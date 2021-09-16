@@ -18,22 +18,19 @@ static const char * const FAILED_TO_GET_LENGTH_OF_THE_FILE_MESSAGE = "не уд�
 static const char * const FAILED_TO_OPEN_THE_FILE_MESSAGE = "";
 #endif
 // ----
-#define PRINT_MESSAGE_FOR_FILE(FILE, MESSAGE) printf("\"%s\": %s.\n", path, FAILED_TO_OPEN_THE_FILE_MESSAGE)
+#define PRINT_MESSAGE_FOR_FILE(FILE_PATH, MESSAGE) printf("\"%s\": %s.\n", FILE_PATH, FAILED_TO_OPEN_THE_FILE_MESSAGE)
 
 static bool get_file_length(FILE* stream, size_t* length) {
 	if (fseek(stream, 0L, SEEK_END) != 0) {
-		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_GET_LENGTH_OF_THE_FILE_MESSAGE);
 		return false;
 	}
 	long length_as_long = ftell(stream);
 	if (length_as_long == -1L) {
-		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_GET_LENGTH_OF_THE_FILE_MESSAGE);
-		fclose(stream);
 		return false;
 	}
 	rewind(stream);
 
-	length = length_as_long;
+	*length = length_as_long;
 	return true;
 }
 
@@ -45,6 +42,7 @@ static bool read_text(const char* path, Text* text_ptr) {
 	}
 	size_t length;
 	if (!get_file_length(stream, &length)) {
+		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_GET_LENGTH_OF_THE_FILE_MESSAGE);
 		fclose(stream);
 		return false;
 	}
@@ -57,7 +55,7 @@ static bool read_text(const char* path, Text* text_ptr) {
 		return false;
 	}
 	if (
-		fread(stream, sizeof(unsigned char), text_ptr->number_of_characters, text_ptr->characters) <
+		fread(text_ptr->characters, sizeof(unsigned char), text_ptr->number_of_characters, stream) <
 		text_ptr->number_of_characters
 	) {
 		PRINT_MESSAGE_FOR_FILE(path, READ_LESS_THAN_EXPECTED_MESSAGE);
@@ -72,17 +70,17 @@ static void free_text(Text text) {
 	free(text.characters);
 }
 
-static void dump_lines(const char* path, TextLines lines) {
-	stream = fopen(output_file_path, "w");
+static void dump_lines(const char* output_file_path, TextLines lines) {
+	FILE* stream = fopen(output_file_path, "w");
 	if (stream == NULL) {
-		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_OPEN_THE_FILE_MESSAGE);
+		PRINT_MESSAGE_FOR_FILE(output_file_path, FAILED_TO_OPEN_THE_FILE_MESSAGE);
 		return;
 	}
 	for (size_t line_index = 0; line_index < lines.number_of_lines; ++line_index) {
-		TextLine* line = lines.lines[line_index];
+		TextLine* line = &lines.lines[line_index];
 		for (
-			TextIterator iterator = line.first_character;
-			iterator != line.after_the_last_character;
+			TextIterator iterator = line->first_character;
+			iterator != line->after_the_last_character;
 			++iterator
 		) {
 			if (fputc(*iterator, stream) == EOF) {
@@ -96,9 +94,12 @@ static void dump_lines(const char* path, TextLines lines) {
 	StringFree(output_file_path);
 }
 
+static int qsort_comparator(const void* left_hand_side, const void* right_hand_side) {
+}
+
 static void process_file(const char* path) {
 	Text text = {NULL};
-	if (!read_text(path, text)) {
+	if (!read_text(path, &text)) {
 		return;
 	}
 
@@ -116,17 +117,17 @@ static void process_file(const char* path) {
 		free_text(text);
 		return;
 	}
-	print_lines(output_file_path, lines.lines);
+	dump_lines(output_file_path, lines);
 	StringFree(output_file_path);
 
-	my_qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), text_compare_reversed_substrings);
+	my_qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), &text_compare_reversed_substrings);
 	output_file_path = StringCat(path, ".my_qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(lines);
 		free_text(text);
 		return;
 	}
-	print_lines(output_file_path, lines.lines);
+	dump_lines(output_file_path, lines);
 	StringFree(output_file_path);
 
 	text_free_lines(lines);
