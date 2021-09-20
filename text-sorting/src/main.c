@@ -1,4 +1,5 @@
-#include "Text.h"
+#include "text.h"
+#include "string_utils.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -91,10 +92,14 @@ static void dump_lines(const char* output_file_path, TextLines lines) {
 			break;
 		}
 	}
-	StringFree(output_file_path);
 }
 
 static int qsort_comparator(const void* left_hand_side, const void* right_hand_side) {
+	return text_compare_substrings(* (TextSubstring*) left_hand_side, * (TextSubstring*) right_hand_side);
+}
+
+static int myqsort_comparator(const void* left_hand_side, const void* right_hand_side) {
+	return text_compare_reversed_substrings(* (TextSubstring*) left_hand_side, * (TextSubstring*) right_hand_side);
 }
 
 static void process_file(const char* path) {
@@ -110,33 +115,40 @@ static void process_file(const char* path) {
 		return;
 	}
 
-	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), text_compare_substrings);
-	const char* output_file_path = StringCat(path, ".qsorted");
+	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), qsort_comparator);
+	const char* output_file_path = string_cat(path, ".qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(lines);
 		free_text(text);
 		return;
 	}
 	dump_lines(output_file_path, lines);
-	StringFree(output_file_path);
+	string_free((char*) output_file_path);
 
-	my_qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), &text_compare_reversed_substrings);
-	output_file_path = StringCat(path, ".my_qsorted");
+	// TODO: my_qsort.
+	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), myqsort_comparator);
+	output_file_path = string_cat(path, ".my_qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(lines);
 		free_text(text);
 		return;
 	}
 	dump_lines(output_file_path, lines);
-	StringFree(output_file_path);
+	string_free((char*) output_file_path);
 
 	text_free_lines(lines);
 	free_text(text);
 }
 
+static void print_usage(const char* invocation) {
+	printf("Usage: %s [text-file] ...\n", invocation);
+	printf("Sorts text file, then writes output to a new file with \".sorted\" prefix.");
+	printf("After that sorts text file in reversed order, then writes output to a new file with \".mysorted\" prefix.\n");
+}
+
 int main(int argc, const char * const * argv) {
 	if (argc <= 1) {
-		print_usage();
+		print_usage(argv[0]);
 		return (int) RETURN_CODE_WRONG_USAGE;
 	}
 

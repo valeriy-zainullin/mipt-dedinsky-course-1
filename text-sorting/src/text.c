@@ -1,6 +1,12 @@
-#include "Text.h"
+#include "text.h"
 
 #include <stddef.h>
+#include <stdlib.h>
+
+static ConstTextSubstring const_text_make_substring(TextSubstring substring) {
+	ConstTextSubstring const_substring = {substring.first_character, substring.after_the_last_character};
+	return const_substring;
+}
 
 size_t text_count_lines(Text text) {
 	size_t number_of_lines = 0;
@@ -17,12 +23,12 @@ size_t text_count_lines(Text text) {
 
 bool text_select_lines(Text text, TextLines* lines_ptr) {
 	lines_ptr->number_of_lines = text_count_lines(text);
-	lines_ptr->lines = malloc(lines_ptr->number_of_lines * sizeof(Line));
+	lines_ptr->lines = malloc(lines_ptr->number_of_lines * sizeof(TextLine));
 	if (lines_ptr->lines == NULL) {
 		return false;
 	}
 
-	Line* current_line = lines_ptr->lines;
+	TextLine* current_line = lines_ptr->lines;
 	for (size_t position = 0; position < text.number_of_characters; ++position) {
 		current_line->first_character = text.characters + position;
 		current_line->after_the_last_character = current_line->first_character;
@@ -43,19 +49,19 @@ void text_free_lines(TextLines lines) {
 }
 
 int text_compare_substrings(TextSubstring left_hand_side, TextSubstring right_hand_side) {
-	return text_compare_const_substrings(
-		text_make_substring_const(left_hand_side),
-		text_make_substring_const(right_hand_side)
+	return const_text_compare_substrings(
+		const_text_make_substring(left_hand_side),
+		const_text_make_substring(right_hand_side)
 	);
 }
 
 int text_compare_reversed_substrings(TextSubstring left_hand_side, TextSubstring right_hand_side) {
-	return text_compare_reversed_const_substrings(text_make_substring_const(left_hand_side), text_make_substring_const(right_hand_side));
+	return const_text_compare_reversed_substrings(const_text_make_substring(left_hand_side), const_text_make_substring(right_hand_side));
 }
 
 #define TEXT_SUBSTR_IS_EMPTY(SUBSTR) (SUBSTR.first_character == SUBSTR.after_the_last_character)
 
-int text_compare_const_substrings(TextConstSubstring left_hand_side, TextConstSubstring right_hand_side) {
+int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
 	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
 		if (*left_hand_side.first_character != *right_hand_side.first_character) {
 			return (int) *left_hand_side.first_character - *right_hand_side.first_character;
@@ -72,11 +78,11 @@ int text_compare_const_substrings(TextConstSubstring left_hand_side, TextConstSu
 	}
 }
 
-int text_compare_reversed_const_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
+int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
 	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
-		TextIterator left_hand_side_last_character = left_hand_side.after_the_last_character - 1;
-		TextIterator right_hand_side_last_character = right_hand_side.after_the_last_character - 1;
-		if (*left_hand_side_last_character != *left_hand_side_last_character) {
+		ConstTextIterator left_hand_side_last_character = left_hand_side.after_the_last_character - 1;
+		ConstTextIterator right_hand_side_last_character = right_hand_side.after_the_last_character - 1;
+		if (*left_hand_side_last_character != *right_hand_side_last_character) {
 			return (int) *left_hand_side_last_character - *right_hand_side_last_character;
 		}
 		left_hand_side.after_the_last_character = left_hand_side_last_character;

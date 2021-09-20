@@ -30,9 +30,10 @@ struct ConstTextSubstring {
 	ConstTextIterator after_the_last_character;
 };
 typedef struct ConstTextSubstring ConstTextSubstring;
-inline ConstTextSubstring text_make_const_text_substring(TextSubstring substring) {
-	return ConstTextSubstring{substring.first_character, substring.after_the_last_character};
-}
+/* inline static ConstTextSubstring const_text_make_substring(TextSubstring substring) {
+	ConstTextSubstring const_substring = {substring.first_character, substring.after_the_last_character};
+	return const_substring;
+} */
 
 struct TextLines {
 	TextLine* lines;
@@ -44,7 +45,8 @@ bool text_select_lines(Text text, TextLines* lines_ptr);
 void text_free_lines(TextLines lines);
 
 int text_compare_substrings(TextSubstring left_hand_side, TextSubstring right_hand_side);
-int text_compare_const_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side);
-
 int text_compare_reversed_substrings(TextSubstring left_hand_side, TextSubstring right_hand_side);
-int text_compare_reversed_const_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side);
+
+int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side);
+int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side);
+
