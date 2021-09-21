@@ -35,42 +35,6 @@ static bool get_file_length(FILE* stream, size_t* length) {
 	return true;
 }
 
-static bool read_text(const char* path, Text* text_ptr) {
-	FILE* stream = fopen(path, "r");
-	if (stream == NULL) {
-		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_OPEN_THE_FILE_MESSAGE);
-		return false;
-	}
-	size_t length;
-	if (!get_file_length(stream, &length)) {
-		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_GET_LENGTH_OF_THE_FILE_MESSAGE);
-		fclose(stream);
-		return false;
-	}
-
-	text_ptr->number_of_characters = length;
-	text_ptr->characters = malloc(length * sizeof(unsigned char));
-	if (text_ptr->characters == NULL) {
-		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_ALLOCATE_MEMORY_MESSAGE);
-		fclose(stream);
-		return false;
-	}
-	if (
-		fread(text_ptr->characters, sizeof(unsigned char), text_ptr->number_of_characters, stream) <
-		text_ptr->number_of_characters
-	) {
-		PRINT_MESSAGE_FOR_FILE(path, READ_LESS_THAN_EXPECTED_MESSAGE);
-		free(text_ptr->characters);
-		fclose(stream);
-		return false;
-	}
-	fclose(stream);
-	return true;
-}
-static void free_text(Text text) {
-	free(text.characters);
-}
-
 static void dump_lines(const char* output_file_path, TextLines lines) {
 	FILE* stream = fopen(output_file_path, "w");
 	if (stream == NULL) {
@@ -103,12 +67,12 @@ static int myqsort_comparator(const void* left_hand_side, const void* right_hand
 }
 
 static void process_file(const char* path) {
-	Text text = {NULL};
-	if (!read_text(path, &text)) {
+	Text text;
+	if (!text_read_from_file(&text, path)) {
 		return;
 	}
 
-	TextLines lines = {NULL};
+	TextLines lines;
 	if (!text_select_lines(text, &lines)) {
 		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_ALLOCATE_MEMORY_MESSAGE);
 		free(text.characters);
@@ -119,7 +83,7 @@ static void process_file(const char* path) {
 	const char* output_file_path = string_cat(path, ".qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(lines);
-		free_text(text);
+		text_free(text);
 		return;
 	}
 	dump_lines(output_file_path, lines);
@@ -130,14 +94,14 @@ static void process_file(const char* path) {
 	output_file_path = string_cat(path, ".my_qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(lines);
-		free_text(text);
+		text_free(text);
 		return;
 	}
 	dump_lines(output_file_path, lines);
 	string_free((char*) output_file_path);
 
 	text_free_lines(lines);
-	free_text(text);
+	text_free(text);
 }
 
 static void print_usage(const char* invocation) {

@@ -21,6 +21,15 @@ size_t text_count_lines(Text text) {
 	return number_of_lines;
 }
 
+bool text_is_supported(Text text) {
+	// Assuming text is UTF-8.
+	if (text->number_of_characters >= 3U && memcmp(text->characters, "\xef\xbb\xbf") == 0) {
+		// File has BOM. Not supported.
+		return false;
+	}
+	return true;
+}
+
 bool text_select_lines(Text text, TextLines* lines_ptr) {
 	lines_ptr->number_of_lines = text_count_lines(text);
 	lines_ptr->lines = malloc(lines_ptr->number_of_lines * sizeof(TextLine));
@@ -95,4 +104,50 @@ int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, Co
 	} else {
 		return *(left_hand_side.after_the_last_character - 1);
 	}
+}
+
+TextStatus text_read_from_file(Text* text_ptr, const char* path) {
+	assert(text_ptr != NULL);
+	assert(path != NULL);
+
+	FILE* stream = fopen(path, "r");
+	if (stream == NULL) {
+		return TEXT_FAILED_TO_OPEN_THE_FILE;
+	}
+	size_t file_size;
+	if (!get_file_size(stream, &file_size)) {
+		fclose(stream);
+		return TEXT_FAILED_TO_GET_SIZE_OF_THE_FILE;
+	}
+
+	if (!text_check_file_is_supported(stream)) {
+		return TEXT_NOT_SUPPORTED;
+	}
+
+	text_ptr->number_of_characters = file_size;
+	text_ptr->characters = malloc(file_size * sizeof(unsigned char));
+	if (text_ptr->characters == NULL) {
+		fclose(stream);
+		return TEXT_FAILED_TO_ALLOCATE_MEMORY;
+	}
+	if (
+		fread(text_ptr->characters, sizeof(unsigned char), text_ptr->number_of_characters, stream) <
+		text_ptr->number_of_characters
+	) {
+		free(text_ptr->characters);
+		fclose(stream);
+		return TEXT_ERROR_WHILE_READING;
+	}
+	fclose(stream);
+	return TEXT_SUCCESS;
+}
+
+void text_free(Text* text_ptr) {
+	assert(text_ptr != NULL);
+	assert(text_ptr->characters != NULL);
+
+	free(text_ptr->characters);
+#if defined(TEXT_DEBUG)
+	text_ptr->characters = NULL;
+#endif
 }

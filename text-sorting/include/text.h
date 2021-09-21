@@ -3,11 +3,22 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+enum TextStatus {
+	TEXT_SUCCESS,
+	TEXT_FAILED_TO_GET_SIZE_OF_THE_FILE,
+	TEXT_NOT_SUPPORTED,
+	TEXT_FAILED_TO_ALLOCATE_MEMORY,
+	TEXT_ERROR_WHILE_READING
+};
+typedef enum TextStatus TextStatus;
+
 struct Text {
 	unsigned char* characters;
 	size_t number_of_characters;
 };
 typedef struct Text Text;
+TextStatus text_read_from_file(Text* text_ptr, const char* path);
+
 
 struct ConstText {
 	const unsigned char * const characters;
