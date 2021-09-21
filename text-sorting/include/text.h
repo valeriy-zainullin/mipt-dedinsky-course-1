@@ -5,6 +5,7 @@
 
 enum TextStatus {
 	TEXT_SUCCESS,
+	TEXT_FAILED_TO_OPEN_THE_FILE,
 	TEXT_FAILED_TO_GET_SIZE_OF_THE_FILE,
 	TEXT_NOT_SUPPORTED,
 	TEXT_FAILED_TO_ALLOCATE_MEMORY,
@@ -18,7 +19,7 @@ struct Text {
 };
 typedef struct Text Text;
 TextStatus text_read_from_file(Text* text_ptr, const char* path);
-
+void text_free(Text* text_ptr);
 
 struct ConstText {
 	const unsigned char * const characters;

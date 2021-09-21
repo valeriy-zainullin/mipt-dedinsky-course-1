@@ -6,6 +6,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if defined(__GNUC__)
+#define UNREACHABLE __builtin_unreachable();
+#define UNLIKELY(EXPR) __builtin_expect((EXPR), 0)
+#else
+#define UNREACHABLE
+#define UNLINKELY(EXPR) (EXPR)
+#endif
+
 enum RETURN_CODE {
 	RETURN_CODE_WRONG_USAGE = 1,
 	RETURN_CODE_SUCCESS = 0
@@ -20,20 +28,6 @@ static const char * const FAILED_TO_OPEN_THE_FILE_MESSAGE = "";
 #endif
 // ----
 #define PRINT_MESSAGE_FOR_FILE(FILE_PATH, MESSAGE) printf("\"%s\": %s.\n", FILE_PATH, FAILED_TO_OPEN_THE_FILE_MESSAGE)
-
-static bool get_file_length(FILE* stream, size_t* length) {
-	if (fseek(stream, 0L, SEEK_END) != 0) {
-		return false;
-	}
-	long length_as_long = ftell(stream);
-	if (length_as_long == -1L) {
-		return false;
-	}
-	rewind(stream);
-
-	*length = length_as_long;
-	return true;
-}
 
 static void dump_lines(const char* output_file_path, TextLines lines) {
 	FILE* stream = fopen(output_file_path, "w");
@@ -68,8 +62,17 @@ static int myqsort_comparator(const void* left_hand_side, const void* right_hand
 
 static void process_file(const char* path) {
 	Text text;
-	if (!text_read_from_file(&text, path)) {
-		return;
+	switch (text_read_from_file(&text, path)) {
+		case TEXT_FAILED_TO_OPEN_THE_FILE:
+			PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_OPEN_THE_FILE_MESSAGE);
+			return;
+		case TEXT_FAILED_TO_GET_SIZE_OF_THE_FILE:
+			PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_GET_SIZE_OF_THE_FILE);
+			return;
+		case TEXT_ERROR_WHILE_READING:
+			PRINT_MESSAGE_FOR_FILE(path, );
+			return;
+		default: assert(0); UNREACHABLE;
 	}
 
 	TextLines lines;
@@ -83,7 +86,7 @@ static void process_file(const char* path) {
 	const char* output_file_path = string_cat(path, ".qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(lines);
-		text_free(text);
+		text_free(&text);
 		return;
 	}
 	dump_lines(output_file_path, lines);
@@ -94,14 +97,14 @@ static void process_file(const char* path) {
 	output_file_path = string_cat(path, ".my_qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(lines);
-		text_free(text);
+		text_free(&text);
 		return;
 	}
 	dump_lines(output_file_path, lines);
 	string_free((char*) output_file_path);
 
 	text_free_lines(lines);
-	text_free(text);
+	text_free(&text);
 }
 
 static void print_usage(const char* invocation) {

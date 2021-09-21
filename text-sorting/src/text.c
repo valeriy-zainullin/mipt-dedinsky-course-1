@@ -1,7 +1,88 @@
 #include "text.h"
 
+#include <assert.h>
+#include <string.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+static const char BOM_SIGNATURE[] = "\xef\xbb\xbf";
+static const size_t BOM_SIGNATURE_LENGTH = sizeof(BOM_SIGNATURE) / sizeof(char) - 1;
+static TextStatus text_check_file_is_supported(FILE* stream) {
+	// Assuming text is UTF-8.
+	char beginning[BOM_SIGNATURE_LENGTH];
+	if (fread(beginning, sizeof(char), BOM_SIGNATURE_LENGTH, stream) < BOM_SIGNATURE_LENGTH) {
+		return TEXT_ERROR_WHILE_READING;
+	}
+	if (memcmp(beginning, BOM_SIGNATURE, BOM_SIGNATURE_LENGTH) == 0) {
+		// File has BOM. Not supported.
+		return TEXT_NOT_SUPPORTED;
+	}
+	rewind(stream);
+	return TEXT_SUCCESS;
+}
+
+static bool get_file_size(FILE* stream, size_t* size) {
+	if (fseek(stream, 0, SEEK_END) != 0) {
+		return false;
+	}
+	long size_as_long = ftell(stream);
+	if (size_as_long == -1L) {
+		return false;
+	}
+	rewind(stream);
+
+	*size = size_as_long;
+	return true;
+}
+
+TextStatus text_read_from_file(Text* text_ptr, const char* path) {
+	assert(text_ptr != NULL);
+	assert(path != NULL);
+
+	FILE* stream = fopen(path, "r");
+	if (stream == NULL) {
+		return TEXT_FAILED_TO_OPEN_THE_FILE;
+	}
+	size_t file_size;
+	if (!get_file_size(stream, &file_size)) {
+		fclose(stream);
+		return TEXT_FAILED_TO_GET_SIZE_OF_THE_FILE;
+	}
+
+	TextStatus checking_if_supported_result = text_check_file_is_supported(stream);
+	if (checking_if_supported_result != TEXT_SUCCESS) {
+		fclose(stream);
+		return checking_if_supported_result;
+	}
+
+	text_ptr->number_of_characters = file_size;
+	text_ptr->characters = malloc(file_size * sizeof(unsigned char));
+	if (text_ptr->characters == NULL) {
+		fclose(stream);
+		return TEXT_FAILED_TO_ALLOCATE_MEMORY;
+	}
+	if (
+		fread(text_ptr->characters, sizeof(unsigned char), text_ptr->number_of_characters, stream) <
+		text_ptr->number_of_characters
+	) {
+		free(text_ptr->characters);
+		fclose(stream);
+		return TEXT_ERROR_WHILE_READING;
+	}
+	fclose(stream);
+	return TEXT_SUCCESS;
+}
+
+void text_free(Text* text_ptr) {
+	assert(text_ptr != NULL);
+	assert(text_ptr->characters != NULL);
+
+	free(text_ptr->characters);
+#if defined(TEXT_DEBUG)
+	text_ptr->characters = NULL;
+#endif
+}
 
 static ConstTextSubstring const_text_make_substring(TextSubstring substring) {
 	ConstTextSubstring const_substring = {substring.first_character, substring.after_the_last_character};
@@ -19,15 +100,6 @@ size_t text_count_lines(Text text) {
 		number_of_lines += 1;
 	}
 	return number_of_lines;
-}
-
-bool text_is_supported(Text text) {
-	// Assuming text is UTF-8.
-	if (text->number_of_characters >= 3U && memcmp(text->characters, "\xef\xbb\xbf") == 0) {
-		// File has BOM. Not supported.
-		return false;
-	}
-	return true;
 }
 
 bool text_select_lines(Text text, TextLines* lines_ptr) {
@@ -104,50 +176,4 @@ int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, Co
 	} else {
 		return *(left_hand_side.after_the_last_character - 1);
 	}
-}
-
-TextStatus text_read_from_file(Text* text_ptr, const char* path) {
-	assert(text_ptr != NULL);
-	assert(path != NULL);
-
-	FILE* stream = fopen(path, "r");
-	if (stream == NULL) {
-		return TEXT_FAILED_TO_OPEN_THE_FILE;
-	}
-	size_t file_size;
-	if (!get_file_size(stream, &file_size)) {
-		fclose(stream);
-		return TEXT_FAILED_TO_GET_SIZE_OF_THE_FILE;
-	}
-
-	if (!text_check_file_is_supported(stream)) {
-		return TEXT_NOT_SUPPORTED;
-	}
-
-	text_ptr->number_of_characters = file_size;
-	text_ptr->characters = malloc(file_size * sizeof(unsigned char));
-	if (text_ptr->characters == NULL) {
-		fclose(stream);
-		return TEXT_FAILED_TO_ALLOCATE_MEMORY;
-	}
-	if (
-		fread(text_ptr->characters, sizeof(unsigned char), text_ptr->number_of_characters, stream) <
-		text_ptr->number_of_characters
-	) {
-		free(text_ptr->characters);
-		fclose(stream);
-		return TEXT_ERROR_WHILE_READING;
-	}
-	fclose(stream);
-	return TEXT_SUCCESS;
-}
-
-void text_free(Text* text_ptr) {
-	assert(text_ptr != NULL);
-	assert(text_ptr->characters != NULL);
-
-	free(text_ptr->characters);
-#if defined(TEXT_DEBUG)
-	text_ptr->characters = NULL;
-#endif
 }
