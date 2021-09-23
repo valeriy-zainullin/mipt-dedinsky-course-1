@@ -6,22 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static const char BOM_SIGNATURE[] = "\xef\xbb\xbf";
-static const size_t BOM_SIGNATURE_LENGTH = sizeof(BOM_SIGNATURE) / sizeof(char) - 1;
-static TextStatus text_check_file_is_supported(FILE* stream) {
-	// Assuming text is UTF-8.
-	char beginning[BOM_SIGNATURE_LENGTH];
-	if (fread(beginning, sizeof(char), BOM_SIGNATURE_LENGTH, stream) < BOM_SIGNATURE_LENGTH) {
-		return TEXT_ERROR_WHILE_READING;
-	}
-	if (memcmp(beginning, BOM_SIGNATURE, BOM_SIGNATURE_LENGTH) == 0) {
-		// File has BOM. Not supported.
-		return TEXT_NOT_SUPPORTED;
-	}
-	rewind(stream);
-	return TEXT_SUCCESS;
-}
-
 static bool get_file_size(FILE* stream, size_t* size) {
 	if (fseek(stream, 0, SEEK_END) != 0) {
 		return false;
@@ -36,6 +20,8 @@ static bool get_file_size(FILE* stream, size_t* size) {
 	return true;
 }
 
+static const char BOM_SIGNATURE[] = "\xef\xbb\xbf";
+static const size_t BOM_SIGNATURE_LENGTH = sizeof(BOM_SIGNATURE) / sizeof(char) - 1;
 TextStatus text_read_from_file(Text* text_ptr, const char* path) {
 	assert(text_ptr != NULL);
 	assert(path != NULL);
@@ -50,10 +36,17 @@ TextStatus text_read_from_file(Text* text_ptr, const char* path) {
 		return TEXT_FAILED_TO_GET_SIZE_OF_THE_FILE;
 	}
 
-	TextStatus checking_if_supported_result = text_check_file_is_supported(stream);
-	if (checking_if_supported_result != TEXT_SUCCESS) {
-		fclose(stream);
-		return checking_if_supported_result;
+	// Assuming text is UTF-8.
+	char beginning[BOM_SIGNATURE_LENGTH];
+	if (fread(beginning, sizeof(char), BOM_SIGNATURE_LENGTH, stream) < BOM_SIGNATURE_LENGTH) {
+		return TEXT_ERROR_WHILE_READING;
+	}
+	if (memcmp(beginning, BOM_SIGNATURE, BOM_SIGNATURE_LENGTH) == 0) {
+		// File has BOM. Skipping.
+		assert(file_size >= BOM_SIGNATURE_LENGTH);
+		file_size -= BOM_SIGNATURE_LENGTH;
+	} else {
+		rewind(stream);
 	}
 
 	text_ptr->number_of_characters = file_size;
@@ -112,14 +105,10 @@ bool text_select_lines(Text text, TextLines* lines_ptr) {
 	TextLine* current_line = lines_ptr->lines;
 	for (size_t position = 0; position < text.number_of_characters; ++position) {
 		current_line->first_character = text.characters + position;
-		current_line->after_the_last_character = current_line->first_character;
-
 		while (position < text.number_of_characters && text.characters[position] != '\n') {
-			current_line->after_the_last_character += 1;
 			position += 1;
 		}
-		current_line->after_the_last_character += 1;
-
+		current_line->after_the_last_character = text.characters + position;
 		current_line += 1;
 	}
 
@@ -153,9 +142,9 @@ int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSu
 	if (TEXT_SUBSTR_IS_EMPTY(left_hand_side) && TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
 		return 0;
 	} else if (TEXT_SUBSTR_IS_EMPTY(left_hand_side)) {
-		return -*right_hand_side.first_character;
+		return - (int) *right_hand_side.first_character;
 	} else {
-		return *left_hand_side.first_character;
+		return (int) *left_hand_side.first_character;
 	}
 }
 
@@ -172,8 +161,8 @@ int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, Co
 	if (TEXT_SUBSTR_IS_EMPTY(left_hand_side) && TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
 		return 0;
 	} else if (TEXT_SUBSTR_IS_EMPTY(left_hand_side)) {
-		return -*(right_hand_side.after_the_last_character - 1);
+		return - (int) *(right_hand_side.after_the_last_character - 1);
 	} else {
-		return *(left_hand_side.after_the_last_character - 1);
+		return (int) *(left_hand_side.after_the_last_character - 1);
 	}
 }

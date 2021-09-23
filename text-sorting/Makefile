@@ -2,7 +2,7 @@ CC=gcc
 CXX=g++
 CFLAGS=-Wall -pedantic -Wextra -Wshadow -Werror -std=c99 -Iinclude
 CFLAGS_RELEASE=-O2
-CFLAGS_DEBUG=-g -O0
+CFLAGS_DEBUG=-g -O0 -DTEXT_DEBUG
 
 all: build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan docs
 
