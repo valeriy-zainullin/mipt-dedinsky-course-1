@@ -83,13 +83,22 @@ static ConstTextSubstring const_text_make_substring(TextSubstring substring) {
 }
 
 size_t text_count_lines(Text text) {
+	if (text.number_of_characters == 0) {
+		return 0;
+	}
+
 	size_t number_of_lines = 0;
 	for (size_t position = 0; position < text.number_of_characters; ++position) {
-		if (text.characters[position] == '\n') {
+		if (text.characters[position] == '\r') {
+			number_of_lines += 1;
+			if (position + 1 < text.number_of_characters && text.characters[position + 1] == '\n') {
+				position += 1;
+			}
+		} else if (text.characters[position] == '\n') {
 			number_of_lines += 1;
 		}
 	}
-	if (text.characters[text.number_of_characters - 1] != '\n') {
+	if (text.characters[text.number_of_characters - 1] != '\n' && text.characters[text.number_of_characters - 1] != '\r') {
 		number_of_lines += 1;
 	}
 	return number_of_lines;
@@ -103,13 +112,17 @@ bool text_select_lines(Text text, TextLines* lines_ptr) {
 	}
 
 	TextLine* current_line = lines_ptr->lines;
-	for (size_t position = 0; position < text.number_of_characters; ++position) {
+	size_t position = 0;
+	while (position < text.number_of_characters) {
 		current_line->first_character = text.characters + position;
-		while (position < text.number_of_characters && text.characters[position] != '\n') {
+		while (position < text.number_of_characters && text.characters[position] != '\r' && text.characters[position] != '\n') {
 			position += 1;
 		}
 		current_line->after_the_last_character = text.characters + position;
 		current_line += 1;
+		while (position < text.number_of_characters && (text.characters[position] == '\r' || text.characters[position] == '\n')) {
+			position += 1;
+		}
 	}
 
 	return true;
