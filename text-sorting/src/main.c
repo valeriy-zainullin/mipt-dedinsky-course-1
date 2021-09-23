@@ -1,6 +1,7 @@
 #include "text.h"
 #include "string_utils.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -22,12 +23,19 @@ enum RETURN_CODE {
 // Messages.
 #if defined(_WIN32)
 static const char * const FAILED_TO_OPEN_THE_FILE_MESSAGE = "не удалось открыть файл";
-static const char * const FAILED_TO_GET_LENGTH_OF_THE_FILE_MESSAGE = "не удалось выяснить длину файла";
+static const char * const FAILED_TO_GET_SIZE_OF_THE_FILE_MESSAGE = "не удалось выяснить длину файла";
+static const char * const ERROR_WHILE_READING_MESSAGE = "";
+static const char * const TEXT_IS_NOT_SUPPORTED_MESSAGE = "";
+static const char * const FAILED_TO_ALLOCATE_MEMORY = "";
 #else
 static const char * const FAILED_TO_OPEN_THE_FILE_MESSAGE = "";
+static const char * const FAILED_TO_GET_SIZE_OF_THE_FILE_MESSAGE = "не удалось выяснить длину файла";
+static const char * const ERROR_WHILE_READING_MESSAGE = "";
+static const char * const TEXT_IS_NOT_SUPPORTED_MESSAGE = "";
+static const char * const FAILED_TO_ALLOCATE_MEMORY = "";
 #endif
 // ----
-#define PRINT_MESSAGE_FOR_FILE(FILE_PATH, MESSAGE) printf("\"%s\": %s.\n", FILE_PATH, FAILED_TO_OPEN_THE_FILE_MESSAGE)
+#define PRINT_MESSAGE_FOR_FILE(FILE_PATH, MESSAGE) printf("\"%s\": %s.\n", FILE_PATH, MESSAGE)
 
 static void dump_lines(const char* output_file_path, TextLines lines) {
 	FILE* stream = fopen(output_file_path, "w");
@@ -70,8 +78,15 @@ static void process_file(const char* path) {
 			PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_GET_SIZE_OF_THE_FILE);
 			return;
 		case TEXT_ERROR_WHILE_READING:
-			PRINT_MESSAGE_FOR_FILE(path, );
+			PRINT_MESSAGE_FOR_FILE(path, ERROR_WHILE_READING_MESSAGE);
 			return;
+		case TEXT_NOT_SUPPORTED:
+			PRINT_MESSAGE_FOR_FILE(path, TEXT_IS_NOT_SUPPORTED_MESSAGE);
+			return;
+		case TEXT_FAILED_TO_ALLOCATE_MEMORY:
+			PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_ALLOCATE_MEMORY_MESSAGE);
+			return;
+		case TEXT_SUCCESS: break;
 		default: assert(0); UNREACHABLE;
 	}
 
