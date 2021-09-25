@@ -1,6 +1,7 @@
 #include "text.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <string.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -128,8 +129,22 @@ bool text_select_lines(Text text, TextLines* lines_ptr) {
 
 	return true;
 }
-void text_free_lines(TextLines lines) {
-	free(lines.lines);
+void text_free_lines(TextLines* lines_ptr) {
+	free(lines_ptr->lines);
+#if defined(TEXT_DEBUG)
+	lines_ptr->lines = NULL;
+#endif
+}
+
+void text_remove_empty_lines(TextLines lines) {
+	TextLine* item_to_be_replaced = &lines.lines[0];
+	for (size_t i = 0; i < lines.number_of_lines; ++i) {
+		TextLine* line = &lines.lines[i];
+		if (line->first_character != line->after_the_last_character) {
+			*item_to_be_replaced = *line;
+			item_to_be_replaced += 1;
+		}
+	}
 }
 
 int text_compare_substrings(TextSubstring left_hand_side, TextSubstring right_hand_side) {
@@ -143,12 +158,45 @@ int text_compare_reversed_substrings(TextSubstring left_hand_side, TextSubstring
 	return const_text_compare_reversed_substrings(const_text_make_substring(left_hand_side), const_text_make_substring(right_hand_side));
 }
 
+static size_t text_get_number_of_bytes_in_utf8_character(unsigned char character) {
+#if defined(__GNUC__)
+	return (size_t) __builtin_clz(
+		~(
+			((unsigned int) character) << ((sizeof(unsigned int) - sizeof(unsigned char)) * CHAR_BIT)
+		)
+	) + 1;
+#else
+	size_t number_of_leading_ones = 0;
+	static const unsigned char MASK = 1 << (sizeof(unsigned char) * CHAR_BIT);
+	while ((character & MASK) != 0) {
+		number_of_leading_ones += 1;
+		character <<= 1;
+	}
+	return number_of_leading_ones + 1;
+#endif
+}
+
+static int text_compare_utf8_characters(const unsigned char* left_hand_side, const unsigned char* right_hand_side) {
+	size_t left_hand_side_length = text_get_number_of_bytes_in_utf8_character(*left_hand_side);
+	size_t right_hand_side_length = text_get_number_of_bytes_in_utf8_character(*right_hand_side);
+	if (left_hand_side_length != right_hand_side_length) {
+		return (int) left_hand_side_length - (int) right_hand_side_length;
+	}
+	for (size_t i = 0; i < left_hand_side_length; ++i) {
+		if (left_hand_side[i] != right_hand_side[i]) {
+			return (int) left_hand_side[i] - right_hand_side[i];
+		}
+	}
+	return 0;
+}
+
 #define TEXT_SUBSTR_IS_EMPTY(SUBSTR) (SUBSTR.first_character == SUBSTR.after_the_last_character)
 
 int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
 	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
-		if (*left_hand_side.first_character != *right_hand_side.first_character) {
-			return (int) *left_hand_side.first_character - *right_hand_side.first_character;
+		int comparison_result = text_compare_utf8_characters(left_hand_side.first_character, right_hand_side.first_character);
+		if (comparison_result != 0) {
+			return comparison_result;
 		}
 		left_hand_side.first_character += 1;
 		right_hand_side.first_character += 1;
@@ -156,9 +204,9 @@ int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSu
 	if (TEXT_SUBSTR_IS_EMPTY(left_hand_side) && TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
 		return 0;
 	} else if (TEXT_SUBSTR_IS_EMPTY(left_hand_side)) {
-		return - (int) *right_hand_side.first_character;
+		return -1;
 	} else {
-		return (int) *left_hand_side.first_character;
+		return 1;
 	}
 }
 
@@ -166,8 +214,9 @@ int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, Co
 	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
 		ConstTextIterator left_hand_side_last_character = left_hand_side.after_the_last_character - 1;
 		ConstTextIterator right_hand_side_last_character = right_hand_side.after_the_last_character - 1;
-		if (*left_hand_side_last_character != *right_hand_side_last_character) {
-			return (int) *left_hand_side_last_character - *right_hand_side_last_character;
+		int comparison_result = text_compare_utf8_characters(left_hand_side_last_character, right_hand_side_last_character);
+		if (comparison_result != 0) {
+			return comparison_result;
 		}
 		left_hand_side.after_the_last_character = left_hand_side_last_character;
 		right_hand_side.after_the_last_character = right_hand_side_last_character;
@@ -175,8 +224,8 @@ int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, Co
 	if (TEXT_SUBSTR_IS_EMPTY(left_hand_side) && TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
 		return 0;
 	} else if (TEXT_SUBSTR_IS_EMPTY(left_hand_side)) {
-		return - (int) *(right_hand_side.after_the_last_character - 1);
+		return -1;
 	} else {
-		return (int) *(left_hand_side.after_the_last_character - 1);
+		return 1;
 	}
 }

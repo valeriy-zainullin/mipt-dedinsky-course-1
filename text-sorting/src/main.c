@@ -88,7 +88,7 @@ static void process_file(const char* path) {
 	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), qsort_comparator);
 	const char* output_file_path = string_cat(path, ".qsorted");
 	if (output_file_path == NULL) {
-		text_free_lines(lines);
+		text_free_lines(&lines);
 		text_free(&text);
 		return;
 	}
@@ -99,14 +99,14 @@ static void process_file(const char* path) {
 	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), myqsort_comparator);
 	output_file_path = string_cat(path, ".my_qsorted");
 	if (output_file_path == NULL) {
-		text_free_lines(lines);
+		text_free_lines(&lines);
 		text_free(&text);
 		return;
 	}
 	dump_lines(output_file_path, lines);
 	string_free((char*) output_file_path);
 
-	text_free_lines(lines);
+	text_free_lines(&lines);
 	text_free(&text);
 }
 
