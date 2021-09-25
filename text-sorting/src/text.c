@@ -93,7 +93,10 @@ size_t text_count_lines(Text text) {
 	for (size_t position = 0; position < text.number_of_characters; ++position) {
 		if (text.characters[position] == '\r') {
 			number_of_lines += 1;
-			if (position + 1 < text.number_of_characters && text.characters[position + 1] == '\n') {
+			/*if (position + 1 < text.number_of_characters && text.characters[position + 1] == '\n') {
+				position += 1;
+			}*/
+			while (position + 1 < text.number_of_characters && text.characters[position + 1] == '\n') {
 				position += 1;
 			}
 		} else if (text.characters[position] == '\n') {
@@ -126,6 +129,8 @@ bool text_select_lines(Text text, TextLines* lines_ptr) {
 			position += 1;
 		}
 	}
+	printf("(size_t) (current_line - lines_ptr->lines) = %zu, lines_ptr->number_of_lines = %zu.\n", (size_t) (current_line - lines_ptr->lines), lines_ptr->number_of_lines);
+	assert((size_t) (current_line - lines_ptr->lines) == lines_ptr->number_of_lines);
 
 	return true;
 }

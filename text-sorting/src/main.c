@@ -85,6 +85,12 @@ static void process_file(const char* path) {
 		return;
 	}
 
+	for (size_t i = 0; i < lines.number_of_lines; ++i) {
+		printf("%zu\n", (size_t) (lines.lines[i].after_the_last_character - lines.lines[i].first_character));
+	}
+
+	text_remove_empty_lines(lines);
+
 	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), qsort_comparator);
 	const char* output_file_path = string_cat(path, ".qsorted");
 	if (output_file_path == NULL) {
