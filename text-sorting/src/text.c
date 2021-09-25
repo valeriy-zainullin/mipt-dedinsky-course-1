@@ -26,7 +26,8 @@ TextStatus text_read_from_file(Text* text_ptr, const char* path) {
 	assert(text_ptr != NULL);
 	assert(path != NULL);
 
-	FILE* stream = fopen(path, "r");
+	// In MinGW64 build, just "r" would skip '\r' bytes, but we support them.
+	FILE* stream = fopen(path, "rb");
 	if (stream == NULL) {
 		return TEXT_FAILED_TO_OPEN_THE_FILE;
 	}

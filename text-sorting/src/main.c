@@ -21,17 +21,10 @@ enum RETURN_CODE {
 };
 
 // Messages.
-#if defined(_WIN32)
-static const char * const FAILED_TO_OPEN_THE_FILE_MESSAGE = "не удалось открыть файл";
-static const char * const FAILED_TO_GET_SIZE_OF_THE_FILE_MESSAGE = "не удалось выяснить длину файла";
-static const char * const ERROR_WHILE_READING_MESSAGE = "";
-static const char * const FAILED_TO_ALLOCATE_MEMORY = "";
-#else
 static const char * const FAILED_TO_OPEN_THE_FILE_MESSAGE = "не удалось открыть файл";
 static const char * const FAILED_TO_GET_SIZE_OF_THE_FILE_MESSAGE = "не удалось выяснить длину файла";
 static const char * const ERROR_WHILE_READING_MESSAGE = "ошибка при чтении файла";
 static const char * const FAILED_TO_ALLOCATE_MEMORY_MESSAGE = "не удалось выделить память";
-#endif
 // ----
 #define PRINT_MESSAGE_FOR_FILE(FILE_PATH, MESSAGE) printf("\"%s\": %s.\n", FILE_PATH, MESSAGE)
 
