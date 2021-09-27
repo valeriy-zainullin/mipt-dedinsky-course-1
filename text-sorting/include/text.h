@@ -54,7 +54,7 @@ typedef struct TextLines TextLines;
 size_t text_count_lines(Text text);
 bool text_select_lines(Text text, TextLines* lines_ptr);
 void text_free_lines(TextLines* lines_ptr);
-void text_remove_empty_lines(TextLines lines);
+void text_remove_empty_lines(TextLines* lines_ptr);
 
 int text_compare_substrings(TextSubstring left_hand_side, TextSubstring right_hand_side);
 int text_compare_reversed_substrings(TextSubstring left_hand_side, TextSubstring right_hand_side);

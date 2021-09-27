@@ -21,6 +21,20 @@ static bool get_file_size(FILE* stream, size_t* size) {
 	return true;
 }
 
+static void text_delete_carriage_returns(Text* text_ptr) {
+	TextIterator character_to_be_replaced = text_ptr->characters;
+	TextIterator iterator = text_ptr->characters;
+	TextIterator after_the_last = text_ptr->characters + text_ptr->number_of_characters;
+	for (; iterator != after_the_last; ++iterator) {
+		if (*iterator == '\r') {
+			text_ptr->number_of_characters -= 1;
+			continue;
+		}
+		*character_to_be_replaced = *iterator;
+		character_to_be_replaced += 1;
+	}
+}
+
 static const char BOM_SIGNATURE[] = "\xef\xbb\xbf";
 static const size_t BOM_SIGNATURE_LENGTH = sizeof(BOM_SIGNATURE) / sizeof(char) - 1;
 TextStatus text_read_from_file(Text* text_ptr, const char* path) {
@@ -65,6 +79,8 @@ TextStatus text_read_from_file(Text* text_ptr, const char* path) {
 		fclose(stream);
 		return TEXT_ERROR_WHILE_READING;
 	}
+	text_delete_carriage_returns(text_ptr);
+
 	fclose(stream);
 	return TEXT_SUCCESS;
 }
@@ -91,19 +107,11 @@ size_t text_count_lines(Text text) {
 
 	size_t number_of_lines = 0;
 	for (size_t position = 0; position < text.number_of_characters; ++position) {
-		if (text.characters[position] == '\r') {
-			number_of_lines += 1;
-			/*if (position + 1 < text.number_of_characters && text.characters[position + 1] == '\n') {
-				position += 1;
-			}*/
-			while (position + 1 < text.number_of_characters && text.characters[position + 1] == '\n') {
-				position += 1;
-			}
-		} else if (text.characters[position] == '\n') {
+		if (text.characters[position] == '\n') {
 			number_of_lines += 1;
 		}
 	}
-	if (text.characters[text.number_of_characters - 1] != '\n' && text.characters[text.number_of_characters - 1] != '\r') {
+	if (text.characters[text.number_of_characters - 1] != '\n') {
 		number_of_lines += 1;
 	}
 	return number_of_lines;
@@ -120,12 +128,13 @@ bool text_select_lines(Text text, TextLines* lines_ptr) {
 	size_t position = 0;
 	while (position < text.number_of_characters) {
 		current_line->first_character = text.characters + position;
-		while (position < text.number_of_characters && text.characters[position] != '\r' && text.characters[position] != '\n') {
+		while (position < text.number_of_characters && text.characters[position] != '\n') {
 			position += 1;
 		}
 		current_line->after_the_last_character = text.characters + position;
+
 		current_line += 1;
-		while (position < text.number_of_characters && (text.characters[position] == '\r' || text.characters[position] == '\n')) {
+		if (position < text.number_of_characters) {
 			position += 1;
 		}
 	}
@@ -141,13 +150,16 @@ void text_free_lines(TextLines* lines_ptr) {
 #endif
 }
 
-void text_remove_empty_lines(TextLines lines) {
-	TextLine* item_to_be_replaced = &lines.lines[0];
-	for (size_t i = 0; i < lines.number_of_lines; ++i) {
-		TextLine* line = &lines.lines[i];
-		if (line->first_character != line->after_the_last_character) {
-			*item_to_be_replaced = *line;
+void text_remove_empty_lines(TextLines* lines_ptr) {
+	TextLine* item_to_be_replaced = lines_ptr->lines;
+	TextLine* iterator = lines_ptr->lines;
+	TextLine* after_the_last = lines_ptr->lines + lines_ptr->number_of_lines;
+	for (; iterator != after_the_last; ++iterator) {
+		if (iterator->first_character != iterator->after_the_last_character) {
+			*item_to_be_replaced = *iterator;
 			item_to_be_replaced += 1;
+		} else {
+			lines_ptr->number_of_lines -= 1;
 		}
 	}
 }
