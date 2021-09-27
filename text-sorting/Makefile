@@ -14,7 +14,7 @@ TARGETS=build/main build/main_debug
 endif
 
 ifneq ($(NO_DOCS),1)
-TARGETS=$(TARGETS) docs
+TARGETS += docs
 endif
 
 CFLAGS=-Wall -pedantic -Wextra -Wshadow -Werror -std=c99 -Iinclude
@@ -31,15 +31,15 @@ docs: | build
 
 .PHONY: all clean docs
 
-build/main: build/main.c.o build/text.c.o build/string_utils.c.o | build
+build/main: build/main.c.o build/text.c.o build/string_utils.c.o build/my_qsort.c.o | build
 	$(CC) -o $@ $^
-build/main_debug: build/main.c.debug.o build/text.c.debug.o build/string_utils.c.debug.o | build
+build/main_debug: build/main.c.debug.o build/text.c.debug.o build/string_utils.c.debug.o build/my_qsort.c.debug.o | build
 	$(CC) -o $@ $^
-build/main_asan: build/main.c.asan.o build/text.c.asan.o build/string_utils.c.asan.o | build
+build/main_asan: build/main.c.asan.o build/text.c.asan.o build/string_utils.c.asan.o build/my_qsort.c.asan.o | build
 	$(CC) -o $@ $^ -lasan
-build/main_ubsan: build/main.c.ubsan.o build/text.c.ubsan.o build/string_utils.c.ubsan.o | build
+build/main_ubsan: build/main.c.ubsan.o build/text.c.ubsan.o build/string_utils.c.ubsan.o build/my_qsort.c.ubsan.o | build
 	$(CC) -o $@ $^ -lubsan
-build/main_lsan: build/main.c.lsan.o build/text.c.lsan.o build/string_utils.c.lsan.o | build
+build/main_lsan: build/main.c.lsan.o build/text.c.lsan.o build/string_utils.c.lsan.o build/my_qsort.c.lsan.o | build
 	$(CC) -o $@ $^ -llsan
 
 build/%.c.o: src/%.c | build build/deps
