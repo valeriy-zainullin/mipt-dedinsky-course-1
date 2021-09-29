@@ -140,7 +140,7 @@ bool text_select_lines(Text text, TextLines* lines_ptr) {
 			position += 1;
 		}
 	}
-	printf("(size_t) (current_line - lines_ptr->lines) = %zu, lines_ptr->number_of_lines = %zu.\n", (size_t) (current_line - lines_ptr->lines), lines_ptr->number_of_lines);
+	fprintf(stderr, "(size_t) (current_line - lines_ptr->lines) = %zu, lines_ptr->number_of_lines = %zu.\n", (size_t) (current_line - lines_ptr->lines), lines_ptr->number_of_lines);
 	assert((size_t) (current_line - lines_ptr->lines) == lines_ptr->number_of_lines);
 
 	return true;
@@ -213,24 +213,8 @@ static int text_compare_utf8_characters(const unsigned char* left_hand_side, con
 	return 0;
 }
 
-#define TEXT_SUBSTR_IS_EMPTY(SUBSTR) (SUBSTR.first_character == SUBSTR.after_the_last_character)
-
-int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
-	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
-		int comparison_result = text_compare_utf8_characters(left_hand_side.first_character, right_hand_side.first_character);
-		if (comparison_result != 0) {
-			return comparison_result;
-		}
-		left_hand_side.first_character += 1;
-		right_hand_side.first_character += 1;
-	}
-	if (TEXT_SUBSTR_IS_EMPTY(left_hand_side) && TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
-		return 0;
-	} else if (TEXT_SUBSTR_IS_EMPTY(left_hand_side)) {
-		return -1;
-	} else {
-		return 1;
-	}
+static const unsigned char* text_get_next_utf8_character(const unsigned char* character) {
+	return character + text_get_number_of_bytes_in_utf8_character(*character);
 }
 
 static bool text_byte_is_utf8_continuation_byte(const unsigned char byte) {
@@ -240,10 +224,32 @@ static bool text_byte_is_utf8_continuation_byte(const unsigned char byte) {
 }
 
 static const unsigned char* text_find_utf8_character_beginning(const unsigned char* byte) {
+	fprintf(stderr, "character = %x.\n", (int) (*byte));
 	while (text_byte_is_utf8_continuation_byte(*byte)) {
 		byte -= 1;
+		fprintf(stderr, "character = %x.\n", (int) (*byte));
 	}
 	return byte;
+}
+
+#define TEXT_SUBSTR_IS_EMPTY(SUBSTR) (SUBSTR.first_character == SUBSTR.after_the_last_character)
+
+int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
+	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
+		int comparison_result = text_compare_utf8_characters(left_hand_side.first_character, right_hand_side.first_character);
+		if (comparison_result != 0) {
+			return comparison_result;
+		}
+		left_hand_side.first_character = text_get_next_utf8_character(left_hand_side.first_character);
+		right_hand_side.first_character = text_get_next_utf8_character(right_hand_side.first_character);
+	}
+	if (TEXT_SUBSTR_IS_EMPTY(left_hand_side) && TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
+		return 0;
+	} else if (TEXT_SUBSTR_IS_EMPTY(left_hand_side)) {
+		return -1;
+	} else {
+		return 1;
+	}
 }
 
 int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
