@@ -1,5 +1,6 @@
 #include "text.h"
 #include "string_utils.h"
+#include "my_qsort.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -86,11 +87,12 @@ static void process_file(const char* path) {
 	}
 
 	text_remove_empty_lines(&lines);
-
+	((void) qsort_comparator);
+/*
 	for (size_t i = 0; i < lines.number_of_lines; ++i) {
 		printf("%zu\n", (size_t) (lines.lines[i].after_the_last_character - lines.lines[i].first_character));
-	}
-
+	}*/
+/*
 	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), qsort_comparator);
 	const char* output_file_path = string_cat(path, ".qsorted");
 	if (output_file_path == NULL) {
@@ -100,10 +102,9 @@ static void process_file(const char* path) {
 	}
 	dump_lines(output_file_path, lines);
 	string_free((char*) output_file_path);
-
-	// TODO: my_qsort.
-	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), myqsort_comparator);
-	output_file_path = string_cat(path, ".my_qsorted");
+*/
+	my_qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), myqsort_comparator);
+	const char* output_file_path = string_cat(path, ".my_qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(&lines);
 		text_free(&text);

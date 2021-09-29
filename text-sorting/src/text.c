@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// TODO: maybe process somehow bad utf-8 files. Meaning that do something if there's an error. What to do with qsort interface - I don't know. Maybe validate file before sorting? Must be a good idea.
+
 static bool get_file_size(FILE* stream, size_t* size) {
 	if (fseek(stream, 0, SEEK_END) != 0) {
 		return false;
@@ -177,20 +179,24 @@ int text_compare_reversed_substrings(TextSubstring left_hand_side, TextSubstring
 
 static size_t text_get_number_of_bytes_in_utf8_character(unsigned char character) {
 #if defined(__GNUC__)
-	return (size_t) __builtin_clz(
+	size_t number_of_leading_ones = (size_t) __builtin_clz(
 		~(
 			((unsigned int) character) << ((sizeof(unsigned int) - sizeof(unsigned char)) * CHAR_BIT)
 		)
-	) + 1;
+	);
 #else
 	size_t number_of_leading_ones = 0;
-	static const unsigned char MASK = 1 << (sizeof(unsigned char) * CHAR_BIT);
-	while ((character & MASK) != 0) {
+	static const unsigned char FIRST_BYTE_MASK = 1 << (sizeof(unsigned char) * CHAR_BIT - 1);
+	while ((character & FIRST_BYTE_MASK) != 0) {
 		number_of_leading_ones += 1;
 		character <<= 1;
 	}
-	return number_of_leading_ones + 1;
 #endif
+	if (number_of_leading_ones == 0) {
+		// One octet. Probably an ASCII character.
+		return 1;
+	}
+	return number_of_leading_ones + 1;
 }
 
 static int text_compare_utf8_characters(const unsigned char* left_hand_side, const unsigned char* right_hand_side) {
@@ -227,10 +233,23 @@ int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSu
 	}
 }
 
+static bool text_byte_is_utf8_continuation_byte(const unsigned char byte) {
+	static const unsigned char CONTINUATION_BYTE_MASK = (1 << (sizeof(unsigned char) * CHAR_BIT - 1)) | (1 << (sizeof(unsigned char) * CHAR_BIT - 2));
+	static const unsigned char CONTINUATION_BYTE_BEGINNING = 1 << (sizeof(unsigned char) * CHAR_BIT - 1);
+	return (byte & CONTINUATION_BYTE_MASK) == CONTINUATION_BYTE_BEGINNING;
+}
+
+static const unsigned char* text_find_utf8_character_beginning(const unsigned char* byte) {
+	while (text_byte_is_utf8_continuation_byte(*byte)) {
+		byte -= 1;
+	}
+	return byte;
+}
+
 int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
 	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
-		ConstTextIterator left_hand_side_last_character = left_hand_side.after_the_last_character - 1;
-		ConstTextIterator right_hand_side_last_character = right_hand_side.after_the_last_character - 1;
+		ConstTextIterator left_hand_side_last_character = text_find_utf8_character_beginning(left_hand_side.after_the_last_character - 1);
+		ConstTextIterator right_hand_side_last_character = text_find_utf8_character_beginning(right_hand_side.after_the_last_character - 1);
 		int comparison_result = text_compare_utf8_characters(left_hand_side_last_character, right_hand_side_last_character);
 		if (comparison_result != 0) {
 			return comparison_result;

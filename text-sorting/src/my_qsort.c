@@ -1,6 +1,7 @@
 #include "my_qsort.h"
 
 #include <assert.h>
+#include <stdio.h>
 
 #define SWAP_OBJECTS(TYPE, LEFT_HAND_SIDE, RIGHT_HAND_SIDE) { \
 	TYPE tmp = * (TYPE*) (LEFT_HAND_SIDE);                      \
@@ -27,7 +28,7 @@ static size_t my_qsort_partition(char* items, size_t length, size_t item_size, i
 		while (left < right && compare(items + left * item_size, items + pivot_item_index * item_size) <= 0) {
 			left += 1;
 		}
-		while (left < right && compare(items + left * item_size, items + pivot_item_index * item_size) >= 0) {
+		while (left < right && compare(items + right * item_size, items + pivot_item_index * item_size) >= 0) {
 			right -= 1;
 		}
 		if (left < right) {
@@ -42,6 +43,8 @@ static size_t my_qsort_partition(char* items, size_t length, size_t item_size, i
 
 // To not cast items to char* every time we need to do pointer arithmetics with it.
 static void my_qsort_impl(char* items, size_t length, size_t item_size, int(*compare)(const void*, const void*)) {
+	printf("items = %p, length = %zu, item_size = %zu.\n", items, length, item_size);
+	fflush(stdout);
 	if (length <= 1) {
 		return;
 	} else if (length == 2) {
@@ -52,6 +55,8 @@ static void my_qsort_impl(char* items, size_t length, size_t item_size, int(*com
 	}
 	size_t pivot_item_index = length / 2;
 	pivot_item_index = my_qsort_partition(items, length, item_size, compare, pivot_item_index);
+	printf("pivot_item_index = %zu.\n", pivot_item_index);
+	fflush(stdout);
 	my_qsort_impl(items, pivot_item_index, item_size, compare);
 	my_qsort_impl(items + (pivot_item_index + 1) * item_size, length - pivot_item_index - 1, item_size, compare);
 }
