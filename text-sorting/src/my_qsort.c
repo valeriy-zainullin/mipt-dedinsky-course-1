@@ -27,11 +27,14 @@ static size_t my_qsort_partition(char* items, size_t length, size_t item_size, i
 	while (left < right) {
 		while (left < right && compare(items + left * item_size, items + pivot_item_index * item_size) <= 0) {
 			left += 1;
+			fprintf(stderr, "left = %zu.\n", left);
 		}
 		while (left < right && compare(items + right * item_size, items + pivot_item_index * item_size) >= 0) {
 			right -= 1;
+			fprintf(stderr, "right = %zu.\n", right);
 		}
 		if (left < right) {
+			fprintf(stderr, "Swapping %zu and %zu.\n", left, right);
 			my_qsort_swap_bytes(items + left * item_size, items + right * item_size, item_size);
 			left += 1;
 			right -= 1;

@@ -130,17 +130,23 @@ bool text_select_lines(Text text, TextLines* lines_ptr) {
 	size_t position = 0;
 	while (position < text.number_of_characters) {
 		current_line->first_character = text.characters + position;
+		fputs("||||", stderr);
 		while (position < text.number_of_characters && text.characters[position] != '\n') {
+			fputc(text.characters[position], stderr);
 			position += 1;
 		}
+		fputs("||||", stderr);
+		fputc('\n', stderr);
 		current_line->after_the_last_character = text.characters + position;
 
 		current_line += 1;
 		if (position < text.number_of_characters) {
+			// fprintf(stderr, "text.characters[position] = %d.\n", (int) text.characters[position]);
+			assert(text.characters[position] == '\n');
 			position += 1;
 		}
 	}
-	fprintf(stderr, "(size_t) (current_line - lines_ptr->lines) = %zu, lines_ptr->number_of_lines = %zu.\n", (size_t) (current_line - lines_ptr->lines), lines_ptr->number_of_lines);
+	// fprintf(stderr, "(size_t) (current_line - lines_ptr->lines) = %zu, lines_ptr->number_of_lines = %zu.\n", (size_t) (current_line - lines_ptr->lines), lines_ptr->number_of_lines);
 	assert((size_t) (current_line - lines_ptr->lines) == lines_ptr->number_of_lines);
 
 	return true;
@@ -196,10 +202,12 @@ static size_t text_get_number_of_bytes_in_utf8_character(unsigned char character
 		// One octet. Probably an ASCII character.
 		return 1;
 	}
-	return number_of_leading_ones + 1;
+	assert(number_of_leading_ones != 1); // Can happen if file is invalid. Should not be an assert, but an if.
+	return number_of_leading_ones;
 }
 
 static int text_compare_utf8_characters(const unsigned char* left_hand_side, const unsigned char* right_hand_side) {
+	printf("left_hand_side = %p, right_hand_side = %p.\n", left_hand_side, right_hand_side);
 	size_t left_hand_side_length = text_get_number_of_bytes_in_utf8_character(*left_hand_side);
 	size_t right_hand_side_length = text_get_number_of_bytes_in_utf8_character(*right_hand_side);
 	if (left_hand_side_length != right_hand_side_length) {
@@ -213,35 +221,60 @@ static int text_compare_utf8_characters(const unsigned char* left_hand_side, con
 	return 0;
 }
 
-static const unsigned char* text_get_next_utf8_character(const unsigned char* character) {
-	return character + text_get_number_of_bytes_in_utf8_character(*character);
-}
-
 static bool text_byte_is_utf8_continuation_byte(const unsigned char byte) {
 	static const unsigned char CONTINUATION_BYTE_MASK = (1 << (sizeof(unsigned char) * CHAR_BIT - 1)) | (1 << (sizeof(unsigned char) * CHAR_BIT - 2));
 	static const unsigned char CONTINUATION_BYTE_BEGINNING = 1 << (sizeof(unsigned char) * CHAR_BIT - 1);
 	return (byte & CONTINUATION_BYTE_MASK) == CONTINUATION_BYTE_BEGINNING;
 }
 
-static const unsigned char* text_find_utf8_character_beginning(const unsigned char* byte) {
-	fprintf(stderr, "character = %x.\n", (int) (*byte));
-	while (text_byte_is_utf8_continuation_byte(*byte)) {
+// ENH: better validation.
+static const unsigned char* text_get_next_utf8_character(const unsigned char* character, const unsigned char* past_the_right_border) {
+	printf("character = %p.\n", character);
+	character += text_get_number_of_bytes_in_utf8_character(*character);
+	if ((void*) character >= (void*) past_the_right_border) {
+		return NULL;
+	}
+	return character;
+}
+
+static const unsigned char* text_find_utf8_character_beginning(const unsigned char* byte, const unsigned char* left_border) {
+	// fprintf(stderr, "character = %x.\n", (int) (*byte));
+	assert(byte >= left_border);
+	while (byte != left_border && text_byte_is_utf8_continuation_byte(*byte)) {
 		byte -= 1;
-		fprintf(stderr, "character = %x.\n", (int) (*byte));
+		// fprintf(stderr, "character = %x.\n", (int) (*byte));
+	}
+	if (text_byte_is_utf8_continuation_byte(*byte)) {
+		return NULL;
 	}
 	return byte;
 }
 
-#define TEXT_SUBSTR_IS_EMPTY(SUBSTR) (SUBSTR.first_character == SUBSTR.after_the_last_character)
+#define TEXT_SUBSTR_IS_EMPTY(SUBSTR) ((void*) SUBSTR.first_character >= (void*) SUBSTR.after_the_last_character)
 
 int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
+	size_t pos = 0;
 	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
+		fprintf(stderr, "pos = %zu.\n", pos);
+		for (ConstTextIterator it = left_hand_side.first_character; it != left_hand_side.after_the_last_character; ++it) {
+			fputc(*it, stderr);
+		}
+		fputc('\n', stderr);
+		pos += 1;
+		for (ConstTextIterator it = left_hand_side.first_character; it != left_hand_side.after_the_last_character; ++it) {
+			fprintf(stderr, "%x", (int) *it);
+		}
+		fputc('\n', stderr);
 		int comparison_result = text_compare_utf8_characters(left_hand_side.first_character, right_hand_side.first_character);
 		if (comparison_result != 0) {
 			return comparison_result;
 		}
-		left_hand_side.first_character = text_get_next_utf8_character(left_hand_side.first_character);
-		right_hand_side.first_character = text_get_next_utf8_character(right_hand_side.first_character);
+		left_hand_side.first_character = text_get_next_utf8_character(left_hand_side.first_character, left_hand_side.after_the_last_character);
+		right_hand_side.first_character = text_get_next_utf8_character(right_hand_side.first_character, right_hand_side.after_the_last_character);
+		if (left_hand_side.first_character == NULL || right_hand_side.first_character == NULL) {
+			// Buffer for one of the hands ended before the character's encoding. Think that there's no characters then.
+			return (int) ((left_hand_side.first_character == NULL) - (right_hand_side.first_character == NULL));
+		}
 	}
 	if (TEXT_SUBSTR_IS_EMPTY(left_hand_side) && TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
 		return 0;
@@ -252,10 +285,18 @@ int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSu
 	}
 }
 
+#define SUBSTRING_LENGTH(SUBSTRING) ((SUBSTRING).after_the_last_character - (SUBSTRING).first_character)
+
 int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
+	printf("l1 = %zu, l2 = %zu.\n", SUBSTRING_LENGTH(left_hand_side), SUBSTRING_LENGTH(right_hand_side));
 	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
-		ConstTextIterator left_hand_side_last_character = text_find_utf8_character_beginning(left_hand_side.after_the_last_character - 1);
-		ConstTextIterator right_hand_side_last_character = text_find_utf8_character_beginning(right_hand_side.after_the_last_character - 1);
+		ConstTextIterator left_hand_side_last_character = text_find_utf8_character_beginning(left_hand_side.after_the_last_character - 1, left_hand_side.first_character);
+		ConstTextIterator right_hand_side_last_character = text_find_utf8_character_beginning(right_hand_side.after_the_last_character - 1, right_hand_side.first_character);
+		if (left_hand_side_last_character == NULL || right_hand_side_last_character == NULL) {
+			// We are skipping invalid UTF-8 byte sequences. NULL is returned if it turned out that no valid UTF-8 characters are left.
+			return (int) ((left_hand_side_last_character == NULL) - (right_hand_side_last_character == NULL));
+		}
+		printf("i1 = %zu, i2 = %zu.\n", SUBSTRING_LENGTH(left_hand_side), SUBSTRING_LENGTH(right_hand_side));
 		int comparison_result = text_compare_utf8_characters(left_hand_side_last_character, right_hand_side_last_character);
 		if (comparison_result != 0) {
 			return comparison_result;

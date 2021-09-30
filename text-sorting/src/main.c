@@ -25,31 +25,29 @@ enum RETURN_CODE {
 static const char * const FAILED_TO_OPEN_THE_FILE_MESSAGE = "не удалось открыть файл";
 static const char * const FAILED_TO_GET_SIZE_OF_THE_FILE_MESSAGE = "не удалось выяснить длину файла";
 static const char * const ERROR_WHILE_READING_MESSAGE = "ошибка при чтении файла";
+static const char * const ERROR_WHILE_WRITING_MESSAGE = "ошибка при записи в файл";
 static const char * const FAILED_TO_ALLOCATE_MEMORY_MESSAGE = "не удалось выделить память";
 // ----
 #define PRINT_MESSAGE_FOR_FILE(FILE_PATH, MESSAGE) printf("\"%s\": %s.\n", FILE_PATH, MESSAGE)
 
+// Should be in text module.
 static void dump_lines(const char* output_file_path, TextLines lines) {
-	FILE* stream = fopen(output_file_path, "w");
+	FILE* stream = fopen(output_file_path, "wb");
 	if (stream == NULL) {
 		PRINT_MESSAGE_FOR_FILE(output_file_path, FAILED_TO_OPEN_THE_FILE_MESSAGE);
 		return;
 	}
 	for (size_t line_index = 0; line_index < lines.number_of_lines; ++line_index) {
-		TextLine* line = &lines.lines[line_index];
-		for (
-			TextIterator iterator = line->first_character;
-			iterator != line->after_the_last_character;
-			++iterator
-		) {
-			if (fputc(*iterator, stream) == EOF) {
-				break;
-			}
-		}
-		if (fputc('\n', stream) == EOF) {
-			break;
+		TextLine* line = lines.lines + line_index;
+		size_t line_length = (size_t) (line->after_the_last_character - line->first_character);
+		if (fwrite(line->first_character, sizeof(line->first_character), line_length, stream) != line_length || fputc('\n', stream) == EOF) {
+			PRINT_MESSAGE_FOR_FILE(output_file_path, ERROR_WHILE_WRITING_MESSAGE);
+			return;
 		}
 	}
+	int closing_result = fclose(stream);
+	assert(closing_result == 0);
+	((void) closing_result);
 }
 
 static int qsort_comparator(const void* left_hand_side, const void* right_hand_side) {
@@ -79,7 +77,12 @@ static void process_file(const char* path) {
 		default: assert(0); UNREACHABLE;
 	}
 
-	TextLines lines;
+	FILE* stream = fopen("after_reading.txt", "wb");
+	assert(stream != NULL);
+	assert(fwrite(text.characters, sizeof(*text.characters), text.number_of_characters, stream) == text.number_of_characters);
+	fclose(stream);
+
+	TextLines lines = {NULL};
 	if (!text_select_lines(text, &lines)) {
 		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_ALLOCATE_MEMORY_MESSAGE);
 		free(text.characters);
@@ -87,12 +90,11 @@ static void process_file(const char* path) {
 	}
 
 	text_remove_empty_lines(&lines);
-	((void) qsort_comparator);
-/*
-	for (size_t i = 0; i < lines.number_of_lines; ++i) {
+
+	/*for (size_t i = 0; i < lines.number_of_lines; ++i) {
 		printf("%zu\n", (size_t) (lines.lines[i].after_the_last_character - lines.lines[i].first_character));
 	}*/
-/*
+
 	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), qsort_comparator);
 	const char* output_file_path = string_cat(path, ".qsorted");
 	if (output_file_path == NULL) {
@@ -102,9 +104,9 @@ static void process_file(const char* path) {
 	}
 	dump_lines(output_file_path, lines);
 	string_free((char*) output_file_path);
-*/
+
 	my_qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), myqsort_comparator);
-	const char* output_file_path = string_cat(path, ".my_qsorted");
+	output_file_path = string_cat(path, ".my_qsorted");
 	if (output_file_path == NULL) {
 		text_free_lines(&lines);
 		text_free(&text);
