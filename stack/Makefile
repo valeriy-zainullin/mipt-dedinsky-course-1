@@ -19,7 +19,7 @@ endif
 
 CFLAGS=-Wall -pedantic -Wextra -Wshadow -Werror -std=c99 -Iinclude
 CFLAGS_RELEASE=-O2
-CFLAGS_DEBUG=-g -O0 -DTEXT_DEBUG
+CFLAGS_DEBUG=-g -O0
 
 all: $(TARGETS)
 
@@ -27,7 +27,7 @@ clean:
 	rm -r build
 
 docs: | build
-	doxygen doxygen.config
+	# doxygen doxygen.config
 
 .PHONY: all clean docs
 
@@ -35,7 +35,7 @@ build/main: build/main.c.o build/stack.c.o | build
 	$(CC) -o $@ $^
 build/main_debug: build/main.c.debug.o build/stack.c.debug.o | build
 	$(CC) -o $@ $^
-build/main_asan: build/main.c.asan.o build/stack.c.asan | build
+build/main_asan: build/main.c.asan.o build/stack.c.asan.o | build
 	$(CC) -o $@ $^ -lasan
 build/main_ubsan: build/main.c.ubsan.o build/stack.c.ubsan.o | build
 	$(CC) -o $@ $^ -lubsan
