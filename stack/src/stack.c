@@ -24,7 +24,7 @@ typedef struct StackImpl StackImpl;
 
 static unsigned long long CANARY_VALUE = 0xCD07B10913AE98FALL;
 
-bool STACK_INIT_FUNCTION_NAME(Stack* stack_ptr) {
+bool STACK_INIT_FUNCTION_NAME(STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 
 	const size_t STACK_IMPL_INITIAL_SIZE = sizeof(StackImpl) + STACK_CANARY_SIZE;
@@ -39,7 +39,7 @@ bool STACK_INIT_FUNCTION_NAME(Stack* stack_ptr) {
 	STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
 }
 
-static bool stack_ensure_has_space_for_new_item(Stack* stack_ptr) {
+static bool stack_ensure_has_space_for_new_item(STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
 
@@ -62,7 +62,7 @@ static bool stack_ensure_has_space_for_new_item(Stack* stack_ptr) {
 	return true;
 }
 
-bool STACK_PUSH_FUNCTION_NAME(Stack* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item) {
+bool STACK_PUSH_FUNCTION_NAME(STACK_TYPE_NAME* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item) {
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
@@ -82,7 +82,7 @@ bool STACK_PUSH_FUNCTION_NAME(Stack* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item)
 	return true;
 }
 
-static void stack_shrink_if_needed(Stack* stack_ptr) {
+static void stack_shrink_if_needed(STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
@@ -96,7 +96,7 @@ static void stack_shrink_if_needed(Stack* stack_ptr) {
 	}
 }
 
-bool STACK_POP_FUNCTION_NAME(Stack* stack_ptr, STACK_ITEM_TYPE* item_ptr) {
+bool STACK_POP_FUNCTION_NAME(STACK_TYPE_NAME* stack_ptr, STACK_ITEM_TYPE* item_ptr) {
 	assert(stack_ptr != NULL);
 	assert(item_ptr != NULL);
 
