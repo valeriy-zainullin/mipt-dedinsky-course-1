@@ -1,6 +1,8 @@
 #define INCLUDED_FROM_STACK_IMPLEMENTATION
 #include "stack.h"
 
+#include "variable_location.h"
+
 #include <assert.h>
 #include <limits.h>
 #include <stddef.h>
@@ -18,6 +20,7 @@ struct StackImpl {
 	unsigned long long data_hash;
 	size_t size;
 	size_t capacity;
+	VariableLocation definition_location;
 	STACK_ITEM_TYPE data[1];
 	// data...
 	// const CANARY_TYPE canary;
@@ -28,7 +31,7 @@ typedef struct StackImpl StackImpl;
 
 // www.cse.yorku.ca/~oz/hash.html
 static unsigned long long hash(unsigned char* bytes, size_t length) {
-	unsigned long hash = 5381;
+	unsigned long long hash = 5381;
 	for (size_t i = 0; i < length; ++i) {
 		hash = ((hash << 5) + hash) + bytes[i];
 	}
@@ -78,6 +81,14 @@ static StackValidityInformation validate_stack(StackImpl* stack_impl_ptr) {
 	return validity_information;
 }
 
+#if defined(__GNUC__)
+#define UNREACHABLE __builtin_unreachable()
+#elif defined(_MSC_VER)
+#define UNREACHABLE __assume(0)
+#else
+#define UNREACHABLE
+#endif
+
 static void print_validity(ValidityFlag validity_flag) {
 	switch (validity_flag) {
 		case VALID: fprintf(stderr, "ok"); break;
@@ -87,43 +98,52 @@ static void print_validity(ValidityFlag validity_flag) {
 	}
 }
 
-#define MACRO_VALUE_TO_STRING(MACRO) #MACRO
-static void dump_stack(const char* source_file, size_t line, const char* function, const char* variable, ValidityInformaiton validity_information, StackImpl* stack_impl_ptr) {
-	fprintf(stderr, "stack<%s>[%p] \"%s\" from %s(%zu), %s:\n", MACRO_VALUE_TO_STRING(STACK_ITEM_TYPE), stack_impl_ptr, variable, source_file, line, function);
-	fprintf(stderr, "canary = %llu (", stack_impl_ptr->canary);
-	print_validity(validity_information->front_canary_validity);
-	fputs(stderr, ")\n");
+#define EXPANDED_MACRO_VALUE_TO_STRING(MACRO) #MACRO
+#define MACRO_VALUE_TO_STRING(MACRO) EXPANDED_MACRO_VALUE_TO_STRING(MACRO)
+static void dump_stack(VariableLocation variable_location, StackValidityInformation validity_information, StackImpl* stack_impl_ptr) {
+	fprintf(stderr, "stack<%s>[%p] \"%s\" from %s(%zu), %s (issued for line %zu of \"%s\", function \"%s\"):\n", MACRO_VALUE_TO_STRING(STACK_ITEM_TYPE), (void*) stack_impl_ptr, stack_impl_ptr->definition_location.variable, stack_impl_ptr->definition_location.source_file, stack_impl_ptr->definition_location.line, stack_impl_ptr->definition_location.function, variable_location.line, variable_location.source_file, variable_location.function);
+	fprintf(stderr, "canary = %llx (", stack_impl_ptr->canary);
+	print_validity(validity_information.front_canary_validity);
+	fputs(")\n", stderr);
 
-	fputs(stderr, "--- Struct hash validity: ");
-	print_validity(validity_information->struct_validity);
-	fputs(stderr, " ---\n");
+	fprintf(stderr, "struct hash = %llx\n", stack_impl_ptr->struct_hash);
+	fprintf(stderr, "data hash = %llx\n", stack_impl_ptr->data_hash);
+
+	fputs("--- Struct hash validity: ", stderr);
+	print_validity(validity_information.struct_validity);
+	fputs(" ---\n", stderr);
 
 	fprintf(stderr, "size = %zu (", stack_impl_ptr->size);
-	print_validity(validity_information->size_validity);
-	fprintf(stderr, ")\ncapacity = %zu ", stack_impl_ptr->capacity);
-	fputs(stderr, "------\n");
+	print_validity(validity_information.size_validity);
+	fprintf(stderr, ")\ncapacity = %zu\n", stack_impl_ptr->capacity);
+	fputs("------\n", stderr);
 
-	fprintf(stderr, "data[%p] (", stack_impl_ptr->data);
-	print_validity(validity_information->data_validity);
-	fputs(stderr, ") {\n");
+	fputs("--- Data hash validity: ", stderr);
+	print_validity(validity_information.data_validity);
+	fputs(" ---\n", stderr);
+	fprintf(stderr, "data[%p] {\n", (void*) stack_impl_ptr->data);
 
 	for (size_t i = 0; i < stack_impl_ptr->capacity; ++i) {
 		fprintf(stderr, "\t[%zu] = %d", i, stack_impl_ptr->data[i]);
 		if (stack_impl_ptr->data[i] == STACK_POISON) {
-			fputs(stderr, " (POISON)");
+			fputs(" (POISON)", stderr);
 		}
-		fputs(stderr, ",\n");
+		fputs(",\n", stderr);
 	}
-	fputs(stderr, "}\n");
+	fputs("}\n", stderr);
+	fputs("------\n", stderr);
+	fprintf(stderr, "canary = %llx (", STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr));
+	print_validity(validity_information.back_canary_validity);
+	fputs(").\n", stderr);
 }
 
-#define VALIDATE_STACK(SOURCE_FILE, LINE, FUNCTION, VARIABLE, STACK_IMPL_PTR) {       \
-		ValidityFlags validity_flags = validate_stack(STACK_IMPL_PTR);                    \
-		if (!all_validity_flags_are_set(validity_flags)) {                                \
-			dump_stack(SOURCE_FILE, LINE, FUNCTION, VARIABLE, STACK_IMPL_PTR);              \
-			fprintf(stderr, "Stack is not valid.\n");                                       \
-			exit(STACK_VERIFICATION_FAILED_EXIT_CODE);                                      \
-		}                                                                                 \
+#define VALIDATE_STACK(VARIABLE_INFORMATION, STACK_IMPL_PTR) {                            \
+		StackValidityInformation stack_validity_information = validate_stack(STACK_IMPL_PTR); \
+		if (!all_validity_flags_are_set(stack_validity_information)) {                        \
+			dump_stack(VARIABLE_INFORMATION, stack_validity_information, STACK_IMPL_PTR);       \
+			fprintf(stderr, "Stack is not valid.\n");                                           \
+			exit(STACK_VERIFICATION_FAILED_EXIT_CODE);                                          \
+		}                                                                                     \
 	}
 
 static void update_hashes(StackImpl* stack_impl_ptr) {
@@ -132,7 +152,7 @@ static void update_hashes(StackImpl* stack_impl_ptr) {
 	stack_impl_ptr->data_hash = calculate_data_hash(stack_impl_ptr);
 }
 
-bool STACK_INIT_FUNCTION_NAME(const char* source_file, size_t line, const char* function, const char* variable, STACK_TYPE_NAME* stack_ptr) {
+bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 
 	static const size_t STACK_IMPL_INITIAL_CAPACITY = 1; // Can't be zero, because we allocate space for 1 element in the structure itself.
@@ -151,22 +171,22 @@ bool STACK_INIT_FUNCTION_NAME(const char* source_file, size_t line, const char* 
 	* (CANARY_TYPE*) &STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
 	update_hashes(stack_impl_ptr);
 
-	stack_impl_ptr->variable_name = 
+	stack_impl_ptr->definition_location = definition_location;
 
 	return true;
 }
 
-void STACK_DEINIT_FUNCTION_NAME(const char* source_file, size_t line, const char* function, const char* variable, STACK_TYPE_NAME* stack_ptr) {
+void STACK_DEINIT_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
-	VALIDATE_STACK(stack_impl_ptr);
+	VALIDATE_STACK(variable_location, stack_impl_ptr);
 
 	free(*stack_ptr);
 	*stack_ptr = NULL;
 }
 
-static bool ensure_stack_has_space_for_new_item(const char* source_file, size_t line, const char* function, const char* variable, STACK_TYPE_NAME* stack_ptr) {
+static bool ensure_stack_has_space_for_new_item(STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
 
@@ -193,18 +213,18 @@ static bool ensure_stack_has_space_for_new_item(const char* source_file, size_t 
 	return true;
 }
 
-bool STACK_PUSH_FUNCTION_NAME(const char* source_file, size_t line, const char* function, const char* variable, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item) {
+bool STACK_PUSH_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item) {
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
-	VALIDATE_STACK(stack_impl_ptr);
+	VALIDATE_STACK(variable_location, stack_impl_ptr);
 
 	if (!ensure_stack_has_space_for_new_item(stack_ptr)) {
 		return false;
 	}
 	stack_impl_ptr = (StackImpl*) *stack_ptr;
 
-#if defined(STACK_ACCEPTS_ITEMS_BY_POINTERS)
+#if STACK_ACCEPTS_ITEMS_BY_POINTERS
 	stack_impl_ptr->data[stack_impl_ptr->size] = *item;
 #else
 	stack_impl_ptr->data[stack_impl_ptr->size] = item;
@@ -234,12 +254,12 @@ static void shrink_stack_if_needed(STACK_TYPE_NAME* stack_ptr) {
 	}
 }
 
-bool STACK_POP_FUNCTION_NAME(const char* source_file, size_t line, const char* function, const char* variable, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_TYPE* item_ptr) {
+bool STACK_POP_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_TYPE* item_ptr) {
 	assert(stack_ptr != NULL);
 	assert(item_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
-	VALIDATE_STACK(stack_impl_ptr);
+	VALIDATE_STACK(variable_location, stack_impl_ptr);
 	if (stack_impl_ptr->size == 0) {
 		return false;
 	}
