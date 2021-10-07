@@ -30,7 +30,7 @@ typedef struct StackImpl StackImpl;
 #define STACK_IMPL_CANARY_AT_THE_END(STACK_IMPL_PTR) (* (const CANARY_TYPE*) (STACK_IMPL_PTR->data + STACK_IMPL_PTR->capacity))
 
 // www.cse.yorku.ca/~oz/hash.html
-static unsigned long long hash(unsigned char* bytes, size_t length) {
+static unsigned long long hash(const unsigned char* bytes, size_t length) {
 	unsigned long long hash = 5381;
 	for (size_t i = 0; i < length; ++i) {
 		hash = ((hash << 5) + hash) + bytes[i];
@@ -38,12 +38,12 @@ static unsigned long long hash(unsigned char* bytes, size_t length) {
 	return hash;
 }
 
-static unsigned long long calculate_struct_hash(StackImpl* stack_impl_ptr) {
-	return hash((unsigned char*) &stack_impl_ptr->size, (size_t) ((char*) stack_impl_ptr->data - (char*) &stack_impl_ptr->size));
+static unsigned long long calculate_struct_hash(const StackImpl* stack_impl_ptr) {
+	return hash((const unsigned char*) &stack_impl_ptr->size, (size_t) ((char*) stack_impl_ptr->data - (char*) &stack_impl_ptr->size));
 }
 
-static unsigned long long calculate_data_hash(StackImpl* stack_impl_ptr) {
-	return hash((unsigned char*) stack_impl_ptr->data, stack_impl_ptr->capacity * sizeof(STACK_ITEM_TYPE));
+static unsigned long long calculate_data_hash(const StackImpl* stack_impl_ptr) {
+	return hash((const unsigned char*) stack_impl_ptr->data, stack_impl_ptr->capacity * sizeof(STACK_ITEM_TYPE));
 }
 
 enum ValidityFlags {
@@ -65,7 +65,7 @@ static bool all_validity_flags_are_set(StackValidityInformation validity_informa
 	return validity_information.front_canary_validity == VALID && validity_information.size_validity == VALID && validity_information.struct_validity == VALID && validity_information.data_validity == VALID && validity_information.back_canary_validity == VALID;
 }
 
-static StackValidityInformation validate_stack(StackImpl* stack_impl_ptr) {
+static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) {
 	StackValidityInformation validity_information;
 	validity_information.front_canary_validity = (ValidityFlag) (stack_impl_ptr->canary == CANARY_VALUE);
 	validity_information.size_validity = (ValidityFlag) (stack_impl_ptr->size <= stack_impl_ptr->capacity);
@@ -100,7 +100,7 @@ static void print_validity(ValidityFlag validity_flag) {
 
 #define EXPANDED_MACRO_VALUE_TO_STRING(MACRO) #MACRO
 #define MACRO_VALUE_TO_STRING(MACRO) EXPANDED_MACRO_VALUE_TO_STRING(MACRO)
-static void dump_stack(VariableLocation variable_location, StackValidityInformation validity_information, StackImpl* stack_impl_ptr) {
+static void dump_stack(VariableLocation variable_location, StackValidityInformation validity_information, const StackImpl* stack_impl_ptr) {
 	fprintf(stderr, "stack<%s>[%p] \"%s\" from %s(%zu), %s (issued for line %zu of \"%s\", function \"%s\"):\n", MACRO_VALUE_TO_STRING(STACK_ITEM_TYPE), (void*) stack_impl_ptr, stack_impl_ptr->definition_location.variable, stack_impl_ptr->definition_location.source_file, stack_impl_ptr->definition_location.line, stack_impl_ptr->definition_location.function, variable_location.line, variable_location.source_file, variable_location.function);
 	fprintf(stderr, "canary = %llx (", stack_impl_ptr->canary);
 	print_validity(validity_information.front_canary_validity);
@@ -137,14 +137,14 @@ static void dump_stack(VariableLocation variable_location, StackValidityInformat
 	fputs(").\n", stderr);
 }
 
-#define VALIDATE_STACK(VARIABLE_INFORMATION, STACK_IMPL_PTR) {                            \
-		StackValidityInformation stack_validity_information = validate_stack(STACK_IMPL_PTR); \
-		if (!all_validity_flags_are_set(stack_validity_information)) {                        \
-			dump_stack(VARIABLE_INFORMATION, stack_validity_information, STACK_IMPL_PTR);       \
-			fprintf(stderr, "Stack is not valid.\n");                                           \
-			exit(STACK_VERIFICATION_FAILED_EXIT_CODE);                                          \
-		}                                                                                     \
+static void ensure_stack_is_valid(VariableLocation variable_location, const StackImpl* stack_impl_ptr) {
+	StackValidityInformation stack_validity_information = validate_stack(stack_impl_ptr);
+	if (!all_validity_flags_are_set(stack_validity_information)) {
+		dump_stack(variable_location, stack_validity_information, stack_impl_ptr);
+		fprintf(stderr, "Stack is not valid.\n");
+		exit(STACK_VERIFICATION_FAILED_EXIT_CODE);
 	}
+}
 
 static void update_hashes(StackImpl* stack_impl_ptr) {
 	// Now we are using the fact that we are zeroing new items and the struct itself when initializing it as we are zeroing padding bytes as well.
@@ -169,9 +169,9 @@ bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_N
 	// Dropping constnesses and initializing canaries.
 	* (CANARY_TYPE*) &stack_impl_ptr->canary = CANARY_VALUE;
 	* (CANARY_TYPE*) &STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
-	update_hashes(stack_impl_ptr);
 
 	stack_impl_ptr->definition_location = definition_location;
+	update_hashes(stack_impl_ptr);
 
 	return true;
 }
@@ -180,7 +180,7 @@ void STACK_DEINIT_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_N
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
-	VALIDATE_STACK(variable_location, stack_impl_ptr);
+	ensure_stack_is_valid(variable_location, stack_impl_ptr);
 
 	free(*stack_ptr);
 	*stack_ptr = NULL;
@@ -217,7 +217,7 @@ bool STACK_PUSH_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAM
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
-	VALIDATE_STACK(variable_location, stack_impl_ptr);
+	ensure_stack_is_valid(variable_location, stack_impl_ptr);
 
 	if (!ensure_stack_has_space_for_new_item(stack_ptr)) {
 		return false;
@@ -259,7 +259,7 @@ bool STACK_POP_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME
 	assert(item_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
-	VALIDATE_STACK(variable_location, stack_impl_ptr);
+	ensure_stack_is_valid(variable_location, stack_impl_ptr);
 	if (stack_impl_ptr->size == 0) {
 		return false;
 	}
