@@ -124,6 +124,8 @@ static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) 
 	StackValidityInformation validity_information;
 #if STACK_CANARY_PROTECTION_ENABLED
 	validity_information.front_canary_validity = (ValidityFlag) (stack_impl_ptr->canary == CANARY_VALUE);
+	validity_information.data_validity = VALID;
+	validity_information.back_canary_validity = VALID;
 #endif
 	validity_information.size_validity = (ValidityFlag) (stack_impl_ptr->size <= stack_impl_ptr->capacity);
 #if STACK_STRUCT_HASH_PROTECTION_ENABLED
@@ -150,6 +152,8 @@ static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) 
 // TODO: struct hash protection is not enabled.
 	return validity_information;
 }
+StackValidityInformation (*VALIDATE_STACK_PTR)(const StackImpl* stack_impl_ptr) = &validate_stack;
+#define validate_stack (*VALIDATE_STACK_PTR) // To make the program more reliable.
 
 #if defined(__GNUC__)
 #define UNREACHABLE __builtin_unreachable()

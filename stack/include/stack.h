@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+// --- These lines are designed to be changes according to needs. ---
 #define STACK_CANARY_PROTECTION_ENABLED 1
 #define STACK_STRUCT_HASH_PROTECTION_ENABLED 1
 #define STACK_DATA_HASH_PROTECTION_ENABLED 1
@@ -30,6 +31,7 @@ static const STACK_ITEM_TYPE STACK_INT_POISON = -120304010;
 #define STACK_DEINIT_FUNCTION_NAME stack_int_do_deinit
 #define STACK_PUSH_FUNCTION_NAME stack_int_do_push
 #define STACK_POP_FUNCTION_NAME stack_int_do_pop
+// ------
 
 typedef void* STACK_TYPE_NAME; // Implicit cast to void* is allowed in this case.
 /*
