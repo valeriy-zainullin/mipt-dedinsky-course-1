@@ -34,12 +34,12 @@ struct StackImpl {
 #endif
 };
 typedef struct StackImpl StackImpl;
-static size_t stack_impl_size_for_capacity(size_t capacity) {
+static size_t calculate_stack_impl_size_for_capacity(size_t capacity) {
 	assert(capacity >= 1); // Zero capacity is forbidden. There is always memory for at least one element.
 #if STACK_CANARY_PROTECTION_ENABLED
-	return sizeof(StackImpl) + (CAPACITY - 1) * sizeof(STACK_ITEM_TYPE) + sizeof(CANARY_TYPE);
+	return sizeof(StackImpl) + (capacity - 1) * sizeof(STACK_ITEM_TYPE) + sizeof(CANARY_TYPE);
 #else
-	return sizeof(StackImpl) + (CAPACITY - 1) * sizeof(STACK_ITEM_TYPE);
+	return sizeof(StackImpl) + (capacity - 1) * sizeof(STACK_ITEM_TYPE);
 #endif
 }
 #define STACK_IMPL_CANARY_AT_THE_END(STACK_IMPL_PTR) (* (const CANARY_TYPE*) (STACK_IMPL_PTR->data + STACK_IMPL_PTR->capacity))
@@ -67,7 +67,7 @@ static unsigned long long calculate_data_hash(const StackImpl* stack_impl_ptr) {
 }
 #endif
 
-#if STACK_STRUCT_HASH_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED
+#if STACK_ANY_HASH_PROTECTION_ENABLED
 static void update_hashes(StackImpl* stack_impl_ptr) {
 	// Now we are using the fact that we are zeroing new items and the struct itself when initializing it as we are zeroing padding bytes as well.
 #if STACK_STRUCT_HASH_PROTECTION_ENABLED
@@ -97,7 +97,7 @@ struct StackValidityInformation {
 #if STACK_DATA_HASH_PROTECTION_ENABLED
 	ValidityFlag data_validity; // hash of data corresponds to the hash of the data at the moment
 #endif
-#if STACK_CANARY_PROTECTION_ENABLED;
+#if STACK_CANARY_PROTECTION_ENABLED
 	ValidityFlag back_canary_validity;
 #endif
 };
@@ -128,7 +128,8 @@ static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) 
 	validity_information.size_validity = (ValidityFlag) (stack_impl_ptr->size <= stack_impl_ptr->capacity);
 #if STACK_STRUCT_HASH_PROTECTION_ENABLED
 	validity_information.struct_validity = (ValidityFlag) (stack_impl_ptr->struct_hash == calculate_struct_hash(stack_impl_ptr));
-#if STACK_CANARY_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED
+#endif
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED && (STACK_CANARY_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED)
 	if (validity_information.struct_validity) {
 		// We skip checking of data and back canary if struct is not valid as we can segfault while doing so.
 #if STACK_DATA_HASH_PROTECTION_ENABLED
@@ -146,6 +147,7 @@ static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) 
 #endif
 	}
 #endif
+// TODO: struct hash protection is not enabled.
 	return validity_information;
 }
 
@@ -217,6 +219,9 @@ static void dump_stack(VariableLocation variable_location, StackValidityInformat
 #endif
 #if STACK_CANARY_PROTECTION_ENABLED
 	fprintf(stderr, "canary = %llx (", STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr));
+	if (validity_information.back_canary_validity == NOT_CHECKED) {
+		validity_information.back_canary_validity = STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE;
+	}
 	print_validity(validity_information.back_canary_validity);
 	fputs(")\n", stderr);
 #endif
@@ -236,7 +241,7 @@ bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_N
 	assert(stack_ptr != NULL);
 
 	static const size_t STACK_IMPL_INITIAL_CAPACITY = 1; // Can't be zero, because we allocate space for 1 element in the structure itself.
-	const size_t STACK_IMPL_INITIAL_SIZE = STACK_IMPL_SIZE_FOR_CAPACITY(STACK_IMPL_INITIAL_CAPACITY);
+	const size_t STACK_IMPL_INITIAL_SIZE = calculate_stack_impl_size_for_capacity(STACK_IMPL_INITIAL_CAPACITY);
 	*stack_ptr = malloc(STACK_IMPL_INITIAL_SIZE);
 	if (*stack_ptr == NULL) {
 		return false;
@@ -251,6 +256,9 @@ bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_N
 	* (CANARY_TYPE*) &STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
 
 	stack_impl_ptr->definition_location = definition_location;
+	for (size_t i = 0; i < stack_impl_ptr->capacity; ++i) {
+		stack_impl_ptr->data[i] = STACK_POISON;
+	}
 #if STACK_ANY_HASH_PROTECTION_ENABLED
 	update_hashes(stack_impl_ptr);
 #endif
@@ -273,24 +281,26 @@ static bool ensure_stack_has_space_for_new_item(STACK_TYPE_NAME* stack_ptr) {
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
 
 	if (stack_impl_ptr->size + 1 <= stack_impl_ptr->capacity) {
-		return false;
+		return true;
 	}
 
 	size_t new_capacity = stack_impl_ptr->capacity * 2;
 
-	void* new_stack_ptr = realloc(*stack_ptr, STACK_IMPL_SIZE_FOR_CAPACITY(new_capacity));
+	void* new_stack_ptr = realloc(*stack_ptr, calculate_stack_impl_size_for_capacity(new_capacity));
 	if (new_stack_ptr == NULL) {
 		return false;
 	}
 	*stack_ptr = new_stack_ptr;
 	stack_impl_ptr = (StackImpl*) *stack_ptr;
 
-	// Zeroing new items as we will be referencing them for hashing and dumping.
+	// Filling new items with poison as we will be referencing them for hashing and dumping.
 	// Otherwise we don't know the value stored there. And C standard says it is undefined behaviour to read uninitialized data.
-	memset(stack_impl_ptr->data + stack_impl_ptr->capacity, 0, (new_capacity - stack_impl_ptr->capacity) * sizeof(STACK_ITEM_TYPE));
+	for (size_t i = stack_impl_ptr->capacity; i < new_capacity; ++i) {
+		stack_impl_ptr->data[i] = STACK_POISON;
+	}
 
 	stack_impl_ptr->capacity = new_capacity;
-	* (CANARY_TYPE*) STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
+	* (CANARY_TYPE*) &STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
 
 	return true;
 }
@@ -306,6 +316,12 @@ bool STACK_PUSH_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAM
 	}
 	stack_impl_ptr = (StackImpl*) *stack_ptr;
 
+	if (stack_impl_ptr->data[stack_impl_ptr->size] != STACK_POISON) {
+		StackValidityInformation stack_validity_information = validate_stack(stack_impl_ptr);
+		dump_stack(variable_location, stack_validity_information, stack_impl_ptr);
+		printf("Tried to insert to position %zu, but that position is not poisoned.\n", stack_impl_ptr->size);
+		exit(STACK_VERIFICATION_FAILED_EXIT_CODE);
+	}
 #if STACK_ACCEPTS_ITEMS_BY_POINTERS
 	stack_impl_ptr->data[stack_impl_ptr->size] = *item;
 #else
@@ -329,12 +345,16 @@ static void shrink_stack_if_needed(STACK_TYPE_NAME* stack_ptr) {
 			// We can't have capacity be less than 1, as one element is allocated in the structure itself.
 			new_capacity = 1;
 		}
-		void* new_stack_ptr = realloc(*stack_ptr, STACK_IMPL_SIZE_FOR_CAPACITY(new_capacity));
+		void* new_stack_ptr = realloc(*stack_ptr, calculate_stack_impl_size_for_capacity(new_capacity));
 		if (new_stack_ptr == NULL) {
 			// Failed to shrink.
 			return;
 		}
 		*stack_ptr = new_stack_ptr;
+		stack_impl_ptr = *stack_ptr;
+
+		stack_impl_ptr->capacity = new_capacity;
+		* (CANARY_TYPE*) &STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
 	}
 }
 
