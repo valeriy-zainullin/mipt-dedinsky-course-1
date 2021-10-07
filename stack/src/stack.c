@@ -15,20 +15,36 @@
 static unsigned long long CANARY_VALUE = 0xCD07B10913AE98FALL;
 
 struct StackImpl {
+#if STACK_CANARY_PROTECTION_ENABLED
 	const CANARY_TYPE canary;
+#endif
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
 	unsigned long long struct_hash;
+#endif
+#if STACK_DATA_HASH_PROTECTION_ENABLED
 	unsigned long long data_hash;
+#endif
 	size_t size;
 	size_t capacity;
 	VariableLocation definition_location;
 	STACK_ITEM_TYPE data[1];
 	// data...
+#if STACK_CANARY_PROTECTION_ENABLED
 	// const CANARY_TYPE canary;
+#endif
 };
 typedef struct StackImpl StackImpl;
-#define STACK_IMPL_SIZE_FOR_CAPACITY(CAPACITY) (sizeof(StackImpl) + (CAPACITY - 1) * sizeof(STACK_ITEM_TYPE) + sizeof(CANARY_TYPE))
+static size_t stack_impl_size_for_capacity(size_t capacity) {
+	assert(capacity >= 1); // Zero capacity is forbidden. There is always memory for at least one element.
+#if STACK_CANARY_PROTECTION_ENABLED
+	return sizeof(StackImpl) + (CAPACITY - 1) * sizeof(STACK_ITEM_TYPE) + sizeof(CANARY_TYPE);
+#else
+	return sizeof(StackImpl) + (CAPACITY - 1) * sizeof(STACK_ITEM_TYPE);
+#endif
+}
 #define STACK_IMPL_CANARY_AT_THE_END(STACK_IMPL_PTR) (* (const CANARY_TYPE*) (STACK_IMPL_PTR->data + STACK_IMPL_PTR->capacity))
 
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED
 // www.cse.yorku.ca/~oz/hash.html
 static unsigned long long hash(const unsigned char* bytes, size_t length) {
 	unsigned long long hash = 5381;
@@ -37,14 +53,31 @@ static unsigned long long hash(const unsigned char* bytes, size_t length) {
 	}
 	return hash;
 }
+#endif
 
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
 static unsigned long long calculate_struct_hash(const StackImpl* stack_impl_ptr) {
 	return hash((const unsigned char*) &stack_impl_ptr->size, (size_t) ((char*) stack_impl_ptr->data - (char*) &stack_impl_ptr->size));
 }
+#endif
 
+#if STACK_DATA_HASH_PROTECTION_ENABLED
 static unsigned long long calculate_data_hash(const StackImpl* stack_impl_ptr) {
 	return hash((const unsigned char*) stack_impl_ptr->data, stack_impl_ptr->capacity * sizeof(STACK_ITEM_TYPE));
 }
+#endif
+
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED
+static void update_hashes(StackImpl* stack_impl_ptr) {
+	// Now we are using the fact that we are zeroing new items and the struct itself when initializing it as we are zeroing padding bytes as well.
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
+	stack_impl_ptr->struct_hash = calculate_struct_hash(stack_impl_ptr);
+#endif
+#if STACK_DATA_HASH_PROTECTION_ENABLED
+	stack_impl_ptr->data_hash = calculate_data_hash(stack_impl_ptr);
+#endif
+}
+#endif
 
 enum ValidityFlags {
 	NOT_VALID = 0,
@@ -54,30 +87,65 @@ enum ValidityFlags {
 typedef enum ValidityFlags ValidityFlag;
 
 struct StackValidityInformation {
+#if STACK_CANARY_PROTECTION_ENABLED
 	ValidityFlag front_canary_validity;
+#endif
 	ValidityFlag size_validity; // size <= capacity
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
 	ValidityFlag struct_validity; // hash of struct corresponds to the hash of the struct at the momenct
+#endif
+#if STACK_DATA_HASH_PROTECTION_ENABLED
 	ValidityFlag data_validity; // hash of data corresponds to the hash of the data at the moment
+#endif
+#if STACK_CANARY_PROTECTION_ENABLED;
 	ValidityFlag back_canary_validity;
+#endif
 };
 typedef struct StackValidityInformation StackValidityInformation;
 static bool all_validity_flags_are_set(StackValidityInformation validity_information) {
-	return validity_information.front_canary_validity == VALID && validity_information.size_validity == VALID && validity_information.struct_validity == VALID && validity_information.data_validity == VALID && validity_information.back_canary_validity == VALID;
+	return
+#if STACK_CANARY_PROTECTION_ENABLED
+		validity_information.front_canary_validity == VALID &&
+#endif
+		validity_information.size_validity == VALID &&
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
+		validity_information.struct_validity == VALID &&
+#endif
+#if STACK_DATA_HASH_PROTECTION_ENABLED
+		validity_information.data_validity == VALID &&
+#endif
+#if STACK_CANARY_PROTECTION_ENABLED
+		validity_information.back_canary_validity == VALID &&
+#endif
+		true;
 }
 
 static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) {
 	StackValidityInformation validity_information;
+#if STACK_CANARY_PROTECTION_ENABLED
 	validity_information.front_canary_validity = (ValidityFlag) (stack_impl_ptr->canary == CANARY_VALUE);
+#endif
 	validity_information.size_validity = (ValidityFlag) (stack_impl_ptr->size <= stack_impl_ptr->capacity);
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
 	validity_information.struct_validity = (ValidityFlag) (stack_impl_ptr->struct_hash == calculate_struct_hash(stack_impl_ptr));
+#if STACK_CANARY_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED
 	if (validity_information.struct_validity) {
-		// We skip checking of data if struct is not valid as we can segfault while doing so.
+		// We skip checking of data and back canary if struct is not valid as we can segfault while doing so.
+#if STACK_DATA_HASH_PROTECTION_ENABLED
 		validity_information.data_validity = (ValidityFlag) (stack_impl_ptr->data_hash == calculate_data_hash(stack_impl_ptr));
+#endif
+#if STACK_CANARY_PROTECTION_ENABLED
 		validity_information.back_canary_validity = STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE;
+#endif
 	} else {
+#if STACK_DATA_HASH_PROTECTION_ENABLED
 		validity_information.data_validity = NOT_CHECKED;
+#endif
+#if STACK_CANARY_PROTECTION_ENABLED
 		validity_information.back_canary_validity = NOT_CHECKED;
+#endif
 	}
+#endif
 	return validity_information;
 }
 
@@ -102,25 +170,38 @@ static void print_validity(ValidityFlag validity_flag) {
 #define MACRO_VALUE_TO_STRING(MACRO) EXPANDED_MACRO_VALUE_TO_STRING(MACRO)
 static void dump_stack(VariableLocation variable_location, StackValidityInformation validity_information, const StackImpl* stack_impl_ptr) {
 	fprintf(stderr, "stack<%s>[%p] \"%s\" from %s(%zu), %s (issued for line %zu of \"%s\", function \"%s\"):\n", MACRO_VALUE_TO_STRING(STACK_ITEM_TYPE), (void*) stack_impl_ptr, stack_impl_ptr->definition_location.variable, stack_impl_ptr->definition_location.source_file, stack_impl_ptr->definition_location.line, stack_impl_ptr->definition_location.function, variable_location.line, variable_location.source_file, variable_location.function);
+#if STACK_CANARY_PROTECTION_ENABLED
 	fprintf(stderr, "canary = %llx (", stack_impl_ptr->canary);
 	print_validity(validity_information.front_canary_validity);
 	fputs(")\n", stderr);
+#endif
 
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
 	fprintf(stderr, "struct hash = %llx\n", stack_impl_ptr->struct_hash);
+#endif
+#if STACK_DATA_HASH_PROTECTION_ENABLED
 	fprintf(stderr, "data hash = %llx\n", stack_impl_ptr->data_hash);
+#endif
 
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
 	fputs("--- Struct hash validity: ", stderr);
 	print_validity(validity_information.struct_validity);
 	fputs(" ---\n", stderr);
+#endif
 
 	fprintf(stderr, "size = %zu (", stack_impl_ptr->size);
 	print_validity(validity_information.size_validity);
 	fprintf(stderr, ")\ncapacity = %zu\n", stack_impl_ptr->capacity);
+	// Variable location.
+#if STACK_STRUCT_HASH_PROTECTION_ENABLED
 	fputs("------\n", stderr);
+#endif
 
+#if STACK_DATA_HASH_PROTECTION_ENABLED
 	fputs("--- Data hash validity: ", stderr);
 	print_validity(validity_information.data_validity);
 	fputs(" ---\n", stderr);
+#endif
 	fprintf(stderr, "data[%p] {\n", (void*) stack_impl_ptr->data);
 
 	for (size_t i = 0; i < stack_impl_ptr->capacity; ++i) {
@@ -131,10 +212,15 @@ static void dump_stack(VariableLocation variable_location, StackValidityInformat
 		fputs(",\n", stderr);
 	}
 	fputs("}\n", stderr);
+#if STACK_DATA_HASH_PROTECTION_ENABLED
 	fputs("------\n", stderr);
+#endif
+#if STACK_CANARY_PROTECTION_ENABLED
 	fprintf(stderr, "canary = %llx (", STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr));
 	print_validity(validity_information.back_canary_validity);
-	fputs(").\n", stderr);
+	fputs(")\n", stderr);
+#endif
+	fputs("}\n", stderr);
 }
 
 static void ensure_stack_is_valid(VariableLocation variable_location, const StackImpl* stack_impl_ptr) {
@@ -144,12 +230,6 @@ static void ensure_stack_is_valid(VariableLocation variable_location, const Stac
 		fprintf(stderr, "Stack is not valid.\n");
 		exit(STACK_VERIFICATION_FAILED_EXIT_CODE);
 	}
-}
-
-static void update_hashes(StackImpl* stack_impl_ptr) {
-	// Now we are using the fact that we are zeroing new items and the struct itself when initializing it as we are zeroing padding bytes as well.
-	stack_impl_ptr->struct_hash = calculate_struct_hash(stack_impl_ptr);
-	stack_impl_ptr->data_hash = calculate_data_hash(stack_impl_ptr);
 }
 
 bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_NAME* stack_ptr) {
@@ -171,7 +251,9 @@ bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_N
 	* (CANARY_TYPE*) &STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
 
 	stack_impl_ptr->definition_location = definition_location;
+#if STACK_ANY_HASH_PROTECTION_ENABLED
 	update_hashes(stack_impl_ptr);
+#endif
 
 	return true;
 }
@@ -230,7 +312,9 @@ bool STACK_PUSH_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAM
 	stack_impl_ptr->data[stack_impl_ptr->size] = item;
 #endif
 	stack_impl_ptr->size += 1;
+#if STACK_ANY_HASH_PROTECTION_ENABLED
 	update_hashes(stack_impl_ptr);
+#endif
 
 	return true;
 }
@@ -265,11 +349,14 @@ bool STACK_POP_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME
 	}
 	*item_ptr = stack_impl_ptr->data[stack_impl_ptr->size - 1];
 	stack_impl_ptr->size -= 1;
+	stack_impl_ptr->data[stack_impl_ptr->size] = STACK_POISON;
 
 	shrink_stack_if_needed(stack_ptr);
 	stack_impl_ptr = (StackImpl*) *stack_ptr;
 
+#if STACK_ANY_HASH_PROTECTION_ENABLED
 	update_hashes(stack_impl_ptr);
+#endif
 
 	return true;
 }
