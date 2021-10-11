@@ -122,15 +122,19 @@ static bool all_validity_flags_are_set(StackValidityInformation validity_informa
 
 static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) {
 	StackValidityInformation validity_information;
+
 #if STACK_CANARY_PROTECTION_ENABLED
 	validity_information.front_canary_validity = (ValidityFlag) (stack_impl_ptr->canary == CANARY_VALUE);
 	validity_information.data_validity = VALID;
 	validity_information.back_canary_validity = VALID;
 #endif
+
 	validity_information.size_validity = (ValidityFlag) (stack_impl_ptr->size <= stack_impl_ptr->capacity);
+
 #if STACK_STRUCT_HASH_PROTECTION_ENABLED
 	validity_information.struct_validity = (ValidityFlag) (stack_impl_ptr->struct_hash == calculate_struct_hash(stack_impl_ptr));
 #endif
+
 #if STACK_STRUCT_HASH_PROTECTION_ENABLED && (STACK_CANARY_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED)
 	if (validity_information.struct_validity) {
 		// We skip checking of data and back canary if struct is not valid as we can segfault while doing so.
@@ -138,7 +142,7 @@ static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) 
 		validity_information.data_validity = (ValidityFlag) (stack_impl_ptr->data_hash == calculate_data_hash(stack_impl_ptr));
 #endif
 #if STACK_CANARY_PROTECTION_ENABLED
-		validity_information.back_canary_validity = STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE;
+		validity_information.back_canary_validity = (ValidityFlag) (STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE);
 #endif
 	} else {
 #if STACK_DATA_HASH_PROTECTION_ENABLED
@@ -149,6 +153,7 @@ static StackValidityInformation validate_stack(const StackImpl* stack_impl_ptr) 
 #endif
 	}
 #endif
+
 // TODO: struct hash protection is not enabled.
 	return validity_information;
 }
@@ -224,7 +229,7 @@ static void dump_stack(VariableLocation variable_location, StackValidityInformat
 #if STACK_CANARY_PROTECTION_ENABLED
 	fprintf(stderr, "canary = %llx (", STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr));
 	if (validity_information.back_canary_validity == NOT_CHECKED) {
-		validity_information.back_canary_validity = STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE;
+		validity_information.back_canary_validity = (ValidityFlag) (STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE);
 	}
 	print_validity(validity_information.back_canary_validity);
 	fputs(")\n", stderr);
@@ -355,7 +360,7 @@ static void shrink_stack_if_needed(STACK_TYPE_NAME* stack_ptr) {
 			return;
 		}
 		*stack_ptr = new_stack_ptr;
-		stack_impl_ptr = *stack_ptr;
+		stack_impl_ptr = (StackImpl*) *stack_ptr;
 
 		stack_impl_ptr->capacity = new_capacity;
 		* (CANARY_TYPE*) &STACK_IMPL_CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
