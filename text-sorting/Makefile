@@ -43,7 +43,7 @@ build/main_lsan: build/main.c.lsan.o build/text.c.lsan.o build/string_utils.c.ls
 	$(CC) -o $@ $^ -llsan
 
 build/%.c.o: src/%.c | build build/deps
-	$(CC) -c $(CFLAGS) $(CLAGS_RELEASE) -o $@ -MD -MF build/deps/$(notdir $@).mk $<
+	$(CC) -c $(CFLAGS) $(CFLAGS_RELEASE) -o $@ -MD -MF build/deps/$(notdir $@).mk $<
 build/%.c.debug.o: src/%.c | build build/deps
 	$(CC) -c $(CFLAGS) $(CFLAGS_DEBUG) -o $@ -MD -MF build/deps/$(notdir $@).mk $<
 build/%.c.asan.o: src/%.c | build build/deps

@@ -27,14 +27,11 @@ static size_t my_qsort_partition(char* items, size_t length, size_t item_size, i
 	while (left < right) {
 		while (left < right && compare(items + left * item_size, items + pivot_item_index * item_size) <= 0) {
 			left += 1;
-			fprintf(stderr, "left = %zu.\n", left);
 		}
 		while (left < right && compare(items + right * item_size, items + pivot_item_index * item_size) >= 0) {
 			right -= 1;
-			fprintf(stderr, "right = %zu.\n", right);
 		}
 		if (left < right) {
-			fprintf(stderr, "Swapping %zu and %zu.\n", left, right);
 			my_qsort_swap_bytes(items + left * item_size, items + right * item_size, item_size);
 			left += 1;
 			right -= 1;
@@ -46,8 +43,6 @@ static size_t my_qsort_partition(char* items, size_t length, size_t item_size, i
 
 // To not cast items to char* every time we need to do pointer arithmetics with it.
 static void my_qsort_impl(char* items, size_t length, size_t item_size, int(*compare)(const void*, const void*)) {
-	printf("items = %p, length = %zu, item_size = %zu.\n", items, length, item_size);
-	fflush(stdout);
 	if (length <= 1) {
 		return;
 	} else if (length == 2) {
@@ -58,8 +53,6 @@ static void my_qsort_impl(char* items, size_t length, size_t item_size, int(*com
 	}
 	size_t pivot_item_index = length / 2;
 	pivot_item_index = my_qsort_partition(items, length, item_size, compare, pivot_item_index);
-	printf("pivot_item_index = %zu.\n", pivot_item_index);
-	fflush(stdout);
 	my_qsort_impl(items, pivot_item_index, item_size, compare);
 	my_qsort_impl(items + (pivot_item_index + 1) * item_size, length - pivot_item_index - 1, item_size, compare);
 }

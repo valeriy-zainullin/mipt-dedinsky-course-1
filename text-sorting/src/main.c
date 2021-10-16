@@ -40,7 +40,7 @@ static void dump_lines(const char* output_file_path, TextLines lines) {
 	for (size_t line_index = 0; line_index < lines.number_of_lines; ++line_index) {
 		TextLine* line = lines.lines + line_index;
 		size_t line_length = (size_t) (line->after_the_last_character - line->first_character);
-		if (fwrite(line->first_character, sizeof(line->first_character), line_length, stream) != line_length || fputc('\n', stream) == EOF) {
+		if (fwrite(line->first_character, sizeof(*line->first_character), line_length, stream) != line_length || fputc('\n', stream) == EOF) {
 			PRINT_MESSAGE_FOR_FILE(output_file_path, ERROR_WHILE_WRITING_MESSAGE);
 			return;
 		}
@@ -90,10 +90,6 @@ static void process_file(const char* path) {
 	}
 
 	text_remove_empty_lines(&lines);
-
-	/*for (size_t i = 0; i < lines.number_of_lines; ++i) {
-		printf("%zu\n", (size_t) (lines.lines[i].after_the_last_character - lines.lines[i].first_character));
-	}*/
 
 	qsort(lines.lines, lines.number_of_lines, sizeof(TextLine), qsort_comparator);
 	const char* output_file_path = string_cat(path, ".qsorted");
