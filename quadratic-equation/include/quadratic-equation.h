@@ -3,7 +3,7 @@
 #include <inttypes.h>
 
 #if defined(QUADRATIC_EQUATION_IMPL)
-static const double COMPARISON_EPS = 1e-5L;
+/*static*/ const double COMPARISON_EPS = 1e-5L;
 #endif
 
 void process_output(int8_t number_of_roots, double* roots);

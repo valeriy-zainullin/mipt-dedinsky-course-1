@@ -50,9 +50,9 @@ int8_t solve_quadratic(
 }
 
 void solve(double parameter_a, double parameter_b, double parameter_c) {
-	int8_t number_of_roots;
+	int8_t number_of_roots = 0;
 	double roots[2] = {0, 0};
-	if (parameter_a == 0) {
+	if (are_equal(parameter_a, 0)) {
 		number_of_roots = solve_linear(parameter_b, parameter_c, roots);
 	} else {
 		number_of_roots =

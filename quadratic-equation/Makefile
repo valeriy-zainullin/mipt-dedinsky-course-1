@@ -6,10 +6,10 @@ clean:
 .PHONY: all clean
 
 bin/main: bin/main.o bin/quadratic-equation.o | bin
-	gcc -o $@ $^ -lm
+	g++ -o $@ $^ -lm
 
-bin/%.o: src/%.c | bin bin/deps
-	gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -O2 -std=c99 -o $@ -Iinclude -MD -MF bin/deps/$(notdir $@).mk $<
+bin/%.o: src/%.cpp | bin bin/deps
+	g++ -c -Wall -pedantic -Wextra -Wshadow -Werror -O2 -std=c++11 -o $@ -Iinclude -MD -MF bin/deps/$(notdir $@).mk $<
 
 bin:
 	mkdir bin

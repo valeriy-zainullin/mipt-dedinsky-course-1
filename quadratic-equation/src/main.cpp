@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static void print_usage(const char* program_name) {
@@ -17,17 +18,13 @@ static void print_usage(const char* program_name) {
 }
 
 static bool parse_double(const char* string, double* result_ptr) {
-	if (!isdigit(string[0]) && string[0] != '-' && string[0] != '+') {
-		return false;
-	}
-
-	char after_double = 0;
-	int scanf_return_value = sscanf(string, "%lf%c", result_ptr, &after_double);
-	return scanf_return_value == 1;
+	char* end_ptr;
+	*result_ptr = strtod(string, &end_ptr);
+	return end_ptr == string + strlen(string);
 }
 
 void process_output(int8_t number_of_roots, double* roots) {
-	switch(number_of_roots) {
+	switch (number_of_roots) {
 		case -1: printf("ANY_NUMBER\n"); break;
 		case 0: printf("NO ROOTS\n"); break;
 		case 1: printf("%f\n", roots[0]); break;
