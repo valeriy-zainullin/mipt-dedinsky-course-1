@@ -3,33 +3,34 @@ CXX=g++
 TARGETS=as
 
 EXECUTABLES=as
-SOURCES=src/assembler.cpp
+SOURCES=src/assembler_cli.cpp
 
-as_OBJECTS=assembler.cpp.obj
+as_OBJECTS=assembler_cli.cpp.obj
+as_LIBS=../text-sorting/build/text.a
 
 ifneq ($(NO_DOCS),1)
 #TARGETS += docs
 endif
 
-CFLAGS=-Wall -pedantic -Wextra -Wshadow -Werror -std=c99 -Iinclude
-CFLAGS_RELEASE=-O2
-CFLAGS_DEBUG=-g -O0
+CFLAGS=-Wall -pedantic -Wextra -Wshadow -Werror -std=c99 -Iinclude -I../text-sorting/include -DCLI_SUPPORTS_STDIN=0
+CFLAGS_RELEASE=-O2 -DVM_DEBUG=0
+CFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
 
-CXXFLAGS=-Wall -pedantic -Wextra -Wshadow -Werror -std=c++11 -Iinclude
-CXXFLAGS_RELEASE=-O2
-CXXFLAGS_DEBUG=-g -O0
+CXXFLAGS=-Wall -pedantic -Wextra -Wshadow -Werror -std=c++11 -Iinclude -I../text-sorting/include -DCLI_SUPPORTS_STDIN=0
+CXXFLAGS_RELEASE=-O2 -DVM_DEBUG=0
+CXXFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
 
 define EXECUTABLE_RULE =
 build/release/$(1): $$(addprefix build/obj/release/, $$($(1)_OBJECTS)) | build/release
-	$(CXX) -o $$@ $$^
+	$(CXX) -o $$@ $$^ $$($(1)_LIBS)
 build/debug/$(1): $$(addprefix build/obj/debug/, $$($(1)_OBJECTS)) | build/debug
-	$(CXX) -o $$@ $$^
+	$(CXX) -o $$@ $$^ $$($(1)_LIBS)
 build/asan/$(1): $$(addprefix build/obj/asan/, $$($(1)_OBJECTS)) | build/asan
-	$(CXX) -o $$@ $$^ -lasan
+	$(CXX) -o $$@ $$^ -lasan $$($(1)_LIBS)
 build/ubsan/$(1): $$(addprefix build/obj/ubsan/, $$($(1)_OBJECTS)) | build/ubsan
-	$(CXX) -o $$@ $$^ -lubsan
+	$(CXX) -o $$@ $$^ -lubsan $$($(1)_LIBS)
 build/lsan/$(1): $$(addprefix build/obj/lsan/, $$($(1)_OBJECTS)) | build/lsan
-	#$(CXX) -o $$@ $$^ -llsan
+	#$(CXX) -o $$@ $$^ -llsan $$($(1)_LIBS)
 endef
 
 define SOURCE_RULE =
