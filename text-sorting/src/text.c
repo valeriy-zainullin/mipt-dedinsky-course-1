@@ -152,6 +152,14 @@ void text_free_lines(TextLines* lines_ptr) {
 #endif
 }
 
+void text_terminate_lines(Text text) {
+	for (size_t i = 0; i < text.number_of_characters; ++i) {
+		if (text.characters[i] == '\n') {
+			text.characters[i] = 0;
+		}
+	}
+}
+
 void text_remove_empty_lines(TextLines* lines_ptr) {
 	TextLine* item_to_be_replaced = lines_ptr->lines;
 	TextLine* iterator = lines_ptr->lines;

@@ -53,6 +53,7 @@ struct TextLines {
 typedef struct TextLines TextLines;
 size_t text_count_lines(Text text);
 bool text_select_lines(Text text, TextLines* lines_ptr);
+void text_terminate_lines(Text text);
 void text_free_lines(TextLines* lines_ptr);
 void text_remove_empty_lines(TextLines* lines_ptr);
 

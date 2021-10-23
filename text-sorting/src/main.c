@@ -77,11 +77,6 @@ static void process_file(const char* path) {
 		default: assert(0); UNREACHABLE;
 	}
 
-	FILE* stream = fopen("after_reading.txt", "wb");
-	assert(stream != NULL);
-	assert(fwrite(text.characters, sizeof(*text.characters), text.number_of_characters, stream) == text.number_of_characters);
-	fclose(stream);
-
 	TextLines lines = {NULL};
 	if (!text_select_lines(text, &lines)) {
 		PRINT_MESSAGE_FOR_FILE(path, FAILED_TO_ALLOCATE_MEMORY_MESSAGE);
