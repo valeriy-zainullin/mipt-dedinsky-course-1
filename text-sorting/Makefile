@@ -1,7 +1,7 @@
 CC=gcc
 CXX=g++
 AR=ar
-TARGETS=build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan build/text.a
+TARGETS=build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan build/libtext.a
 
 ifeq ($(TARGET),MINGW64_X32)
 CC=i686-w64-mingw32-gcc
@@ -43,7 +43,7 @@ build/main_ubsan: build/main.c.ubsan.o build/text.c.ubsan.o build/string_utils.c
 build/main_lsan: build/main.c.lsan.o build/text.c.lsan.o build/string_utils.c.lsan.o build/my_qsort.c.lsan.o | build
 	#$(CC) -o $@ $^ -llsan
 
-build/text.a: build/text.c.o | build
+build/libtext.a: build/text.c.o | build
 	$(AR) -r $@ $^
 
 build/%.c.o: src/%.c | build build/deps

@@ -3,6 +3,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 enum TextStatus {
 	TEXT_SUCCESS,
 	TEXT_FAILED_TO_OPEN_THE_FILE,
@@ -26,19 +30,16 @@ struct ConstText {
 };
 typedef struct ConstText ConstText;
 
-typedef unsigned char* TextIterator;
-typedef const unsigned char* ConstTextIterator;
-
 struct TextSubstring {
-	TextIterator first_character;
-	TextIterator after_the_last_character;
+	unsigned char* first_character;
+	unsigned char* after_the_last_character;
 };
 typedef struct TextSubstring TextSubstring;
 typedef TextSubstring TextLine;
 
 struct ConstTextSubstring {
-	ConstTextIterator first_character;
-	ConstTextIterator after_the_last_character;
+	const unsigned char* first_character;
+	const unsigned char* after_the_last_character;
 };
 typedef struct ConstTextSubstring ConstTextSubstring;
 /* inline static ConstTextSubstring const_text_make_substring(TextSubstring substring) {
@@ -63,3 +64,6 @@ int text_compare_reversed_substrings(TextSubstring left_hand_side, TextSubstring
 int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side);
 int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side);
 
+#if defined(__cplusplus)
+}
+#endif

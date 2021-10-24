@@ -24,9 +24,9 @@ static bool get_file_size(FILE* stream, size_t* size) {
 }
 
 static void text_delete_carriage_returns(Text* text_ptr) {
-	TextIterator character_to_be_replaced = text_ptr->characters;
-	TextIterator iterator = text_ptr->characters;
-	TextIterator after_the_last = text_ptr->characters + text_ptr->number_of_characters;
+	unsigned char* character_to_be_replaced = text_ptr->characters;
+	unsigned char* iterator = text_ptr->characters;
+	unsigned char* after_the_last = text_ptr->characters + text_ptr->number_of_characters;
 	for (; iterator != after_the_last; ++iterator) {
 		if (*iterator == '\r') {
 			text_ptr->number_of_characters -= 1;
@@ -277,8 +277,8 @@ int const_text_compare_substrings(ConstTextSubstring left_hand_side, ConstTextSu
 
 int const_text_compare_reversed_substrings(ConstTextSubstring left_hand_side, ConstTextSubstring right_hand_side) {
 	while (!TEXT_SUBSTR_IS_EMPTY(left_hand_side) && !TEXT_SUBSTR_IS_EMPTY(right_hand_side)) {
-		ConstTextIterator left_hand_side_last_character = text_find_utf8_character_beginning(left_hand_side.after_the_last_character - 1, left_hand_side.first_character);
-		ConstTextIterator right_hand_side_last_character = text_find_utf8_character_beginning(right_hand_side.after_the_last_character - 1, right_hand_side.first_character);
+		const unsigned char* left_hand_side_last_character = text_find_utf8_character_beginning(left_hand_side.after_the_last_character - 1, left_hand_side.first_character);
+		const unsigned char* right_hand_side_last_character = text_find_utf8_character_beginning(right_hand_side.after_the_last_character - 1, right_hand_side.first_character);
 		if (left_hand_side_last_character == NULL || right_hand_side_last_character == NULL) {
 			// We are skipping invalid UTF-8 byte sequences. NULL is returned if it turned out that no valid UTF-8 characters are left.
 			return (int) ((left_hand_side_last_character == NULL) - (right_hand_side_last_character == NULL));
