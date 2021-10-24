@@ -1,0 +1,11 @@
+#pragma once
+
+#if !defined(COMMAND_ARG_TYPES)
+#define COMMAND_ARG_TYPES
+
+#define COMMAND_ARG_NOT_PRESENT 0
+#define COMMAND_ARG_USES_MEMORY (1)
+#define COMMAND_ARG_USES_REGISTER (1 << 1)
+#define COMMAND_ARG_USES_IMMEDIATE_CONST (1 << 2)
+
+#endif
