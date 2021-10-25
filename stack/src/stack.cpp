@@ -155,44 +155,44 @@ static bool is_fully_valid(ValidityInfo validity) {
 static ValidityInfo validate_stack(const StackImpl* stack_impl_ptr) {
 	ValidityInfo validity;
 
-#if STACK_CANARY_PROTECTION_ENABLED
-	validity.front_canary_validity = (ValidityFlag) (stack_impl_ptr->canary == CANARY_VALUE);
-	validity.data_validity = VALID;
-	validity.back_canary_validity = VALID;
-#endif
+	#if STACK_CANARY_PROTECTION_ENABLED
+		validity.front_canary_validity = (ValidityFlag) (stack_impl_ptr->canary == CANARY_VALUE);
+		validity.data_validity = VALID;
+		validity.back_canary_validity = VALID;
+	#endif
 
 	validity.size_validity = (ValidityFlag) (stack_impl_ptr->size <= stack_impl_ptr->capacity);
 
-#if STACK_STRUCT_HASH_PROTECTION_ENABLED
-	validity.struct_validity = (ValidityFlag) (stack_impl_ptr->struct_hash == calculate_struct_hash(stack_impl_ptr));
-#endif
+	#if STACK_STRUCT_HASH_PROTECTION_ENABLED
+		validity.struct_validity = (ValidityFlag) (stack_impl_ptr->struct_hash == calculate_struct_hash(stack_impl_ptr));
+	#endif
 
-#if STACK_STRUCT_HASH_PROTECTION_ENABLED && (STACK_CANARY_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED)
+	#if STACK_STRUCT_HASH_PROTECTION_ENABLED && (STACK_CANARY_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED)
 
-	// We skip checking of data and back canary if struct is not valid as we can segfault while doing so.
-	if (validity.struct_validity) {
+		// We skip checking of data and back canary if struct is not valid as we can segfault while doing so.
+		if (validity.struct_validity) {
 
-		#if STACK_DATA_HASH_PROTECTION_ENABLED
-				validity.data_validity = (ValidityFlag) (stack_impl_ptr->data_hash == calculate_data_hash(stack_impl_ptr));
-		#endif
+			#if STACK_DATA_HASH_PROTECTION_ENABLED
+					validity.data_validity = (ValidityFlag) (stack_impl_ptr->data_hash == calculate_data_hash(stack_impl_ptr));
+			#endif
 
-		#if STACK_CANARY_PROTECTION_ENABLED
-				validity.back_canary_validity = (ValidityFlag) (CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE);
-		#endif
+			#if STACK_CANARY_PROTECTION_ENABLED
+					validity.back_canary_validity = (ValidityFlag) (CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE);
+			#endif
 
-	} else {
+		} else {
 
-		#if STACK_DATA_HASH_PROTECTION_ENABLED
-				validity.data_validity = NOT_CHECKED;
-		#endif
+			#if STACK_DATA_HASH_PROTECTION_ENABLED
+					validity.data_validity = NOT_CHECKED;
+			#endif
 
-		#if STACK_CANARY_PROTECTION_ENABLED
-				validity.back_canary_validity = NOT_CHECKED;
-		#endif
-	}
-#endif
+			#if STACK_CANARY_PROTECTION_ENABLED
+					validity.back_canary_validity = NOT_CHECKED;
+			#endif
+		}
+	#endif
 
-// TODO: struct hash protection is not enabled.
+	// TODO: struct hash protection is not enabled.
 	return validity;
 }
 ValidityInfo (*VALIDATE_STACK_PTR)(const StackImpl* stack_impl_ptr) = &validate_stack;
@@ -265,10 +265,10 @@ static void dump_stack(Variable variable,
 		fputs(" ---\n", stderr);
 	#endif
 
-		fprintf(stderr, "size = %zu (", stack_impl_ptr->size);
-		print_validity(validity.size_validity);
-		fprintf(stderr, ")\ncapacity = %zu\n", stack_impl_ptr->capacity);
-		// Variable location.
+	fprintf(stderr, "size = %zu (", stack_impl_ptr->size);
+	print_validity(validity.size_validity);
+	fprintf(stderr, ")\ncapacity = %zu\n", stack_impl_ptr->capacity);
+	// Variable location.
 
 	#if STACK_STRUCT_HASH_PROTECTION_ENABLED
 		fputs("------\n", stderr);

@@ -45,7 +45,7 @@ const size_t VM_ASSEMBLY_MAX_INSTRUCTION_LENGTH = 8;
 const size_t VM_ASSEMBLY_MAX_COMMAND_LENGTH = MAX_COMMAND_LENGTH_MACRO;
 
 #define WRITE(VARIABLE) \
-	if (fwrite(&VARIABLE, 1, sizeof(VARIABLE), output_stream) < 1) { \
+	if (fwrite(&VARIABLE, sizeof(VARIABLE), 1, output_stream) < 1) { \
 		status->error = VM_ASSEMBLY_ERROR_WHILE_WRITING; \
 		return; \
 	} \
