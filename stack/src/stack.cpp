@@ -63,7 +63,7 @@ struct StackImpl {
 	size_t size;
 	size_t capacity;
 
-	VariableLocation definition_location;
+	Variable definition;
 
 	STACK_ITEM_TYPE data[1];// []
 
@@ -185,6 +185,7 @@ static ValidityInfo validate_stack(const StackImpl* stack_impl_ptr) {
 		#if STACK_DATA_HASH_PROTECTION_ENABLED
 				validity.data_validity = NOT_CHECKED;
 		#endif
+
 		#if STACK_CANARY_PROTECTION_ENABLED
 				validity.back_canary_validity = NOT_CHECKED;
 		#endif
@@ -217,17 +218,32 @@ static void print_validity(ValidityFlag validity_flag) {
 	}
 }
 
-#define EXPANDED_MACRO_VALUE_TO_STRING(MACRO) #MACRO
-#define MACRO_VALUE_TO_STRING(MACRO) EXPANDED_MACRO_VALUE_TO_STRING(MACRO)
-static void dump_stack(VariableLocation variable_location,
+#define MACRO_TO_STR2(MACRO) #MACRO
+#define MACRO_TO_STR(MACRO) MACRO_TO_STR2(MACRO)
+
+static void dump_stack(Variable variable,
 					   ValidityInfo validity,
 					   const StackImpl* stack_impl_ptr) {
+	fprintf(
+		stderr,
+		"stack<%s>[%p] \"%s\" from %s(%zu), %s ",
+		
+		MACRO_TO_STR(STACK_ITEM_TYPE),
+		(void*) stack_impl_ptr,
+		stack_impl_ptr->definition.name,
+		stack_impl_ptr->definition.file,
+		stack_impl_ptr->definition.line,
+		stack_impl_ptr->definition.function
+	);
 
-	fprintf(stderr, "stack<%s>[%p] \"%s\" from %s(%zu), %s (issued for line %zu of \"%s\", function \"%s\"):\n", 
-			MACRO_VALUE_TO_STRING(STACK_ITEM_TYPE), (void*) stack_impl_ptr, 
-			stack_impl_ptr->definition_location.variable, stack_impl_ptr->definition_location.source_file, 
-			stack_impl_ptr->definition_location.line, stack_impl_ptr->definition_location.function, 
-			variable_location.line, variable_location.source_file, variable_location.function);
+	fprintf(
+		stderr,
+		"(issued for line %zu of \"%s\", function \"%s\"):\n",
+
+		variable.line,
+		variable.file,
+		variable.function
+	);
 
 	#if STACK_CANARY_PROTECTION_ENABLED
 		fprintf(stderr, "canary = %llx (", stack_impl_ptr->canary);
@@ -255,7 +271,6 @@ static void dump_stack(VariableLocation variable_location,
 		// Variable location.
 
 	#if STACK_STRUCT_HASH_PROTECTION_ENABLED
-
 		fputs("------\n", stderr);
 	#endif
 
@@ -298,20 +313,20 @@ static void dump_stack(VariableLocation variable_location,
 	fputs("}\n", stderr);
 }
 
-#define VALIDATE_STACK() {                                       \
+#define VALIDATE_STACK(RETURN_VALUE_ON_ERROR) {                  \
                                                                  \
 	ValidityInfo validity = validate_stack(stack_impl_ptr);      \
                                                                  \
 	if (!is_fully_valid(validity)) {                             \
                                                                  \
-		dump_stack(variable_location, validity, stack_impl_ptr); \
+		dump_stack(variable, validity, stack_impl_ptr);          \
 		fprintf(stderr, "Stack is not valid.\n");                \
                                                                  \
-		return false;                                            \
+		return RETURN_VALUE_ON_ERROR;                            \
 	}                                                            \
 }
 
-bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_NAME* stack_ptr) {
+bool STACK_INIT_FUNCTION_NAME(Variable definition, STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 
 	static const size_t INITIAL_CAPACITY = 1; // Can't be zero, because we allocate space for 1 element in the structure itself.
@@ -330,7 +345,7 @@ bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_N
 	* (CANARY_TYPE*) &stack_impl_ptr->canary = CANARY_VALUE;
 	* (CANARY_TYPE*) &CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
 
-	stack_impl_ptr->definition_location = definition_location;
+	stack_impl_ptr->definition = definition;
 
 	for (size_t i = 0; i < stack_impl_ptr->capacity; ++i) {
 		stack_impl_ptr->data[i] = STACK_POISON;
@@ -342,7 +357,7 @@ bool STACK_INIT_FUNCTION_NAME(VariableLocation definition_location, STACK_TYPE_N
 	return true;
 }
 
-void STACK_DEINIT_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr) {
+void STACK_DEINIT_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
@@ -384,12 +399,12 @@ static bool ensure_space(STACK_TYPE_NAME* stack_ptr) {
 	return true;
 }
 
-bool STACK_PUSH_FUNCTION_NAME(VariableLocation variable_location, 
+bool STACK_PUSH_FUNCTION_NAME(Variable variable, 
 							  STACK_TYPE_NAME* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item) {
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
-	VALIDATE_STACK();
+	VALIDATE_STACK(false);
 
 	if (!ensure_space(stack_ptr)) {
 		return false;
@@ -400,21 +415,24 @@ bool STACK_PUSH_FUNCTION_NAME(VariableLocation variable_location,
 
 		ValidityInfo stack_validity = validate_stack(stack_impl_ptr);
 
-		dump_stack(variable_location, stack_validity, stack_impl_ptr);
+		dump_stack(variable, stack_validity, stack_impl_ptr);
+	
 		fprintf(stderr, "Tried to insert to position %zu, but that position is not poisoned.\n", stack_impl_ptr->size);
 		
 		return false;
 	}
 
-#if STACK_ACCEPTS_ITEMS_BY_POINTERS
-	stack_impl_ptr->data[stack_impl_ptr->size] = *item;
-#else
-	stack_impl_ptr->data[stack_impl_ptr->size] = item;
-#endif
+	#if STACK_ACCEPTS_ITEMS_BY_POINTERS
+		stack_impl_ptr->data[stack_impl_ptr->size] = *item;
+	#else
+		stack_impl_ptr->data[stack_impl_ptr->size] = item;
+	#endif
+	
 	stack_impl_ptr->size += 1;
-#if STACK_ANY_HASH_PROTECTION_ENABLED
-	update_hashes(stack_impl_ptr);
-#endif
+
+	#if STACK_ANY_HASH_PROTECTION_ENABLED
+		update_hashes(stack_impl_ptr);
+	#endif
 
 	return true;
 }
@@ -423,17 +441,21 @@ static void free_unused_space(STACK_TYPE_NAME* stack_ptr) {
 	assert(stack_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
+
 	if (stack_impl_ptr->size <= stack_impl_ptr->capacity / 4) {
+
 		size_t new_capacity = stack_impl_ptr->capacity / 4;
 		if (new_capacity < 1) {
 			// We can't have capacity be less than 1, as one element is allocated in the structure itself.
 			new_capacity = 1;
 		}
+
 		void* new_stack_ptr = realloc(*stack_ptr, get_block_size(new_capacity));
 		if (new_stack_ptr == NULL) {
 			// Failed to shrink.
 			return;
 		}
+
 		*stack_ptr = new_stack_ptr;
 		stack_impl_ptr = (StackImpl*) *stack_ptr;
 
@@ -442,15 +464,17 @@ static void free_unused_space(STACK_TYPE_NAME* stack_ptr) {
 	}
 }
 
-bool STACK_POP_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_TYPE* item_ptr) {
+bool STACK_POP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_TYPE* item_ptr) {
 	assert(stack_ptr != NULL);
 	assert(item_ptr != NULL);
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
-	VALIDATE_STACK();
+	VALIDATE_STACK(false);
+
 	if (stack_impl_ptr->size == 0) {
 		return false;
 	}
+
 	*item_ptr = stack_impl_ptr->data[stack_impl_ptr->size - 1];
 	stack_impl_ptr->size -= 1;
 	stack_impl_ptr->data[stack_impl_ptr->size] = STACK_POISON;
@@ -458,9 +482,9 @@ bool STACK_POP_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME
 	free_unused_space(stack_ptr);
 	stack_impl_ptr = (StackImpl*) *stack_ptr;
 
-#if STACK_ANY_HASH_PROTECTION_ENABLED
-	update_hashes(stack_impl_ptr);
-#endif
+	#if STACK_ANY_HASH_PROTECTION_ENABLED
+		update_hashes(stack_impl_ptr);
+	#endif
 
 	return true;
 }

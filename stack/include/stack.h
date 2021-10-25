@@ -42,10 +42,10 @@ typedef STACK_TYPE_NAME##_STRUCT* STACK_TYPE_NAME;
 // ------
 
 // Function definitions.
-bool STACK_INIT_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr);
-void STACK_DEINIT_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr);
-bool STACK_PUSH_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item);
-bool STACK_POP_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_TYPE* item_ptr);
+bool STACK_INIT_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);
+void STACK_DEINIT_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);
+bool STACK_PUSH_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item);
+bool STACK_POP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_TYPE* item_ptr);
 
 #if !defined(INCLUDED_FROM_STACK_IMPLEMENTATION)
 // Interfacing macros.

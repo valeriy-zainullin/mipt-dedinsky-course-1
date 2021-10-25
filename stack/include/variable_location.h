@@ -2,20 +2,20 @@
 
 #include <stddef.h>
 
-struct VariableLocation {
-	const char* source_file;
+struct Variable {
+	const char* file;
 	size_t line;
 	const char* function;
-	const char* variable;
+	const char* name;
 };
-typedef struct VariableLocation VariableLocation;
+typedef struct Variable Variable;
 
 #if defined(__GNUC__)
 #define MAY_BE_UNUSED __attribute__((unused))
 #endif
 
-MAY_BE_UNUSED static VariableLocation make_variable_location(const char* source_file, size_t line, const char* function, const char* variable) {
-	VariableLocation variable_location = {source_file, line, function, variable};
+MAY_BE_UNUSED static Variable make_variable_location(const char* source_file, size_t line, const char* function, const char* variable) {
+	Variable variable_location = {source_file, line, function, variable};
 	return variable_location;
 }
 
