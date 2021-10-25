@@ -78,16 +78,16 @@ static void assemble_operation(
 	
 	assert(command_number < (1 << 5));
 
-	unsigned char operation = (arg_type << 5) | command_number;
+	uint8_t operation = (arg_type << 5) | command_number;
 
 	WRITE(operation);
 
 	if ((arg_type & COMMAND_ARG_USES_REGISTER) != 0) {
-		int8_t register_index = register_name[0] - '0';
+		int8_t register_index = register_name[0] - 'a';
 		WRITE(register_index);
 	}
 
-	if ((arg_type & COMMAND_ARG_USES_IMMEDIATE_CONST)) {
+	if ((arg_type & COMMAND_ARG_USES_IMMEDIATE_CONST) != 0) {
 		if (immediate_const_is_label) {
 			uint32_t addr = 0;
 			WRITE(addr);
@@ -116,7 +116,9 @@ static bool process_operation(
 
 	char command[VM_ASSEMBLY_MAX_COMMAND_LENGTH + 1];
 
-	int num_read = sscanf((char*) line, COMMAND_NAME_SCANF_FORMAT, command);
+	int arg_start = 0;
+
+	int num_read = sscanf((char*) line, COMMAND_NAME_SCANF_FORMAT "%n", command, &arg_start);
 	if (num_read < 1) {
 		return false;
 	}
@@ -132,7 +134,7 @@ static bool process_operation(
 	#define TRY_READ_ARG(FORMAT, ARG_TYPE, IMMEDIATE_CONST_IS_LABEL, ...) \
 		if (!read) { \
 			int num_characters_read = 0; \
-			num_read = sscanf((char*) line, FORMAT "%n", __VA_ARGS__, &num_characters_read); \
+			num_read = sscanf((char*) line + arg_start, FORMAT "%n", __VA_ARGS__, &num_characters_read); \
 			if (num_characters_read != 0) { \
 				arg_type = ARG_TYPE; \
 \
@@ -144,21 +146,25 @@ static bool process_operation(
 			} \
 		}
 
-	TRY_READ_ARG("[%1[a-c]x+%10" SCNd32 "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, register_name, &immediate_const);
-	TRY_READ_ARG("[%10" SCNd32 "+%1[a-c]x]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, &immediate_const, register_name);
-	TRY_READ_ARG("[%10" SCNd32 "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_IMMEDIATE_CONST, true, &immediate_const);
-	TRY_READ_ARG("[%1[a-c]x]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER, true, register_name);
-	TRY_READ_ARG("%1[a-c]x+%10" SCNd32, COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, register_name, &immediate_const);
-	TRY_READ_ARG("%10" SCNd32 "+%1[a-c]x", COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, &immediate_const, register_name);
-	TRY_READ_ARG("%10" SCNd32, COMMAND_ARG_USES_IMMEDIATE_CONST, true, &immediate_const);
-	TRY_READ_ARG("%1[a-c]x", COMMAND_ARG_USES_REGISTER, true, register_name);
+	TRY_READ_ARG("[%1[a-c]x+%10" SCNd32 "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, false, register_name, &immediate_const);
+	TRY_READ_ARG("[%10" SCNd32 "+%1[a-c]x]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, false, &immediate_const, register_name);
+	TRY_READ_ARG("[%10" SCNd32 "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_IMMEDIATE_CONST, false, &immediate_const);
+	TRY_READ_ARG("[%1[a-c]x]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER, false, register_name);
+	TRY_READ_ARG("%1[a-c]x+%10" SCNd32, COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, false, register_name, &immediate_const);
+	TRY_READ_ARG("%10" SCNd32 "+%1[a-c]x", COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, false, &immediate_const, register_name);
+	TRY_READ_ARG("%10" SCNd32, COMMAND_ARG_USES_IMMEDIATE_CONST, false, &immediate_const);
+	TRY_READ_ARG(" %1[a-c]x", COMMAND_ARG_USES_REGISTER, false, register_name);
 
 	TRY_READ_ARG("[%1[a-c]x+" LABEL_NAME_SCANF_FORMAT "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, register_name, label);
 	TRY_READ_ARG("[" LABEL_NAME_SCANF_FORMAT "+%1[a-c]x]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, label, register_name);
 	TRY_READ_ARG("[" LABEL_NAME_SCANF_FORMAT "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_IMMEDIATE_CONST, true, label);
-	TRY_READ_ARG("%1[a-c]x+" LABEL_NAME_SCANF_FORMAT, COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, register_name, label);
+	TRY_READ_ARG(" %1[a-c]x+" LABEL_NAME_SCANF_FORMAT, COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, register_name, label);
 	TRY_READ_ARG(LABEL_NAME_SCANF_FORMAT "+%1[a-c]x", COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, label, register_name);
 	TRY_READ_ARG(LABEL_NAME_SCANF_FORMAT, COMMAND_ARG_USES_IMMEDIATE_CONST, true, label);
+
+	if (!read) {
+		return false;		
+	}
 
 	#define COMMAND(NAME, NUMBER, ALLOWED_ARG_TYPES)                    \
 		if (strcmp(command, #NAME) == 0) {                              \

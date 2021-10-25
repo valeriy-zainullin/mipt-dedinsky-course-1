@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 	}
 
 	TextLines lines;
-	/*status = */ if (text_select_lines(text, &lines))//;
+	/*status = */ if (!text_select_lines(text, &lines))//;
 	//if (status != TEXT_SUCCESS) {
 	{
 		//cli_print_text_status(input_file, status);
@@ -50,5 +50,5 @@ int main(int argc, char** argv) {
 	text_free(&text);
 
 	// return (int) CLI_EXIT_CODE_SUCCESS;
-	return 5;
+	return 0;
 }

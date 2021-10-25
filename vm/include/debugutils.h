@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#if VM_DEBUG && !defined(DNDEBUG)
+#if VM_DEBUG && defined(NDEBUG)
 #error "Asserts are not checked when debug is enabled."
 #endif
 

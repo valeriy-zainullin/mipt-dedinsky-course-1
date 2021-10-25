@@ -6,7 +6,7 @@ EXECUTABLES=as
 SOURCES=src/assembler/assembler_cli.cpp src/assembler/assembler.cpp
 
 as_OBJECTS=src/assembler/assembler_cli.cpp.obj src/assembler/assembler.cpp.obj
-as_LIBS=../text-sorting/build/text.a
+as_LIBS=../text-sorting/build/libtext.a
 
 ifneq ($(NO_DOCS),1)
 #TARGETS += docs
@@ -21,16 +21,16 @@ CXXFLAGS_RELEASE=-O2 -DVM_DEBUG=0
 CXXFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
 
 define EXECUTABLE_RULE =
-build/release/$(1): $$(addprefix build/obj/release/, $$($(1)_OBJECTS)) | build/release
-	$(CXX) -o $$@ $$^ $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(notdir $$(removeprefix lib, $$($(1)_LIBS))))
+build/release/$(1): $$(addprefix build/obj/release/, $$($(1)_OBJECTS)) $$($(1)_LIBS) | build/release
+	$(CXX) -o $$@ $$(addprefix build/obj/release/, $$($(1)_OBJECTS)) $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(patsubst lib%.a, %, $$(notdir $$($(1)_LIBS))))
 build/debug/$(1): $$(addprefix build/obj/debug/, $$($(1)_OBJECTS)) | build/debug
-	$(CXX) -o $$@ $$^ $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(notdir $$(removeprefix lib, $$($(1)_LIBS))))
+	$(CXX) -o $$@ $$(addprefix build/obj/debug/, $$($(1)_OBJECTS)) $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(patsubst lib%.a, %, $$(notdir $$($(1)_LIBS))))
 build/asan/$(1): $$(addprefix build/obj/asan/, $$($(1)_OBJECTS)) | build/asan
-	$(CXX) -o $$@ $$^ -lasan $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(notdir $$(removeprefix lib, $$($(1)_LIBS))))
+	$(CXX) -o $$@ $$(addprefix build/obj/asan/, $$($(1)_OBJECTS)) -lasan $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(patsubst lib%.a, %, $$(notdir $$($(1)_LIBS))))
 build/ubsan/$(1): $$(addprefix build/obj/ubsan/, $$($(1)_OBJECTS)) | build/ubsan
-	$(CXX) -o $$@ $$^ -lubsan $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(notdir $$(removeprefix lib, $$($(1)_LIBS))))
+	$(CXX) -o $$@ $$(addprefix build/obj/ubsan/, $$($(1)_OBJECTS)) -lubsan $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(patsubst lib%.a, %, $$(notdir $$($(1)_LIBS))))
 build/lsan/$(1): $$(addprefix build/obj/lsan/, $$($(1)_OBJECTS)) | build/lsan
-	#$(CXX) -o $$@ $$^ -llsan $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(notdir $$(removeprefix lib, $$($(1)_LIBS))))
+	#$(CXX) -o $$@ $$(addprefix build/obj/lsan/, $$($(1)_OBJECTS)) -llsan $$(addprefix -L, $$(dir $$($(1)_LIBS))) $$(addprefix -l, $$(patsubst lib%.a, %, $$(notdir $$($(1)_LIBS))))
 endef
 
 define SOURCE_RULE =
@@ -73,4 +73,4 @@ build/release build/debug build/asan build/ubsan build/lsan build/obj: | build
 build/obj/release build/obj/debug build/obj/asan build/obj/ubsan build/obj/lsan: | build/obj
 	mkdir $@
 
-include $(wildcard build/obj/*/*.d)
+include $(wildcard $(patsubst %, build/obj/*/%.d, $(SOURCES)))
