@@ -9,41 +9,6 @@
 #include <inttypes.h>
 #include <ctype.h>
 
-#define MAX_COMMAND_LENGTH_MACRO 10
-#define LABEL_NAME_MAX_LENGTH_MACRO 256
-
-static const size_t VM_ASSEMBLY_MAX_NUMBER_OF_LABELS = 1024;
-static const size_t VM_ASSEMBLY_MAX_LABEL_LENGTH = LABEL_NAME_MAX_LENGTH_MACRO;
-
-struct AssemblyLabel {
-	bool defined;
-	char name[VM_ASSEMBLY_MAX_LABEL_LENGTH + 1];
-	size_t addr = 0;
-};
-
-struct Assembler {
-
-	AssemblyLabel labels[VM_ASSEMBLY_MAX_NUMBER_OF_LABELS];
-	size_t num_labels;
-
-	size_t line;
-
-	size_t ip;
-
-	AssemblyError error;
-
-};
-
-const size_t VM_ASSEMBLY_MAX_INSTRUCTION_LENGTH = 8;
-
-#define EXPAND2(MACRO) #MACRO
-#define EXPAND(MACRO) EXPAND2(MACRO)
-
-#define COMMAND_NAME_SCANF_FORMAT "%" EXPAND(MAX_COMMAND_LENGTH_MACRO) "s"
-#define LABEL_NAME_SCANF_FORMAT "%" EXPAND(LABEL_NAME_MAX_LENGTH_MACRO) "[a-zA-Z0-9_]"
-
-const size_t VM_ASSEMBLY_MAX_COMMAND_LENGTH = MAX_COMMAND_LENGTH_MACRO;
-
 #define WRITE(VARIABLE) \
 	if (fwrite(&VARIABLE, sizeof(VARIABLE), 1, output_stream) < 1) { \
 		status->error = VM_ASSEMBLY_ERROR_WHILE_WRITING; \
@@ -131,36 +96,6 @@ static bool process_operation(
 	char label[VM_ASSEMBLY_MAX_LABEL_LENGTH + 1] = {};
 
 	bool read = false;
-	#define TRY_READ_ARG(FORMAT, ARG_TYPE, IMMEDIATE_CONST_IS_LABEL, ...) \
-		if (!read) { \
-			int num_characters_read = 0; \
-			num_read = sscanf((char*) line + arg_start, FORMAT "%n", __VA_ARGS__, &num_characters_read); \
-			if (num_characters_read != 0) { \
-				arg_type = ARG_TYPE; \
-\
-				if (IMMEDIATE_CONST_IS_LABEL) { \
-					immediate_const_is_label = true; \
-				} \
-\
-				read = true; \
-			} \
-		}
-
-	TRY_READ_ARG("[%1[a-c]x+%10" SCNd32 "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, false, register_name, &immediate_const);
-	TRY_READ_ARG("[%10" SCNd32 "+%1[a-c]x]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, false, &immediate_const, register_name);
-	TRY_READ_ARG("[%10" SCNd32 "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_IMMEDIATE_CONST, false, &immediate_const);
-	TRY_READ_ARG("[%1[a-c]x]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER, false, register_name);
-	TRY_READ_ARG("%1[a-c]x+%10" SCNd32, COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, false, register_name, &immediate_const);
-	TRY_READ_ARG("%10" SCNd32 "+%1[a-c]x", COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, false, &immediate_const, register_name);
-	TRY_READ_ARG("%10" SCNd32, COMMAND_ARG_USES_IMMEDIATE_CONST, false, &immediate_const);
-	TRY_READ_ARG(" %1[a-c]x", COMMAND_ARG_USES_REGISTER, false, register_name);
-
-	TRY_READ_ARG("[%1[a-c]x+" LABEL_NAME_SCANF_FORMAT "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, register_name, label);
-	TRY_READ_ARG("[" LABEL_NAME_SCANF_FORMAT "+%1[a-c]x]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, label, register_name);
-	TRY_READ_ARG("[" LABEL_NAME_SCANF_FORMAT "]", COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_IMMEDIATE_CONST, true, label);
-	TRY_READ_ARG(" %1[a-c]x+" LABEL_NAME_SCANF_FORMAT, COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, register_name, label);
-	TRY_READ_ARG(LABEL_NAME_SCANF_FORMAT "+%1[a-c]x", COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST, true, label, register_name);
-	TRY_READ_ARG(LABEL_NAME_SCANF_FORMAT, COMMAND_ARG_USES_IMMEDIATE_CONST, true, label);
 
 	if (!read) {
 		return false;		

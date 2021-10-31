@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-enum AssemblyError {
+enum VmAssemblyError {
 	VM_ASSEMBLY_SUCCESS = 0,
 	VM_ASSEMBLY_ERROR_EMPTY_LABEL,
 	VM_ASSEMBLY_ERROR_EMPTY_PROGRAM,
@@ -17,9 +17,22 @@ enum AssemblyError {
 	VM_ASSEMBLY_ERROR_WHILE_WRITING
 };
 
-struct AssemblyStatus {
+struct VmAssemblyStatus {
 	size_t line;
 	AssemblyError error;
+};
+
+struct VmAssembler {
+
+	VmAssemblyLabel labels[VM_ASSEMBLY_MAX_NUMBER_OF_LABELS];
+	size_t num_labels;
+
+	size_t line;
+
+	size_t ip;
+
+	AssemblyError error;
+
 };
 
 AssemblyStatus vm_assemble(TextLines* lines, FILE* output_stream);

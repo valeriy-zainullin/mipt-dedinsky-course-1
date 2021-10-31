@@ -2,7 +2,7 @@ bool vm_assembler_is_label_decl(unsigned char* string, size_t length) {
 	return length >= 1 && string[length - 1] == ':';
 }
 
-bool vm_assembler_process_label(Assembler* assembler, unsigned char* line, size_t length, FILE* output_stream) {
+bool vm_read_label(Assembler* assembler, unsigned char* line, size_t length, FILE* output_stream) {
 	while (length >= 1 && is_space(*iterator)) {
 		++iterator;
 		--length;
