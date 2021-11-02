@@ -1,3 +1,4 @@
+#define VM_ASSEMBLER_IMPL
 #include "assembler.h"
 
 #include "arch/arg_types.h"
@@ -9,24 +10,18 @@
 #include <inttypes.h>
 #include <ctype.h>
 
-#define WRITE(VARIABLE) \
-	if (fwrite(&VARIABLE, sizeof(VARIABLE), 1, output_stream) < 1) { \
-		status->error = VM_ASSEMBLY_ERROR_WHILE_WRITING; \
-		return; \
-	} \
-	*ip += sizeof(VARIABLE);
+static bool assemble_operation(
+	VmAssemblyStatus* status,
+	FILE* output_stream,
+	int32_t* ip,
 
-static void assemble_operation(
-	AssemblyStatus* status,
 	uint8_t command_number,
 	uint8_t* allowed_arg_types,
 	size_t num_allowed_arg_types,
 	uint8_t arg_type,
 	bool immediate_const_is_label,
-	char register_name[2],
+	uint32_t register_index,
 	int32_t immediate_const,
-	int32_t* ip,
-	FILE* output_stream
 ) {
 
 	bool found_arg_type = false;
@@ -47,20 +42,11 @@ static void assemble_operation(
 
 	WRITE(operation);
 
-	if ((arg_type & COMMAND_ARG_USES_REGISTER) != 0) {
-		int8_t register_index = register_name[0] - 'a';
-		WRITE(register_index);
+	if (!vm_encode_arg(status, output_stream, arg_type, register_index, immediate_const, immediate_const_is_label, )) {
+
 	}
 
-	if ((arg_type & COMMAND_ARG_USES_IMMEDIATE_CONST) != 0) {
-		if (immediate_const_is_label) {
-			uint32_t addr = 0;
-			WRITE(addr);
-		} else {
-			WRITE(immediate_const);
-		}
-	}
-
+	return true;
 }
 
 #undef WRITE
