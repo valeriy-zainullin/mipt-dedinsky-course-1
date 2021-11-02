@@ -5,36 +5,33 @@
 #include "arch/assembly/command.h"
 #include "arch/assembly/immediate_const.h"
 
-bool vm_read_text_arg(char* string, char* register_name, int32_t* immediate_const, FILE* input_stream) {
-	bool read = false;
+bool vm_text_try_read_arg(
+	VmStatus* status,
 
-	#define IMMEDIATE_CONST_IS_NUMBER false
-	#define IMMEDIATE_CONST_IS_LABEL  true
+	const char* line,
+	VmAssemblyArgument* argument
+) {
 
-	#define TRY_READ_ARG(FORMAT, ARG_TYPE, IMMEDIATE_CONST_IS_LABEL, ...)                                \
-		if (!read) {                                                                                     \
-			int num_characters_read = 0;                                                                 \
-			num_read = sscanf(string, FORMAT "%n", __VA_ARGS__, &num_characters_read);                   \
-			if (num_characters_read != 0) {                                                              \
-				arg_type = ARG_TYPE;                                                                     \
-                                                                                                         \
-				if (IMMEDIATE_CONST_IS_LABEL) {                                                          \
-					immediate_const_is_label = true;                                                     \
-				}                                                                                        \
-                                                                                                         \
-				read = true;                                                                             \
-			}                                                                                            \
+	int num_characters_read = 0;
+
+	#define TRY_READ_ARG(FORMAT, ARG_TYPE, ...)                                \
+		num_characters_read = 0;
+		sscanf(FORMAT "%n", __VA_ARGS__, &num_characters_read);
+		if (num_characters_read != 0) {
+			argument->type = arg_type;
 		}
+		if (num_characters_read != 0)
 
 	// ---- Memory arguments. ----
 
 	TRY_READ_ARG(
 		"[" REGISTER_NAME_SCANF_FORMAT "+" IMMEDIATE_CONST_SCANF_FORMAT "]",
 		COMMAND_ARG_USES_MEMORY | COMMAND_ARG_USES_REGISTER | COMMAND_ARG_USES_IMMEDIATE_CONST,
-		IMMEDIATE_CONST_IS_NUMBER,
-		register_name,
-		&immediate_const
-	);
+		
+	) {
+		argument->immediate_const_is_label = true;
+		return true;
+	}
 	
 	TRY_READ_ARG(
 		"[" IMMEDIATE_CONST_SCANF_FORMAT "+" REGISTER_NAME_SCANF_FORMAT "]",
@@ -143,6 +140,15 @@ bool vm_read_text_arg(char* string, char* register_name, int32_t* immediate_cons
 	);
 
 	// ---- ----
+}
+
+bool vm_text_write_arg(
+	VmStatus* status,
+	FILE* output_stream,
+
+	VmAssemblyArgument* argument
+) {
+
 }
 
 bool vm_encode_arg(
