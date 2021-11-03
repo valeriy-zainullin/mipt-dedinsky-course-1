@@ -168,6 +168,8 @@ bool vm_text_read_arg(
 		argument->immediate_const.is_label = true;
 	}
 
+	TRY_READ_ARG(" ", VM_COMMAND_ARG_NOT_PRESENT);
+
 	// ---- ----
 
 	if (!read) {

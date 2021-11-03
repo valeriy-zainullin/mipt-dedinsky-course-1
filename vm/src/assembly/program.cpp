@@ -13,7 +13,7 @@ bool vm_text_process_operation(VmAssemblyStatus* status, VmForwardStream* stream
 		return false;
 	}
 
-	INVOKE_HOOK(vm_hook_on_operation, argument, operation);
+	INVOKE_HOOK(vm_text_hook_on_operation, argument, operation);
 
 	return true;
 
@@ -27,7 +27,7 @@ bool vm_text_process_label_decl(VmAssemblyStatus* status, VmForwardStream* strea
 		return false;
 	}
 
-	INVOKE_HOOK(vm_hook_on_label_decl, argument, label_name);
+	INVOKE_HOOK(vm_text_hook_on_label_decl, argument, label_name);
 
 	return true;
 
@@ -51,7 +51,7 @@ VmAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
 	status.line = 0;
 	status.error = VM_ASSEMBLY_SUCCESS;
 
-	INVOKE_HOOK(vm_hook_on_program_start, arguments);
+	INVOKE_HOOK(vm_text_hook_on_program_start, argument);
 
 	for (size_t i = 0; i < lines->number_of_lines; ++i) {
 
@@ -76,7 +76,7 @@ VmAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
 		}
 	}
 
-	INVOKE_HOOK(vm_hook_on_program_end, arguments);
+	INVOKE_HOOK(vm_text_hook_on_program_end, argument);
 
 	return status;
 
