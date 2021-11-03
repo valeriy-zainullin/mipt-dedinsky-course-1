@@ -1,8 +1,11 @@
 #include "assembly/assembly_impl.h"
 #include "assembly/status.h"
 
-bool vm_text_read_operation(VmStatus* status, FILE* input_stream, Operation* operation) {
+bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, Operation* operation) {
+
 	char command[VM_ASSEMBLY_MAX_COMMAND_LENGTH + 1];
+
+	vm_read_formatted_text(input_stream, COMMAND_NAME_SCANF_FORMAT, command);
 
 	int arg_start = 0;
 

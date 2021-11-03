@@ -123,77 +123,38 @@ static bool is_label_decl(unsigned char* string, size_t length) {
 
 // Max number of operations restriction.
 
-static bool process_label(
-	AssemblyStatus* status,
-	unsigned char* line,
+static bool process_line(
+	VmAssemblyStatus* status,
+	FILE* output_stream,
+
+	const unsigned char* line,
 	size_t length,
-	AssemblyLabel* labels,
-	size_t* num_labels,
-	int32_t* ip,
-	FILE* output_stream
-) {
-	((void) output_stream);
 
-	if (!is_label_decl(line, length)) {
-		return false;
-	}
-
-	if (*line == ':') {
-		status->error = VM_ASSEMBLY_ERROR_EMPTY_LABEL;
-		return true;
-	}
-
-	size_t label_length = length - 1;
-	if (label_length > VM_ASSEMBLY_MAX_LABEL_LENGTH) {
-		status->error = VM_ASSEMBLY_ERROR_LABEL_IS_TOO_LONG;
-		return true;
-	}
-
-	if (*num_labels >= VM_ASSEMBLY_MAX_NUMBER_OF_LABELS) {
-		status->error = VM_ASSEMBLY_ERROR_TOO_MANY_LABELS;
-		return true;
-	}
-
-	AssemblyLabel* label = &labels[*num_labels];
-	label->defined = true;
-	memcpy(label->name, line, label_length);
-	label->name[label_length] = 0;
-	label->addr = *ip;
-
-	*num_labels += 1;
-
-	return true;
-}
-
-static void process_line(
-	AssemblyStatus* status,
-	unsigned char* line,
-	size_t length,
-	AssemblyLabel* labels,
-	size_t* num_labels,
-	int32_t* ip,
-	FILE* output_stream
+	AssemblyLabels* labels,
+	int32_t* ip
 ) {
 	assert(line[length] == 0);
 
-	if (process_label(status, line, length, labels, num_labels, ip, output_stream)) {
-		return;
+	if (process_label(status, output_stream, line, length, labels, ip)) {
+		return true;
 	}
 
-	if (process_operation(status, line, length, labels, num_labels, ip, output_stream)) {
-		return;
+	if (process_operation(status, output_stream, line, length, labels, ip)) {
+		return true;
 	}
 	
 	status->error = VM_ASSEMBLY_ERROR_INVALID_EXPRESSION;
+	return false;
 }
 
-AssemblyStatus vm_assemble(TextLines* lines, FILE* output_stream) {
-	AssemblyStatus status;
+VmAssemblyStatus vm_assemble(TextLines* lines, FILE* output_stream) {
+	VmAssemblyStatus status;
 	status.line = 0;
 	status.error = VM_ASSEMBLY_SUCCESS;
 
-	AssemblyLabel labels[VM_ASSEMBLY_MAX_NUMBER_OF_LABELS] = {};
-	uint32_t num_labels = 0;
+	VmAssemblyLabels labels = {};
+	labels.nlabels = 0;
+
 	int32_t ip = 0;
 
 	for (size_t i = 0; i < lines->number_of_lines; ++i) {
@@ -214,7 +175,9 @@ AssemblyStatus vm_assemble(TextLines* lines, FILE* output_stream) {
 			continue;
 		}
 
-		process_line(&status, line, length, labels, &num_labels, &ip, output_stream);
+		if (!process_line(&status, line, length, labels, &num_labels, &ip, output_stream)) {
+			return status;
+		}
 	}
 
 	if (ip == 0) {
