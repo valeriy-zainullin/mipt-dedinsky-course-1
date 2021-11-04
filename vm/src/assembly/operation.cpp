@@ -1,24 +1,28 @@
-#include "assembly/argument.h"
-#include "assembly/assembly_impl.h"
-#include "assembly/status.h"
+#include "assembly/operation.h"
 
-bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, Operation* operation) {
-	assert(status != nullptr):
+#include "assembly/argument.h"
+#include "status.h"
+#include "support/forward_stream.h"
+
+#include <assert.h>
+
+bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmAssemblyOperation* operation) {
+	assert(status != nullptr);
 	assert(input_stream != nullptr);
 	assert(operation != nullptr);
 
-	char command[VM_ASSEMBLY_MAX_COMMAND_LENGTH + 1];
+	char command[VM_ASSEMBLY_MAX_COMMAND_LENGTH + 1] = {};
 
 	int arg_start = 0;
-	int num_read = sscanf((char*) input_stream->bytes, COMMAND_NAME_SCANF_FORMAT "%n", command);
+	int num_read = sscanf((char*) input_stream->bytes, VM_COMMAND_NAME_SCANF_FORMAT "%n", command, &arg_start);
 
 	if (num_read < 0) {
-		status->error = VM_ASSEMBLY_ERROR_WHILE_READING;
+		*status = VM_ERROR_WHILE_READING;
 		return false;
 	}
 
 	if (num_read != 1) {
-		status->error = VM_ASSEMBLY_ERROR_INVALID_COMMAND;
+		*status = VM_ASSEMBLY_ERROR_INVALID_COMMAND;
 		return false;
 	}
 
@@ -28,9 +32,8 @@ bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, Ope
 		return false;		
 	}
 
-	#define COMMAND(NAME, NUMBER, ALLOWED_ARG_TYPES)                                              \
+	#define COMMAND(NAME, NUMBER, ALLOWED_ARG_TYPES,...)                                          \
 		if (strcmp(command, #NAME) == 0) {                                                        \
-			uint8_t command_number = NUMBER;                                                      \
 			uint8_t allowed_arg_types[] = ALLOWED_ARG_TYPES;                                      \
 																								  \
 			bool found_arg_type = false;                                                          \
@@ -42,19 +45,20 @@ bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, Ope
 			}                                                                                     \
 			                                                                                      \
 			if (!found_arg_type) {                                                                \
+				*status = VM_ASSEMBLY_ERROR_INVALID_ARGUMENT;                                     \
 				return false;                                                                     \
 			}                                                                                     \
 			                                                                                      \
-			operation->command = command;                                                         \
+			strcpy(operation->command, command);                                                  \
 			operation->argument = argument;                                                       \
 			                                                                                      \
 			return true;                                                                          \
 			                                                                                      \
 		} else
-	#include "arch/commands.h"
+	#include "commands.h"
 	#undef COMMAND
 	{
-		status->error = VM_ASSEMBLY_ERROR_INVALID_COMMAND;
+		*status = VM_ASSEMBLY_ERROR_INVALID_COMMAND;
 		return false;
 	}
 }

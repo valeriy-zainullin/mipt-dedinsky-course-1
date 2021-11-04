@@ -1,10 +1,12 @@
+#include "assembler/assembler.h"
+#include "assembly/program.h"
 #include "cli.h"
-#include "debugutils.h"
-#include "assembler.h"
+#include "support/debug_utils.h"
 
 #include "text.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char** argv) {
 	if (argc != 3) {
@@ -44,8 +46,15 @@ int main(int argc, char** argv) {
 		return 4;
 	}
 
-	vm_assemble(&lines, output_stream);
+	VmAssembler* assembler = (VmAssembler*) calloc(sizeof(VmAssembler), 1);
 
+	assembler->output_file = output_stream;
+	assembler->ip = 0;
+	assembler->labels.nlabels = 0;
+
+	vm_text_process_program(&lines, (void*) assembler);
+
+	free(assembler);
 	text_free_lines(&lines);
 	text_free(&text);
 

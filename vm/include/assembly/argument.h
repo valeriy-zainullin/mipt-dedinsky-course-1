@@ -1,5 +1,9 @@
 #pragma once
 
+#include "assembly/label.h"
+#include "status.h"
+#include "support/forward_stream.h"
+
 #include <stddef.h>
 #include <inttypes.h>
 
@@ -24,3 +28,5 @@ struct VmAssemblyArgument {
 
 	VmAssemblyImmediateConst immediate_const;
 };
+
+bool vm_text_read_arg(VmStatus* status, VmForwardStream* input_stream, VmAssemblyArgument* argument);

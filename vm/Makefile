@@ -3,9 +3,9 @@ CXX=g++
 TARGETS=as
 
 EXECUTABLES=as
-SOURCES=src/assembler/assembler_cli.cpp src/assembler/assembler.cpp
+SOURCES=$(wildcard src/assembly/*.cpp) $(wildcard src/assembler/*.cpp) $(wildcard src/bytecode/*.cpp) $(wildcard src/support/*.cpp)
 
-as_OBJECTS=src/assembler/assembler_cli.cpp.obj src/assembler/assembler.cpp.obj
+as_OBJECTS=src/assembler/assembler.cpp.obj src/assembler/assembler_cli.cpp.obj $(addsuffix .obj, $(wildcard src/assembly/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
 as_LIBS=../text-sorting/build/libtext.a
 
 ifneq ($(NO_DOCS),1)
@@ -25,13 +25,14 @@ CFLAGS=-pedantic -Werror -std=c99 -Iinclude -I../text-sorting/include -DCLI_SUPP
   -Wsync-nand -Wundef -Wunreachable-code -Wunused -Wvariadic-macros -Wno-literal-suffix \
   -Wno-missing-field-initializers -Wnarrowing -Wno-old-style-cast -Wvarargs -Waligned-new \
   -Walloc-size-larger-than=1073741824 -Walloc-zero -Walloca -Walloca-larger-than=8192 \
-  -Wcast-align=strict -Wdangling-else -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 \
-  -Wmissing-attributes -Wmultistatement-macros -Wrestrict -Wshadow=global -Wsuggest-attribute=malloc \
-  -fcheck-new -fsized-deallocation -fstack-check -fstrict-overflow -flto-odr-type-merging
+  -Wdangling-else -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 -Wmissing-attributes \
+  -Wmultistatement-macros -Wrestrict -Wshadow=global -Wsuggest-attribute=malloc -fcheck-new \
+  -fsized-deallocation -fstack-check -fstrict-overflow -flto-odr-type-merging
 CFLAGS_RELEASE=-O2 -DVM_DEBUG=0
 CFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
 
-CXXFLAGS=-pedantic -Werror -std=c++11 -Iinclude -I../text-sorting/include -DCLI_SUPPORTS_STDIN=0 \
+CXXFLAGS= \
+  -pedantic -Werror -std=c++11 -Iinclude -I../text-sorting/include -DCLI_SUPPORTS_STDIN=0 \
   -Wall -Wextra -Weffc++ -Wc++0x-compat -Wc++11-compat -Wc++14-compat -Waggressive-loop-optimizations \
   -Walloc-zero -Walloca -Walloca-larger-than=8192 -Warray-bounds -Wcast-align -Wcast-qual \
   -Wchar-subscripts -Wconditionally-supported -Wconversion -Wctor-dtor-privacy -Wdangling-else \
@@ -43,10 +44,9 @@ CXXFLAGS=-pedantic -Werror -std=c++11 -Iinclude -I../text-sorting/include -DCLI_
   -Wsuggest-attribute=noreturn -Wsuggest-final-types -Wsuggest-override -Wswitch-default -Wswitch-enum \
   -Wsync-nand -Wundef -Wunreachable-code -Wunused -Wvariadic-macros -Wno-literal-suffix \
   -Wno-missing-field-initializers -Wnarrowing -Wno-old-style-cast -Wvarargs -Waligned-new \
-  -Walloc-size-larger-than=1073741824 -Walloc-zero -Walloca -Walloca-larger-than=8192 \
-  -Wcast-align=strict -Wdangling-else -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 \
-  -Wmissing-attributes -Wmultistatement-macros -Wrestrict -Wshadow=global -Wsuggest-attribute=malloc \
-  -fcheck-new -fsized-deallocation -fstack-check -fstrict-overflow -flto-odr-type-merging
+  -Walloc-size-larger-than=1073741824 -Walloc-zero -Walloca -Walloca-larger-than=8192 -Wdangling-else \
+  -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 -Wrestrict -Wshadow=global -fcheck-new \
+  -fsized-deallocation -fstack-check -fstrict-overflow -flto-odr-type-merging
 CXXFLAGS_RELEASE=-O2 -DVM_DEBUG=0
 CXXFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
 
@@ -66,7 +66,7 @@ endef
 define SOURCE_RULE =
 build/obj/release/$(1).obj : $(1) | build/obj/release
 	mkdir -p $$(dir $$@)
-	$$(CXX) -c $$(CXXFLAGS) $$(CXXLAGS_RELEASE) -o $$@ -MD $$<
+	$$(CXX) -c $$(CXXFLAGS) $$(CXXFLAGS_RELEASE) -o $$@ -MD $$<
 build/obj/debug/$(1).obj : $(1) | build/obj/debug
 	mkdir -p $$(dir $$@)
 	$$(CXX) -c $$(CXXFLAGS) $$(CXXFLAGS_DEBUG) -o $$@ -MD $$<

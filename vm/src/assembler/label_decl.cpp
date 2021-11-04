@@ -4,7 +4,7 @@
 #include "assembly/label_decl.h"
 
 bool vm_assemble_label_decl(
-	VmAssemblyStatus* status,
+	VmStatus* status,
 	VmForwardStream* input_stream,
 	VmForwardStream* output_stream,
 
