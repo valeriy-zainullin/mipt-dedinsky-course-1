@@ -11,6 +11,8 @@ bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmA
 	assert(input_stream != nullptr);
 	assert(operation != nullptr);
 
+	*status = VM_SUCCESS;
+
 	char command[VM_ASSEMBLY_MAX_COMMAND_LENGTH + 1] = {};
 
 	int arg_start = 0;
@@ -26,6 +28,12 @@ bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmA
 		return false;
 	}
 
+	assert(arg_start >= 0);
+
+	input_stream->bytes += arg_start;
+	input_stream->offset += arg_start;
+	input_stream->length -= arg_start;
+
 	VmAssemblyArgument argument = {};
 
 	if (!vm_text_read_arg(status, input_stream, &argument)) {
@@ -40,7 +48,8 @@ bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmA
 																								  \
 			for (size_t i = 0; i < sizeof(allowed_arg_types) / sizeof(*allowed_arg_types); ++i) { \
 				if (allowed_arg_types[i] == argument.arg_type) {                                  \
-					return true;                                                                  \
+					found_arg_type = true;                                                        \
+					break;                                                                        \
 				}                                                                                 \
 			}                                                                                     \
 			                                                                                      \

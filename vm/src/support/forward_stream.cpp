@@ -14,6 +14,7 @@ bool vm_write_bytes(VmForwardStream* stream, const uint8_t* bytes, size_t length
 	}
 
 	memcpy(stream->bytes, bytes, length);
+	stream->bytes += length;
 	stream->length -= length;
 	stream->offset += length;
 
@@ -29,6 +30,7 @@ bool vm_read_bytes(VmForwardStream* stream, uint8_t* bytes, size_t length) {
 	}
 
 	memcpy(bytes, stream->bytes, length);
+	stream->bytes += length;
 	stream->length -= length;
 	stream->offset += length;
 

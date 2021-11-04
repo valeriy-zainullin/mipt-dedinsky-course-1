@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 enum VmStatus {
-	VM_ASSEMBLY_SUCCESS = 0,
+	VM_SUCCESS = 0,
 	// VM_ASSEMBLY_ERROR_EMPTY_LABEL,
 	VM_ASSEMBLY_ERROR_EMPTY_PROGRAM,
 	VM_ASSEMBLY_ERROR_INVALID_LABEL_DECL, // Incorrect? Something less strict.

@@ -52,9 +52,12 @@ int main(int argc, char** argv) {
 	assembler->ip = 0;
 	assembler->labels.nlabels = 0;
 
-	vm_text_process_program(&lines, (void*) assembler);
+	VmAssemblyStatus assembly_status = vm_text_process_program(&lines, (void*) assembler);
+	printf("status->line = %zu\n", assembly_status.line);
+	printf("status->error = %d\n", (int) assembly_status.error);
 
 	free(assembler);
+	fclose(output_stream);
 	text_free_lines(&lines);
 	text_free(&text);
 

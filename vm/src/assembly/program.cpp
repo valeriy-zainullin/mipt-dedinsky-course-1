@@ -9,12 +9,12 @@
 
 #define INVOKE_HOOK(HOOK, ...)        \
 	if (!HOOK(status, __VA_ARGS__)) { \
-		return status;                \
+		return false;                 \
 	}
 
 bool vm_text_process_operation(VmStatus* status, VmForwardStream* stream, void* argument) {
 
-	VmAssemblyOperation operation;
+	VmAssemblyOperation operation = {};
 
 	if (!vm_text_read_operation(status, stream, &operation)) {
 		return false;
@@ -27,6 +27,8 @@ bool vm_text_process_operation(VmStatus* status, VmForwardStream* stream, void* 
 }
 
 bool vm_text_process_label_decl(VmStatus* status, VmForwardStream* stream, void* argument) {
+
+	printf("vm_text_process_label_decl.\n");
 
 	char label_name[VM_ASSEMBLY_MAX_LABEL_LENGTH + 1] = {};
 
@@ -56,7 +58,7 @@ bool vm_text_process_line(VmStatus* status, unsigned char* line, size_t length, 
 VmAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
 	VmAssemblyStatus assembly_status;
 	assembly_status.line = 0;
-	assembly_status.error = VM_ASSEMBLY_SUCCESS;
+	assembly_status.error = VM_SUCCESS;
 
 	VmStatus* status = &assembly_status.error;
 
@@ -65,6 +67,8 @@ VmAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
 	}
 
 	for (size_t i = 0; i < lines->number_of_lines; ++i) {
+		printf("i = %zu.\n", i);
+		printf("*status = %d.\n", (int) *status);
 
 		TextLine* text_line = &lines->lines[i];
 

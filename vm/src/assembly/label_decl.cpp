@@ -5,6 +5,12 @@ bool vm_text_lookahead_line_is_label_decl(unsigned char* line, size_t length) {
 }
 
 bool vm_text_read_label_decl(VmStatus* status, VmForwardStream* input_stream, char* label) {
+	assert(status != nullptr);
+	assert(input_stream != nullptr);
+	assert(label != nullptr);
+
+	*status = VM_SUCCESS;
+
 	int num_chars_read = 0;
 	int num_read = sscanf((char*) input_stream->bytes, VM_ASSEMBLY_LABEL_DECL_SCANF_FORMAT "%n", label, &num_chars_read);
 

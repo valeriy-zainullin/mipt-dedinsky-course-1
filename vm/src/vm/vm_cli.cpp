@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 		return 4;
 	}
 
-	vm_execute(input_stream, stdout);
+	vm_execute(input_stream, stdin, stdout);
 
 	// return (int) CLI_EXIT_CODE_SUCCESS;
 	return 0;

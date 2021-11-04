@@ -4,6 +4,7 @@
 #include "assembly/label.h"
 #include "assembly/command.h"
 
+#include <ctype.h>
 #include <stdio.h>
 
 bool vm_text_read_arg(
@@ -15,6 +16,8 @@ bool vm_text_read_arg(
 	assert(status != nullptr);
 	assert(input_stream != nullptr);
 	assert(argument != nullptr);
+
+	// *status = VM_SUCCESS;
 
 	int num_characters_read = 0;
 	char register_name[2] = {};
@@ -171,10 +174,16 @@ bool vm_text_read_arg(
 		argument->immediate_const.is_label = true;
 	}
 
-	num_characters_read = 0;
-	sscanf((char*) input_stream->bytes, " %n", &num_characters_read);
-	if (num_characters_read != 0) {
-		argument->arg_type = VM_COMMAND_ARG_NOT_PRESENT;
+	if (!read) {
+		while (input_stream->length > 0 && isspace(*(char*) input_stream->bytes)) {
+			input_stream->bytes += 1;
+			input_stream->offset += 1;
+			input_stream->length -= 1;
+		}
+		if (input_stream->length == 0) {
+			argument->arg_type = VM_COMMAND_ARG_NOT_PRESENT;
+			read = true;
+		}
 	}
 
 	// ---- ----

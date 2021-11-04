@@ -1,18 +1,23 @@
 CC=gcc
 CXX=g++
-TARGETS=as
+AR=ar
+TARGETS=as vm
 
-EXECUTABLES=as
-SOURCES=$(wildcard src/assembly/*.cpp) $(wildcard src/assembler/*.cpp) $(wildcard src/bytecode/*.cpp) $(wildcard src/support/*.cpp)
+EXECUTABLES=as vm
+SOURCES=$(wildcard src/assembly/*.cpp) $(wildcard src/assembler/*.cpp) $(wildcard src/bytecode/*.cpp) $(wildcard src/vm/*.cpp) $(wildcard src/support/*.cpp)
 
-as_OBJECTS=src/assembler/assembler.cpp.obj src/assembler/assembler_cli.cpp.obj $(addsuffix .obj, $(wildcard src/assembly/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
+as_OBJECTS=$(addsuffix .obj, $(wildcard src/assembler/*.cpp)) $(addsuffix .obj, $(wildcard src/assembly/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
 as_LIBS=../text-sorting/build/libtext.a
+
+vm_OBJECTS=$(addsuffix .obj, $(wildcard src/vm/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
+vm_LIBS=../stack/build/libstack_int.a
+
 
 ifneq ($(NO_DOCS),1)
 #TARGETS += docs
 endif
 
-CFLAGS=-pedantic -Werror -std=c99 -Iinclude -I../text-sorting/include -DCLI_SUPPORTS_STDIN=0 \
+CFLAGS=-pedantic -Werror -std=c99 -Iinclude -I../text-sorting/include -I../stack/include -DCLI_SUPPORTS_STDIN=0 \
   -Wall -Wextra -Weffc++ -Wc++0x-compat -Wc++11-compat -Wc++14-compat -Waggressive-loop-optimizations \
   -Walloc-zero -Walloca -Walloca-larger-than=8192 -Warray-bounds -Wcast-align -Wcast-qual \
   -Wchar-subscripts -Wconditionally-supported -Wconversion -Wctor-dtor-privacy -Wdangling-else \
@@ -32,7 +37,7 @@ CFLAGS_RELEASE=-O2 -DVM_DEBUG=0
 CFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
 
 CXXFLAGS= \
-  -pedantic -Werror -std=c++11 -Iinclude -I../text-sorting/include -DCLI_SUPPORTS_STDIN=0 \
+  -pedantic -Werror -std=c++11 -Iinclude -I../text-sorting/include -I../stack/include -DCLI_SUPPORTS_STDIN=0 \
   -Wall -Wextra -Weffc++ -Wc++0x-compat -Wc++11-compat -Wc++14-compat -Waggressive-loop-optimizations \
   -Walloc-zero -Walloca -Walloca-larger-than=8192 -Warray-bounds -Wcast-align -Wcast-qual \
   -Wchar-subscripts -Wconditionally-supported -Wconversion -Wctor-dtor-privacy -Wdangling-else \

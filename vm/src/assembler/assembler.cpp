@@ -46,6 +46,8 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 
 	VmOperation vm_operation = {};
 
+	printf("operation->command = %s\n", operation->command);
+
 	#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, ...) \
 		if (strcmp(operation->command, #NAME) == 0) {    \
 			vm_operation.command_index = INDEX;          \
@@ -59,6 +61,7 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 	}
 
 	vm_operation.arg_type = operation->argument.arg_type;
+	printf("arg_type = %u.\n", (int) operation->argument.arg_type);
 	vm_operation.register_index = operation->argument.register_index;
 
 	if (operation->argument.immediate_const.is_label) {
@@ -94,7 +97,7 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 		return false;
 	}
 
-	if (fwrite(output, output_stream.offset, sizeof(unsigned char), assembler->output_file) != output_stream.offset) {
+	if (fwrite(output, sizeof(unsigned char), output_stream.offset, assembler->output_file) != output_stream.offset) {
 		*status = VM_ERROR_WHILE_WRITING;
 		return false;
 	}

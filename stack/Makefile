@@ -1,6 +1,7 @@
 CC=gcc
 CXX=g++
-TARGETS=build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan
+AR=ar
+TARGETS=build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan build/libstack_int.a
 
 ifeq ($(TARGET),MINGW64_X32)
 CC=i686-w64-mingw32-gcc
@@ -44,7 +45,9 @@ build/main_asan: build/main.cpp.asan.o build/stack.cpp.asan.o | build
 build/main_ubsan: build/main.cpp.ubsan.o build/stack.cpp.ubsan.o | build
 	$(CXX) -o $@ $^ -lubsan
 build/main_lsan: build/main.cpp.lsan.o build/stack.cpp.lsan.o | build
-	$(CXX) -o $@ $^ -llsan
+	# $(CXX) -o $@ $^ -llsan
+build/libstack_int.a: build/stack.cpp.o | build
+	$(AR) -r $@ $@ $^
 
 build/%.cpp.o: src/%.cpp | build build/deps
 	$(CXX) -c $(CXXFLAGS) $(CXXLAGS_RELEASE) -o $@ -MD -MF build/deps/$(notdir $@).mk $<
@@ -55,7 +58,7 @@ build/%.cpp.asan.o: src/%.cpp | build build/deps
 build/%.cpp.ubsan.o: src/%.cpp | build build/deps
 	$(CXX) -c $(CXXFLAGS) $(CXXFLAGS_DEBUG) -fsanitize=undefined -o $@ -MD -MF build/deps/$(notdir $@).mk $<
 build/%.cpp.lsan.o: src/%.cpp | build build/deps
-	$(CXX) -c $(CXXFLAGS) $(CXXFLAGS_DEBUG) -fsanitize=leak -o $@ -MD -MF build/deps/$(notdir $@).mk $<
+	# $(CXX) -c $(CXXFLAGS) $(CXXFLAGS_DEBUG) -fsanitize=leak -o $@ -MD -MF build/deps/$(notdir $@).mk $<
 
 build:
 	mkdir build
