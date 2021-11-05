@@ -8,6 +8,7 @@
 
 static const size_t VM_BYTECODE_MAX_OPERATION_LENGTH = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int32_t);
 
+// VmBytecodeOperation?
 struct VmOperation {
 	uint8_t command_index;
 
@@ -18,4 +19,4 @@ struct VmOperation {
 };
 
 bool vm_bytecode_write_operation(VmStatus* status, VmForwardStream* output_stream, const VmOperation* operation);
-bool vm_bytecode_read_operation(VmStatus* status, VmForwardStream* input_stream, const VmOperation* operation);
+bool vm_bytecode_read_operation(VmStatus* status, VmForwardStream* input_stream, VmOperation* operation);

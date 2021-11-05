@@ -2,21 +2,22 @@
 
 #include "arg_type.h"
 #include "bytecode/operation.h"
-#include "machine.h"
 #include "status.h"
+#include "vm/state.h"
 
 #include "stack.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
 
-static bool vm_read_program(FILE* program, Machine* machine) {
+static bool vm_read_program(FILE* program, VmState* state) {
 	assert(program != nullptr);
-	assert(machine != nullptr);
+	assert(state != nullptr);
 
-	fread(machine->memory, sizeof(*machine->memory), sizeof(machine->memory) / sizeof(*machine->memory), program);
+	fread(state->memory, sizeof(*state->memory), sizeof(state->memory) / sizeof(*state->memory), program);
 
 	if (ferror(program)) {
 		return false;
@@ -29,20 +30,34 @@ static bool vm_read_program(FILE* program, Machine* machine) {
 	return true;
 }
 
+bool vm_on_send_int(VmStatus* status, void* arg, int32_t value) {
+	(void) status;
+	FILE* output_stream = (FILE*) arg;
+	fprintf(output_stream, "%" PRId32, value);
+	return true;
+}
+
+bool vm_on_send_byte(VmStatus* status, void* arg, uint8_t value) {
+	(void) status;
+	FILE* output_stream = (FILE*) arg;
+	fwrite(&value, sizeof(value), 1, output_stream);
+	return true;
+}
+
 // nullptr -> NULL
 void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
 	assert(program != nullptr);
 	assert(input_stream != nullptr);
 	assert(output_stream != nullptr);
-	
-	Machine* machine = (Machine*) calloc(1, sizeof(Machine));
-	if (machine == nullptr) {
+
+	VmState* state = (VmState*) calloc(1, sizeof(VmState));
+	if (state == nullptr) {
 		return;
 	}
 
-	stack_int_init(&machine->stack);
-	
-	vm_read_program(program, machine);
+	stack_int_init(&state->stack);
+
+	vm_read_program(program, state);
 
 	VmStatus status = VM_SUCCESS;
 
@@ -51,55 +66,19 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
 		VmOperation operation = {};
 
 		VmForwardStream stream = {};
-		stream.bytes = &machine->memory[machine->ip];
-		stream.length = sizeof(machine->memory) / sizeof(*machine->memory) - machine->ip;
+		stream.bytes = &state->memory[state->ip];
+		stream.length = sizeof(state->memory) / sizeof(*state->memory) - state->ip;
 		stream.offset = 0;
 
 		vm_bytecode_read_operation(&status, &stream, &operation);
+		vm_execute_operation(&status, state, &operation, output_stream);
 
-		int32_t* argument_memory = nullptr;
-		int32_t argument = 0;
-
-		if ((operation.arg_type & COMMAND_ARG_USES_REGISTER) != 0) {
-			uint8_t register_index = READ(sizeof(uint8_t));
-			if (register_index >= VM_MACHINE_NUM_REGISTERS) {
-				vm_process_exception();
-			}
-			argument = machine.registers[register_index];
-			argument_memory = &machine.registers[register_index];
-		}
-		if ((arg_type & COMMAND_ARG_USES_IMMEDIATE_CONST) != 0) {
-			int32_t immediate_const = READ(sizeof(int32_t));
-			argument += immediate_const;
-			arg_memory = NULL;
-		}
-		if ((arg_type & COMMAND_ARG_USES_MEMORY) != 0) {
-			if (argument_memory == NULL) {
-				argument_memory = (int32_t*) &machine.memory[argument];
-				argument = *argument_memory;
-			}
+		if (status == VM_STATUS_HALT_REQUESTED) {
+			break;
 		}
 
-		#define ARG_MEMORY argument_memory
-		#define ARG argument
-		#define MEMORY(ADDRESS) (int32_t*) &machine.memory[ADDRESS]
-		#define REGISTER(INDEX) (int32_t*) &machine.registers[INDEX]
-		#define STACK_POP(INDEX) () // VERIFY!
-		#define STACK_PUSH(VALUE) stack_int_push(&machine->stack, ) // VERIFY!
-		#define SEND_INT(VALUE) fprintf(output_stream, "%" PRNd32, VALUE);
-		#define SEND_BYTE(VALUE) fputchar(output_stream, VALUE)
-		#define HALT break
-		#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, EXECUTION_CODE, ...) \
-			if (operation.command_index == INDEX) {                          \
-				EXECUTION_CODE;                                              \
-			} else
-		#include "commands.h"
-		#undef COMMAND
-		{
-
-		}
 	}
 
-	stack_int_deinit(&machine->stack);
-	free(machine);
+	stack_int_deinit(&state->stack);
+	free(state);
 }

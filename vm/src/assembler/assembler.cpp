@@ -102,7 +102,8 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 		return false;
 	}
 
-	assembler->ip += output_stream.offset;
+	assert(output_stream.offset <= INT32_MAX);
+	assembler->ip += (int32_t) output_stream.offset;
 
 	return true;
 

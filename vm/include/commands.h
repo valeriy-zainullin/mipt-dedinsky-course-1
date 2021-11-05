@@ -15,6 +15,7 @@
 		#define REGISTER(INDEX) (int32_t*) &machine.registers[INDEX]
 		#define STACK_POP(INDEX) // VERIFY!
 		#define STACK_PUSH(VALUE) stack_int_push() // VERIFY!
+		#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
 		#define SEND_INT(VALUE) fprintf(output_stream, "%" PRNd32, VALUE);
 		#define SEND_BYTE(VALUE) fputchar(output_stream, VALUE)
 		#define HALT() break
@@ -42,7 +43,7 @@ COMMAND(
 		                                                            VM_COMMAND_ARG_USES_IMMEDIATE_CONST,
 		                             VM_COMMAND_ARG_USES_REGISTER
 	),
-	(
+	CODE(
 		STACK_PUSH(ARGUMENT);
 	),
 )
@@ -57,7 +58,7 @@ COMMAND(
 		                             VM_COMMAND_ARG_USES_REGISTER
 	),
 	CODE(
-		*ARGUMENT_MEMORY = STACK_POP();
+		STACK_POP(ARGUMENT_MEMORY);
 	),
 )
 
@@ -66,8 +67,8 @@ COMMAND(
 	3,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
 	CODE(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs + rhs);
 	),
 )
@@ -76,8 +77,8 @@ COMMAND(
 	4,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
 	CODE(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs - rhs);
 	),
 )
@@ -86,8 +87,8 @@ COMMAND(
 	5,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
 	CODE(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs * rhs);
 	),
 )
@@ -96,8 +97,8 @@ COMMAND(
 	6,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
 	CODE(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs / rhs);
 	),
 )
@@ -107,8 +108,8 @@ COMMAND(
 	7,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
 	CODE(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs >> rhs);
 	),
 )
@@ -117,8 +118,8 @@ COMMAND(
 	8,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
 	CODE(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs << rhs);
 	),
 )
@@ -127,8 +128,8 @@ COMMAND(
 	9,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
 	CODE(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs & rhs);
 	),
 )
@@ -136,9 +137,9 @@ COMMAND(
 	or,
 	10,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
-	(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+	CODE(
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs | rhs);
 	),
 )
@@ -146,9 +147,9 @@ COMMAND(
 	xor,
 	11,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
-	(
-		TMP_VARIABLE(lhs, STACK_POP());
-		TMP_VARIABLE(rhs, STACK_POP());
+	CODE(
+		OPERAND(lhs);
+		OPERAND(rhs);
 		STACK_PUSH(lhs ^ rhs);
 	),
 )
@@ -157,8 +158,9 @@ COMMAND(
 	out,
 	12,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
-	(
-		SEND_INT(STACK_POP());
+	CODE(
+		OPERAND(value);
+		SEND_INT(value);
 	),
 )
 
@@ -166,8 +168,9 @@ COMMAND(
 	outb,
 	13,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
-	(
-		SEND_BYTE(STACK_POP() & 0xFF),
+	CODE(
+		OPERAND(value);
+		SEND_BYTE(value & 0xFF);
 	),
 )
 

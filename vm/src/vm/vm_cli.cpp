@@ -1,6 +1,6 @@
 #include "cli.h"
-#include "debugutils.h"
-#include "assembler.h"
+#include "support/debug_utils.h"
+#include "vm/vm.h"
 
 #include "text.h"
 
@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
 	}
 	const char* input_file = argv[1];
 
-	FILE* input_stream = fopen(input_file, "wb");
+	FILE* input_stream = fopen(input_file, "rb");
 	if (input_stream == NULL) {
 		return 4;
 	}

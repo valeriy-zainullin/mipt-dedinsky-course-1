@@ -10,7 +10,7 @@
 struct VmAssemblyLabel {
 	bool defined;
 	char name[VM_ASSEMBLY_MAX_LABEL_LENGTH + 1];
-	size_t addr = 0;
+	int32_t addr = 0;
 };
 
 struct VmAssemblyLabels {
