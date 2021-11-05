@@ -18,3 +18,4 @@ struct VmOperation {
 };
 
 bool vm_bytecode_write_operation(VmStatus* status, VmForwardStream* output_stream, const VmOperation* operation);
+bool vm_bytecode_read_operation(VmStatus* status, VmForwardStream* input_stream, const VmOperation* operation);

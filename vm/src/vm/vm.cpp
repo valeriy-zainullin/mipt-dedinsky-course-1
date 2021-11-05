@@ -1,10 +1,15 @@
 #include "vm/vm.h"
 
 #include "arg_type.h"
+#include "bytecode/operation.h"
+#include "machine.h"
+#include "status.h"
 
 #include "stack.h"
 
+#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <inttypes.h>
 
 static bool vm_read_program(FILE* program, Machine* machine) {
@@ -24,16 +29,20 @@ static bool vm_read_program(FILE* program, Machine* machine) {
 	return true;
 }
 
-bool vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
+// nullptr -> NULL
+void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
 	assert(program != nullptr);
 	assert(input_stream != nullptr);
 	assert(output_stream != nullptr);
 	
-	Machine machine = {};
+	Machine* machine = (Machine*) calloc(1, sizeof(Machine));
+	if (machine == nullptr) {
+		return;
+	}
 
 	stack_int_init(&machine->stack);
 	
-	vm_read_program(program, &machine);
+	vm_read_program(program, machine);
 
 	VmStatus status = VM_SUCCESS;
 
@@ -66,7 +75,7 @@ bool vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
 		}
 		if ((arg_type & COMMAND_ARG_USES_MEMORY) != 0) {
 			if (argument_memory == NULL) {
-				argument_memory = (int32_t*) &processor.memory[argument];
+				argument_memory = (int32_t*) &machine.memory[argument];
 				argument = *argument_memory;
 			}
 		}
@@ -79,17 +88,18 @@ bool vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
 		#define STACK_PUSH(VALUE) stack_int_push(&machine->stack, ) // VERIFY!
 		#define SEND_INT(VALUE) fprintf(output_stream, "%" PRNd32, VALUE);
 		#define SEND_BYTE(VALUE) fputchar(output_stream, VALUE)
+		#define HALT break
 		#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, EXECUTION_CODE, ...) \
-			if (operation.command_index == INDEX) {
-				EXECUTION_CODE;
+			if (operation.command_index == INDEX) {                          \
+				EXECUTION_CODE;                                              \
 			} else
 		#include "commands.h"
 		#undef COMMAND
 		{
 
 		}
-
 	}
 
 	stack_int_deinit(&machine->stack);
+	free(machine);
 }

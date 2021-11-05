@@ -12,7 +12,6 @@ as_LIBS=../text-sorting/build/libtext.a
 vm_OBJECTS=$(addsuffix .obj, $(wildcard src/vm/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
 vm_LIBS=../stack/build/libstack_int.a
 
-
 ifneq ($(NO_DOCS),1)
 #TARGETS += docs
 endif

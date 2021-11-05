@@ -2,6 +2,8 @@
 
 #include "support/macro_utils.h"
 
+#include <stdint.h>
+
 MAY_BE_UNUSED static const uint8_t VM_COMMAND_ARG_NOT_PRESENT = 0;
 MAY_BE_UNUSED static const uint8_t VM_COMMAND_ARG_USES_MEMORY = (1 << 2);
 MAY_BE_UNUSED static const uint8_t VM_COMMAND_ARG_USES_REGISTER = (1 << 1);
