@@ -1,6 +1,17 @@
-CC=gcc
-CXX=g++
-AR=ar
+IS_CYGWIN = $(findstring CYGWIN, $(shell uname -a))
+
+ifndef CC
+  CC = gcc
+endif
+
+ifndef CXX
+  CXX = g++
+endif
+
+ifndef AR
+  AR = ar
+endif
+
 TARGETS=as vm
 
 EXECUTABLES=as vm
@@ -50,7 +61,8 @@ CXXFLAGS= \
   -Wno-missing-field-initializers -Wnarrowing -Wno-old-style-cast -Wvarargs -Waligned-new \
   -Walloc-size-larger-than=1073741824 -Walloc-zero -Walloca -Walloca-larger-than=8192 -Wdangling-else \
   -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 -Wrestrict -Wshadow=global -fcheck-new \
-  -fsized-deallocation -fstack-check -fstrict-overflow -flto-odr-type-merging
+  -fsized-deallocation -fstrict-overflow -flto-odr-type-merging
+# Disabling -fstack-check, otherwise doesn't not compile on linux.
 CXXFLAGS_RELEASE=-O2 -DVM_DEBUG=0
 CXXFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
 
@@ -95,7 +107,11 @@ docs: | build
 
 .PHONY: all clean docs $(TARGETS)
 
+ifneq ($(IS_CYGWIN),CYGWIN)
 $(TARGETS) : % : build/release/% build/debug/% build/asan/% build/lsan/% build/ubsan/%
+else
+$(TARGETS) : % : build/release/% build/debug/%
+endif
 
 $(foreach EXECUTABLE,$(EXECUTABLES),$(eval $(call EXECUTABLE_RULE,$(EXECUTABLE))))
 $(foreach SOURCE,$(SOURCES),$(eval $(call SOURCE_RULE,$(SOURCE))))

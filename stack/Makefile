@@ -1,17 +1,21 @@
-CC=gcc
-CXX=g++
-AR=ar
-TARGETS=build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan build/libstack_int.a
+IS_CYGWIN = $(findstring CYGWIN, $(shell uname -a))
 
-ifeq ($(TARGET),MINGW64_X32)
-CC=i686-w64-mingw32-gcc
-CXX=i686-w64-mingw32-g++
-TARGETS=build/main build/main_debug
+ifndef CC
+  CC = gcc
 endif
-ifeq ($(TARGET),MINGW64_X64)
-CC=x86_64-w64-mingw32-gcc
-CXX=x86_64-w64-mingw32-g++
-TARGETS=build/main build/main_debug
+
+ifndef CXX
+  CXX = g++
+endif
+
+ifndef AR
+  AR = ar
+endif
+
+ifneq ($(IS_CYGWIN),CYGWIN)
+TARGETS=build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan build/libstack_int.a
+else
+TARGETS=build/main build/main_debug build/libstack_int.a
 endif
 
 ifneq ($(NO_DOCS),1)
