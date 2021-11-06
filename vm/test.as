@@ -18,6 +18,7 @@ HALT:
 	halt
 
 DO_MORE:
+	out
 	push 1
 	push 2
 	sub

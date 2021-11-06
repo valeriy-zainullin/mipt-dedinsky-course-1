@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <string.h>
 
 bool vm_text_hook_on_program_start(VmStatus* status, void* argument) {
 	assert(status != nullptr);
@@ -16,7 +17,6 @@ bool vm_text_hook_on_program_start(VmStatus* status, void* argument) {
 	VmAssembler* assembler = (VmAssembler*) argument;
 
 	assembler->ip = 0;
-	assembler->labels.nlabels = 0;
 
 	return true;
 
@@ -65,24 +65,31 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 	vm_operation.register_index = operation->argument.register_index;
 
 	if (operation->argument.immediate_const.is_label) {
-		bool found_label = false;
+		VmAssemblyLabel* label = nullptr;
 		for (size_t i = 0; i < assembler->labels.nlabels; ++i) {
 			if (strcmp(assembler->labels.labels[i].name, operation->argument.immediate_const.label) == 0) {
-				vm_operation.immediate_const = assembler->labels.labels[i].addr;
-				found_label = true;
+				label = &assembler->labels.labels[i];
 				break;
 			}
 		}
-		printf("label = %s.\n", operation->argument.immediate_const.label);
-		printf("found_label = %d.\n", (int) found_label);
-		if (!found_label) {
+
+		printf("label = %p.\n", operation->argument.immediate_const.label);
+
+		if (label == nullptr) {
 			if (assembler->labels.nlabels >= VM_ASSEMBLY_MAX_NUMBER_OF_LABELS) {
 				*status = VM_ASSEMBLY_ERROR_TOO_MANY_LABELS;
 				return status;
 			}
+			label = &assembler->labels.labels[assembler->labels.nlabels];
+			assembler->labels.nlabels += 1;
+
 			strcpy(assembler->labels.labels[assembler->labels.nlabels].name, operation->argument.immediate_const.label);
 			assembler->labels.labels[assembler->labels.nlabels].defined = false;
-			assembler->labels.nlabels += 1;
+		}
+
+		if (label->defined) {
+			vm_operation.immediate_const = label->addr;
+		} else {
 			vm_operation.immediate_const = 0;
 		}
 	} else {
@@ -123,18 +130,23 @@ bool vm_text_hook_on_label_decl(VmStatus* status, void* argument, char* label_na
 
 	for (size_t i = 0; i < assembler->labels.nlabels; ++i) {
 		if (strcmp(assembler->labels.labels[i].name, label_name) == 0) {
-			if (assembler->labels.labels[i].defined) {
+			if (assembler->pass == 1 && assembler->labels.labels[i].defined) {
 				*status = VM_ASSEMBLY_ERROR_MULTIPLE_DEFINITION_OF_LABEL;
 				return false;
 			}
 
+			label = &assembler->labels.labels[i];
 			break;
 		}
 	}
 
 	if (label == nullptr) {
+		printf("label %s is null.\n", label_name);
+		fflush(stdout);
+		assert(assembler->pass == 1);
 	
 		if (assembler->labels.nlabels >= VM_ASSEMBLY_MAX_NUMBER_OF_LABELS) {
+			// Don't do a second pass then.
 			*status = VM_ASSEMBLY_ERROR_TOO_MANY_LABELS;
 			return false;
 		}

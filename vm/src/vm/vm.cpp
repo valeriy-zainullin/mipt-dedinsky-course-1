@@ -70,7 +70,9 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
 		stream.length = sizeof(state->memory) / sizeof(*state->memory) - state->ip;
 		stream.offset = 0;
 
-		vm_bytecode_read_operation(&status, &stream, &operation);
+		if (!vm_bytecode_read_operation(&status, &stream, &operation)) {
+			break; //return; // false
+		}
 
 		assert(stream.offset <= INT32_MAX);
 		state->ip += (int32_t) stream.offset;
@@ -81,7 +83,11 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
 			break;
 		}
 
+		printf("state->ip = %d.\n", state->ip);
+
 	}
+
+	printf("status = %d.\n", (int) status);
 
 	stack_int_deinit(&state->stack);
 	free(state);

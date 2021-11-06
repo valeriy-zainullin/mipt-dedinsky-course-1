@@ -20,6 +20,7 @@ struct VmAssemblyLabels {
 
 struct VmAssembler {
 	FILE* output_file;
+	int pass;
 
 	int32_t ip;
 	VmAssemblyLabels labels;

@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
 	// VmStream
 	assembler->output_file = output_stream;
 	assembler->ip = 0;
+	assembler->pass = 1;
 	assembler->labels.nlabels = 0;
 
 	VmAssemblyStatus assembly_status = vm_text_process_program(&lines, (void*) assembler);
@@ -60,6 +61,7 @@ int main(int argc, char** argv) {
 	rewind(output_stream);
 
 	assembler->ip = 0;
+	assembler->pass = 2;
 	assembly_status = vm_text_process_program(&lines, (void*) assembler);
 	printf("status->line = %zu\n", assembly_status.line);
 	printf("status->error = %d\n", (int) assembly_status.error);

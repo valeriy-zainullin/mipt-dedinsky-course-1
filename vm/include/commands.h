@@ -9,8 +9,8 @@
 #define CODE(...) __VA_ARGS__
 
 /*
+		#define ARGUMENT_EVAL argument
 		#define ARGUMENT_MEMORY argument_memory
-		#define ARGUMENT argument
 		#define MEMORY(ADDRESS) (int32_t*) &machine.memory[ADDRESS]
 		#define REGISTER(INDEX) (int32_t*) &machine.registers[INDEX]
 		#define STACK_POP(INDEX) // VERIFY!
@@ -45,7 +45,7 @@ COMMAND(
 		                             VM_COMMAND_ARG_USES_REGISTER
 	),
 	CODE(
-		STACK_PUSH(ARGUMENT);
+		STACK_PUSH(ARGUMENT_EVAL);
 	),
 )
 
@@ -177,12 +177,9 @@ COMMAND(
 
 COMMAND(
 	jmp,
-	13,
+	14,
 	ARRAY_DEF(VM_COMMAND_ARG_USES_IMMEDIATE_CONST, VM_COMMAND_ARG_USES_REGISTER),
 	CODE(
-		OPERAND(value);
-		SET_IP(value);
+		SET_IP(ARGUMENT_EVAL);
 	),
 )
-
-#undef EXECUTION_CODE
