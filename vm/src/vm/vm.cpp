@@ -71,6 +71,10 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream) {
 		stream.offset = 0;
 
 		vm_bytecode_read_operation(&status, &stream, &operation);
+
+		assert(stream.offset <= INT32_MAX);
+		state->ip += (int32_t) stream.offset;
+
 		vm_execute_operation(&status, state, &operation, output_stream);
 
 		if (status == VM_STATUS_HALT_REQUESTED) {
