@@ -12,7 +12,7 @@ bool vm_text_lookahead_line_is_directive(unsigned char* line, size_t length) {
 }
 
 static bool read_literal_character(VmForwardStream* stream, char* string, size_t* length) {
-	char next_char = vm_peek_char(stream);
+	char next_char = vm_read_char(stream);
 
 	if (next_char != VM_EOF && next_char != '"') {
 		string[*length] = next_char;
@@ -63,7 +63,6 @@ static bool read_escape_character(VmForwardStream* stream, char* string, size_t*
 // Literal_character = ^('\' | '"')
 // String = '"'  (escape_character | literal_character) {escape_character | literal_character} '"'
 static bool read_string(VmForwardStream* stream, char* string, size_t* length) {
-	
 	if (vm_read_char(stream) != '"') {
 		return false;
 	}
@@ -78,7 +77,9 @@ static bool read_string(VmForwardStream* stream, char* string, size_t* length) {
 		}
 	}
 
-	while (vm_peek_char(stream) != VM_EOF && vm_peek_char(stream) != '"') {
+	*length += 1;
+
+	while (*length + 1 <= VM_ASSEMBLY_DIRECTIVE_MAX_STRING_ARG_LENGTH && vm_peek_char(stream) != VM_EOF && vm_peek_char(stream) != '"') {
 		if (vm_peek_char(stream) == '\\') {
 			if (!read_escape_character(stream, string, length)) {
 				return false;
@@ -166,7 +167,7 @@ bool vm_text_read_directive(VmStatus* status, VmForwardStream* stream, VmAssembl
 
 	for (size_t i = 0; stream->length != 0 && i < VM_ASSEMBLY_DIRECTIVE_MAX_NUMBER_OF_ARGUMENTS; ++i) {
 
-		if (!vm_text_read_directive_arg(status, stream, &directive->arguments[directive->num_arguments])) {
+		if (!vm_text_read_directive_arg(status, stream, &directive->arguments[i])) {
 			return false;
 		}
 

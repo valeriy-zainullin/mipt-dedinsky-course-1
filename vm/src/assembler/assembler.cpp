@@ -48,6 +48,31 @@ bool vm_text_hook_on_directive(VmStatus* status, void* argument, VmAssemblyDirec
 	((void) assembler);
 	((void) directive);
 
+	if (strcmp(directive->name, "db")) {
+		for (size_t i = 0; i < )
+		switch (directive->argument_type) {
+			case VM_ASSEMBLY_DIRECTIVE_ARG_STRING:
+				if (fwrite(directive->string, sizeof(*directive->string), directive->string_length, assembler->output_file) != directive->string_length) {
+					*status = VM_ERROR_WHILE_WRITING;
+					return false;
+				}
+				break;
+			case VM_ASSEMBLY_DIRECTIVE_ARG_NUMBER:
+				if (fwrite(directive->number, sizeof(directive->number), 1, assembler->output_file) != 1) {
+					*status = VM_ERROR_WHILE_WRITING;
+					return false;
+				}
+				break;
+			default:
+				assert(false);
+				UNREACHABLE;
+		}
+		fwrite(directive->assembler->output_file);
+	} else {
+		*status = VM_ASSEMBLY_ERROR_INVALID_DIRECTIVE;
+		return false;
+	}
+
 	printf("vm_text_hook_on_directive\n");
 
 	return true;
