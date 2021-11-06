@@ -39,7 +39,7 @@ bool vm_text_read_arg(
 	// ---- Memory arguments. ----
 
 	TRY_READ_ARG(
-		"[" VM_REGISTER_NAME_SCANF_FORMAT "+" VM_IMMEDIATE_CONST_SCANF_FORMAT "]",
+		" [" VM_REGISTER_NAME_SCANF_FORMAT "+" VM_IMMEDIATE_CONST_SCANF_FORMAT "]",
 		VM_COMMAND_ARG_USES_MEMORY | VM_COMMAND_ARG_USES_REGISTER | VM_COMMAND_ARG_USES_IMMEDIATE_CONST,
 		register_name,
 		&argument->immediate_const.value
@@ -49,7 +49,7 @@ bool vm_text_read_arg(
 	}
 	
 	TRY_READ_ARG(
-		"[" VM_IMMEDIATE_CONST_SCANF_FORMAT "+" VM_REGISTER_NAME_SCANF_FORMAT "]",
+		" [" VM_IMMEDIATE_CONST_SCANF_FORMAT "+" VM_REGISTER_NAME_SCANF_FORMAT "]",
 		VM_COMMAND_ARG_USES_MEMORY | VM_COMMAND_ARG_USES_REGISTER | VM_COMMAND_ARG_USES_IMMEDIATE_CONST,
 		&argument->immediate_const.value,
 		register_name
@@ -59,7 +59,7 @@ bool vm_text_read_arg(
 	}
 
 	TRY_READ_ARG(
-		"[" VM_REGISTER_NAME_SCANF_FORMAT "]",
+		" [" VM_REGISTER_NAME_SCANF_FORMAT "]",
 		VM_COMMAND_ARG_USES_MEMORY | VM_COMMAND_ARG_USES_REGISTER,
 		register_name
 	) {
@@ -67,7 +67,7 @@ bool vm_text_read_arg(
 	}
 
 	TRY_READ_ARG(
-		"[" VM_IMMEDIATE_CONST_SCANF_FORMAT "]",
+		" [" VM_IMMEDIATE_CONST_SCANF_FORMAT "]",
 		VM_COMMAND_ARG_USES_MEMORY | VM_COMMAND_ARG_USES_IMMEDIATE_CONST,
 		&argument->immediate_const.value
 	) {
@@ -119,7 +119,7 @@ bool vm_text_read_arg(
 	// ---- Label arguments. ----
 
 	TRY_READ_ARG(
-		"[" VM_REGISTER_NAME_SCANF_FORMAT "+" VM_ASSEMBLY_LABEL_NAME_SCANF_FORMAT "]",
+		" [" VM_REGISTER_NAME_SCANF_FORMAT "+" VM_ASSEMBLY_LABEL_NAME_SCANF_FORMAT "]",
 		VM_COMMAND_ARG_USES_MEMORY | VM_COMMAND_ARG_USES_REGISTER | VM_COMMAND_ARG_USES_IMMEDIATE_CONST,
 		register_name,
 		argument->immediate_const.label
@@ -130,7 +130,7 @@ bool vm_text_read_arg(
 
 	// TODO: same format for format string names.
 	TRY_READ_ARG(
-		"[" VM_ASSEMBLY_LABEL_NAME_SCANF_FORMAT "+" VM_REGISTER_NAME_SCANF_FORMAT "]",
+		" [" VM_ASSEMBLY_LABEL_NAME_SCANF_FORMAT "+" VM_REGISTER_NAME_SCANF_FORMAT "]",
 		VM_COMMAND_ARG_USES_MEMORY | VM_COMMAND_ARG_USES_REGISTER | VM_COMMAND_ARG_USES_IMMEDIATE_CONST,
 		argument->immediate_const.label,
 		register_name
@@ -140,7 +140,7 @@ bool vm_text_read_arg(
 	}
 
 	TRY_READ_ARG(
-		"[" VM_ASSEMBLY_LABEL_NAME_SCANF_FORMAT "]",
+		" [" VM_ASSEMBLY_LABEL_NAME_SCANF_FORMAT "]",
 		VM_COMMAND_ARG_USES_MEMORY | VM_COMMAND_ARG_USES_IMMEDIATE_CONST,
 		argument->immediate_const.label
 	) {

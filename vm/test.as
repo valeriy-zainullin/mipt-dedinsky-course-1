@@ -38,9 +38,9 @@ IF_2:
 	ret
 BEFORE_JMP_TO_HALT:
 	push OUTPUT_STRING
-	outs
+	call SEND_STRING
 	push OUTPUT_NUMBER
-	out
+	call SEND_STRING
 JMP_TO_HALT:
 	jmp HALT
 
@@ -48,17 +48,21 @@ SEND_STRING:
 	pop ax
 SEND_STRING_LOOP:
 	push [ax]
-	and 255
+	push 255
+	and
 	push 0
 	je SEND_STRING_EXIT
 	push [ax]
-	and 255
+	push 255
+	and
 	out
 	push ax
 	push 1
 	add
 	pop ax
 	jmp SEND_STRING_LOOP
+SEND_STRING_EXIT:
+	ret
 
 OUTPUT_STRING:
 	.db "123, abacaba\n\0"

@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 bool vm_text_lookahead_line_is_directive(unsigned char* line, size_t length) {
-	return length >= 1 && *line == VM_ASSEMBLY_DIRECTIVE_PREFIX;
+	return length >= 1 && * (char*) line == VM_ASSEMBLY_DIRECTIVE_PREFIX;
 }
 
 static bool read_literal_character(VmForwardStream* stream, char* string, size_t* length) {
