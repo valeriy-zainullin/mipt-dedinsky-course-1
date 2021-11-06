@@ -15,8 +15,10 @@
 		#define REGISTER(INDEX) (int32_t*) &machine.registers[INDEX]
 		#define STACK_POP(INDEX) // VERIFY!
 		#define STACK_PUSH(VALUE) stack_int_push() // VERIFY!
-		#define SET_IP(VALUE) state->ip = VALUE
 		#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
+		#define SET_IP(VALUE) state->ip = VALUE
+		#define IF(EXPR) if (EXPR) {
+		#define ENDIF() }
 		#define SEND_INT(VALUE) fprintf(output_stream, "%" PRNd32, VALUE);
 		#define SEND_BYTE(VALUE) fputchar(output_stream, VALUE)
 		#define HALT() break
@@ -180,6 +182,33 @@ COMMAND(
 	14,
 	ARRAY_DEF(VM_COMMAND_ARG_USES_IMMEDIATE_CONST, VM_COMMAND_ARG_USES_REGISTER),
 	CODE(
+		OPERAND(value);
 		SET_IP(ARGUMENT_EVAL);
+	),
+)
+
+COMMAND(
+	jae,
+	15,
+	ARRAY_DEF(VM_COMMAND_ARG_USES_IMMEDIATE_CONST, VM_COMMAND_ARG_USES_REGISTER),
+	CODE(
+		OPERAND(lhs);
+		OPERAND(rhs);
+		IF(lhs >= rhs)
+			SET_IP(ARGUMENT_EVAL);
+		ENDIF()
+	),
+)
+
+COMMAND(
+	jbe,
+	16,
+	ARRAY_DEF(VM_COMMAND_ARG_USES_IMMEDIATE_CONST, VM_COMMAND_ARG_USES_REGISTER),
+	CODE(
+		OPERAND(lhs);
+		OPERAND(rhs);
+		IF(lhs <= rhs)
+			SET_IP(ARGUMENT_EVAL);
+		ENDIF()
 	),
 )

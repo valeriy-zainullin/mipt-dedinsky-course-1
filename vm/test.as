@@ -23,4 +23,16 @@ DO_MORE:
 	push 2
 	sub
 	outb
+	push 1
+	push 1
+	jae IF_1
+IF_1:
+	push 2
+	push 2
+	jbe IF_2
+IF_2:
+	push 3
+	push 1
+	jae IF_2
+JMP_TO_HALT:
 	jmp HALT
