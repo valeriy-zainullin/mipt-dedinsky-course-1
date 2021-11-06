@@ -1,5 +1,7 @@
 #include "assembly/label_decl.h"
 
+#include <stdio.h>
+
 bool vm_text_lookahead_line_is_label_decl(unsigned char* line, size_t length) {
 	return length >= 1 && line[length - 1] == ':';
 }
@@ -8,6 +10,8 @@ bool vm_text_read_label_decl(VmStatus* status, VmForwardStream* input_stream, ch
 	assert(status != nullptr);
 	assert(input_stream != nullptr);
 	assert(label != nullptr);
+
+	printf("vm_text_read_label_decl.\n");
 
 	*status = VM_SUCCESS;
 

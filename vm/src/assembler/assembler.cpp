@@ -73,6 +73,8 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 				break;
 			}
 		}
+		printf("label = %s.\n", operation->argument.immediate_const.label);
+		printf("found_label = %d.\n", (int) found_label);
 		if (!found_label) {
 			if (assembler->labels.nlabels >= VM_ASSEMBLY_MAX_NUMBER_OF_LABELS) {
 				*status = VM_ASSEMBLY_ERROR_TOO_MANY_LABELS;
@@ -81,6 +83,7 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 			strcpy(assembler->labels.labels[assembler->labels.nlabels].name, operation->argument.immediate_const.label);
 			assembler->labels.labels[assembler->labels.nlabels].defined = false;
 			assembler->labels.nlabels += 1;
+			vm_operation.immediate_const = 0;
 		}
 	} else {
 		vm_operation.immediate_const = operation->argument.immediate_const.value;
@@ -138,11 +141,14 @@ bool vm_text_hook_on_label_decl(VmStatus* status, void* argument, char* label_na
 
 		label = &assembler->labels.labels[assembler->labels.nlabels];
 		assembler->labels.nlabels += 1;
-	
+
+		strcpy(label->name, label_name);
 	}
 
 	label->defined = true;
 	label->addr = assembler->ip;
+
+	printf("label_decl: %s.\n", label_name);
 
 	return true;
 

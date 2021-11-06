@@ -48,11 +48,19 @@ int main(int argc, char** argv) {
 
 	VmAssembler* assembler = (VmAssembler*) calloc(sizeof(VmAssembler), 1);
 
+	// VmStream
 	assembler->output_file = output_stream;
 	assembler->ip = 0;
 	assembler->labels.nlabels = 0;
 
 	VmAssemblyStatus assembly_status = vm_text_process_program(&lines, (void*) assembler);
+	printf("status->line = %zu\n", assembly_status.line);
+	printf("status->error = %d\n", (int) assembly_status.error);
+
+	rewind(output_stream);
+
+	assembler->ip = 0;
+	assembly_status = vm_text_process_program(&lines, (void*) assembler);
 	printf("status->line = %zu\n", assembly_status.line);
 	printf("status->error = %d\n", (int) assembly_status.error);
 

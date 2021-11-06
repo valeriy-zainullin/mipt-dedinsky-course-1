@@ -10,5 +10,16 @@ push cx
 add
 add
 add
-out
-halt
+
+out:
+	jmp DO_MORE
+
+HALT:
+	halt
+
+DO_MORE:
+	push 1
+	push 2
+	sub
+	outb
+	jmp HALT
