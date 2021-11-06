@@ -50,6 +50,7 @@ bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* o
 	#define STACK_PUSH(VALUE) stack_int_push(&state->stack, VALUE) // VERIFY!
 	#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
 	#define SET_IP(VALUE) state->ip = VALUE
+	#define GET_IP(VALUE) state->ip
 	#define IF(EXPR) if (EXPR) {
 	#define ENDIF() }
 	#define SEND_INT(VALUE) vm_on_send_int(status, arg, VALUE)

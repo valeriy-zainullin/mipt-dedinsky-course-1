@@ -17,6 +17,7 @@
 		#define STACK_PUSH(VALUE) stack_int_push() // VERIFY!
 		#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
 		#define SET_IP(VALUE) state->ip = VALUE
+		#define GET_IP(VALUE) state->ip = VALUE
 		#define IF(EXPR) if (EXPR) {
 		#define ENDIF() }
 		#define SEND_INT(VALUE) fprintf(output_stream, "%" PRNd32, VALUE);
@@ -210,5 +211,25 @@ COMMAND(
 		IF(lhs <= rhs)
 			SET_IP(ARGUMENT_EVAL);
 		ENDIF()
+	),
+)
+
+COMMAND(
+	call,
+	17,
+	ARRAY_DEF(VM_COMMAND_ARG_USES_IMMEDIATE_CONST, VM_COMMAND_ARG_USES_REGISTER),
+	CODE(
+		STACK_PUSH(GET_IP());
+		SET_IP(ARGUMENT_EVAL);
+	),
+)
+
+COMMAND(
+	ret,
+	18,
+	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
+	CODE(
+		OPERAND(value);
+		SET_IP(value);
 	),
 )

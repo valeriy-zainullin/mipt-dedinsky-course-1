@@ -29,10 +29,12 @@ DO_MORE:
 IF_1:
 	push 2
 	push 2
-	jbe IF_2
+	push JMP_TO_HALT
+	call IF_2
 IF_2:
 	push 3
 	push 1
 	jae IF_2
+	ret
 JMP_TO_HALT:
 	jmp HALT
