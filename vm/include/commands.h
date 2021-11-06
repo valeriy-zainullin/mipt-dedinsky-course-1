@@ -15,6 +15,7 @@
 		#define REGISTER(INDEX) (int32_t*) &machine.registers[INDEX]
 		#define STACK_POP(INDEX) // VERIFY!
 		#define STACK_PUSH(VALUE) stack_int_push() // VERIFY!
+		#define SET_IP(VALUE) state->ip = VALUE
 		#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
 		#define SEND_INT(VALUE) fprintf(output_stream, "%" PRNd32, VALUE);
 		#define SEND_BYTE(VALUE) fputchar(output_stream, VALUE)
@@ -171,6 +172,16 @@ COMMAND(
 	CODE(
 		OPERAND(value);
 		SEND_BYTE(value & 0xFF);
+	),
+)
+
+COMMAND(
+	jmp,
+	13,
+	ARRAY_DEF(VM_COMMAND_ARG_USES_IMMEDIATE_CONST, VM_COMMAND_ARG_USES_REGISTER),
+	CODE(
+		OPERAND(value);
+		SET_IP(value);
 	),
 )
 

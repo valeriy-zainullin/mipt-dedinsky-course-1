@@ -39,6 +39,7 @@ bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* o
 	#define STACK_POP(VARIABLE_PTR) stack_int_pop(&state->stack, VARIABLE_PTR) // VERIFY!
 	#define STACK_PUSH(VALUE) stack_int_push(&state->stack, VALUE) // VERIFY!
 	#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
+	#define SET_IP(VALUE) state->ip = VALUE
 	#define SEND_INT(VALUE) vm_on_send_int(status, arg, VALUE)
 	#define SEND_BYTE(VALUE) vm_on_send_byte(status, arg, (uint8_t) VALUE)
 	#define HALT() *status = VM_STATUS_HALT_REQUESTED; return true
