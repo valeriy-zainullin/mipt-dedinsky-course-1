@@ -1,5 +1,6 @@
 #include "assembly/program.h"
 
+#include "assembly/directive.h"
 #include "assembly/label.h"
 #include "assembly/label_decl.h"
 #include "assembly/operation.h"
@@ -11,6 +12,20 @@
 	if (!HOOK(status, __VA_ARGS__)) { \
 		return false;                 \
 	}
+
+bool vm_text_process_directive(VmStatus* status, VmForwardStream* stream, void* argument) {
+
+	VmAssemblyDirective directive = {};
+
+	if (!vm_text_read_directive(status, stream, &directive)) {
+		return false;
+	}
+
+	INVOKE_HOOK(vm_text_hook_on_directive, argument, &directive);
+
+	return true;
+
+}
 
 bool vm_text_process_operation(VmStatus* status, VmForwardStream* stream, void* argument) {
 
@@ -47,6 +62,10 @@ bool vm_text_process_line(VmStatus* status, unsigned char* line, size_t length, 
 	stream.bytes = (uint8_t*) line;
 	stream.offset = 0;
 	stream.length = length;
+
+	if (vm_text_lookahead_line_is_directive(line, length)) {
+		return vm_text_process_directive(status, &stream, argument);
+	}
 
 	if (vm_text_lookahead_line_is_label_decl(line, length)) {
 		return vm_text_process_label_decl(status, &stream, argument);

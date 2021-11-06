@@ -1,5 +1,6 @@
 #include "assembler/assembler.h"
 
+#include "assembly/directive.h"
 #include "assembly/label.h"
 #include "assembly/program.h"
 #include "bytecode/operation.h"
@@ -35,6 +36,21 @@ bool vm_text_hook_on_program_end(VmStatus* status, void* argument) {
 
 	return true;	
 
+}
+
+bool vm_text_hook_on_directive(VmStatus* status, void* argument, VmAssemblyDirective* directive) {
+	assert(status != nullptr);
+	assert(argument != nullptr);
+	assert(directive != nullptr);
+
+	VmAssembler* assembler = (VmAssembler*) argument;
+
+	((void) assembler);
+	((void) directive);
+
+	printf("vm_text_hook_on_directive\n");
+
+	return true;
 }
 
 bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOperation* operation) {

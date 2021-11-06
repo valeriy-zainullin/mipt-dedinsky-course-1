@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
+// TODO: hex numbers.
 bool vm_text_read_arg(
 	VmStatus* status,
 	VmForwardStream* input_stream,

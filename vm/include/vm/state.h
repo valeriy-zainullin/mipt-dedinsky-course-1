@@ -11,6 +11,9 @@
 static const size_t VM_MACHINE_MEMORY_SIZE = 64 * 1024 * 1024;
 static const size_t VM_MACHINE_NUM_REGISTERS = 3;
 
+static const size_t VM_MACHINE_VIDEO_MEMORY_SIZE = 3 * 1024 * 768;
+static const size_t VM_MACHINE_TRUE_MEMORY_SIZE = VM_MACHINE_MEMORY_SIZE - VM_MACHINE_VIDEO_MEMORY_SIZE;
+
 struct VmState {
 	uint8_t memory[VM_MACHINE_MEMORY_SIZE];
 	int32_t registers[VM_MACHINE_NUM_REGISTERS];
