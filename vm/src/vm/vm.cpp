@@ -35,6 +35,7 @@ bool vm_on_send_int(VmStatus* status, void* arg, int32_t value) {
 	(void) status;
 	FILE* output_stream = (FILE*) arg;
 	fprintf(output_stream, "%" PRId32, value);
+	fflush(stdout);
 	return true;
 }
 
@@ -42,6 +43,7 @@ bool vm_on_send_byte(VmStatus* status, void* arg, uint8_t value) {
 	(void) status;
 	FILE* output_stream = (FILE*) arg;
 	fwrite(&value, sizeof(value), 1, output_stream);
+	fflush(stdout);
 	return true;
 }
 

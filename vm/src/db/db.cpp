@@ -1,3 +1,4 @@
+#include "assembly/argument.h"
 #include "assembly/operation.h"
 #include "status.h"
 #include "support/forward_stream.h"
@@ -9,7 +10,7 @@
 #include <stdbool.h>
 
 struct Debugger {
-	uint32_t nlines_to_skip;
+	uint32_t nops_to_skip;
 	bool exit_requested;
 };
 
@@ -83,6 +84,24 @@ static void read_commands(VmState* state, Debugger* debugger) {
 			continue;
 		}
 
+		num_chars_read = 0;		
+		sscanf(line, " info ip %n", &num_chars_read);
+		if (num_chars_read != 0) {
+			printf("ip = %" PRId32 ".\n", state->ip);
+			fflush(stdout);
+			continue;
+		}
+
+		num_chars_read = 0;		
+		sscanf(line, " info registers %n", &num_chars_read);
+		if (num_chars_read != 0) {
+			for (size_t i = 0; i <= VM_MAX_REGISTER_INDEX; ++i) {
+				printf("%cx = %" SCNd32 "(0x%" SCNx32 ").\n", (char) ('a' + i), state->registers[i], (uint32_t) state->registers[i]);
+			}
+			fflush(stdout);
+			continue;
+		}
+
 		char format_letter[2] = {};
 		char size_letter[2] = {};
 		int32_t repeat_count = 0;
@@ -109,8 +128,15 @@ static void read_commands(VmState* state, Debugger* debugger) {
 		}
 
 		num_chars_read = 0;		
-		sscanf(line, " si %" SCNu32 "%n", &debugger->nlines_to_skip, &num_chars_read);
+		sscanf(line, " si %" SCNu32 "%n", &debugger->nops_to_skip, &num_chars_read);
 		if (num_chars_read != 0) {
+			break;
+		}
+
+		num_chars_read = 0;		
+		sscanf(line, " si %n", &num_chars_read);
+		if (num_chars_read != 0) {
+			debugger->nops_to_skip = 1;
 			break;
 		}
 
@@ -135,6 +161,8 @@ bool vm_on_trap_to_debugger(VmStatus* status, VmState* state, bool* continue_exe
 
 	Debugger* debugger = (Debugger*) debugger_arg;
 
+	debugger->nops_to_skip = 0;
+
 	printf("Debugee requested a trap.\n");
 
 	print_operation(&state->memory[state->ip]);
@@ -158,17 +186,17 @@ bool vm_on_debugger_notified(VmStatus* status, VmState* state, bool* continue_ex
 
 	Debugger* debugger = (Debugger*) debugger_arg;
 
-	if (debugger->nlines_to_skip > 0) {
-		debugger->nlines_to_skip -= 1;
-		return true;
-	}
-
 	print_operation(&state->memory[state->ip]);
 
 	read_commands(state, debugger);
 
 	if (debugger->exit_requested) {
 		*continue_execution = false;
+		return true;
+	}
+
+	if (debugger->nops_to_skip > 0) {
+		debugger->nops_to_skip -= 1;
 		return true;
 	}
 
@@ -187,7 +215,7 @@ int main(int argc, char** argv) {
 	}
 
 	Debugger debugger = {};
-	debugger.nlines_to_skip = 0;
+	debugger.nops_to_skip = 0;
 	debugger.exit_requested = false;
 
 	vm_execute(input_stream, stdin, stdout, &debugger);

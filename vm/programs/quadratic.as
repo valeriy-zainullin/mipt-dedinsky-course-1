@@ -21,9 +21,11 @@ LINEAR_EQUATION:
 	mul
 	push bx
 	out
+	halt
 B_IS_ZERO:
 	push NO_ROOTS_STR
 	outs
+	halt
 
 QUADRATIC_EQUATION:
 	push 4
@@ -62,6 +64,7 @@ QUADRATIC_EQUATION:
 	add
 	div
 	out
+	halt
 
 
 SQRT_DESCRIMINANT:

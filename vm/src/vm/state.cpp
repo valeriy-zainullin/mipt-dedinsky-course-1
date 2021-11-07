@@ -49,8 +49,8 @@ bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* o
 	#define GET_IP(VALUE) state->ip
 	#define IF(EXPR) if (EXPR) {
 	#define ENDIF() }
-	#define SEND_INT(VALUE) if (!vm_on_send_int(status, arg, VALUE)) { return false; }
-	#define SEND_BYTE(VALUE) if (!vm_on_send_byte(status, arg, (uint8_t) VALUE)) { return false; }
+	#define SEND_INT(VALUE) if (!vm_on_send_int(status, arg, VALUE)) { return false; };
+	#define SEND_BYTE(VALUE) if (!vm_on_send_byte(status, arg, (uint8_t) VALUE)) { return false; };
 	#define HALT() *status = VM_STATUS_HALT_REQUESTED; return true
 	#define TRAP()                                                                       \
 		bool continue_execution = true;                                                  \
@@ -63,7 +63,7 @@ bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* o
 		}
 	#define READ(VARIABLE) int32_t VARIABLE = 0; scanf("%" SCNd32, &VARIABLE)
 	#define SQRT(VALUE) (int32_t) sqrt((double) (VALUE))
-	#define SEND_STRING(VALUE) puts((char*) &state->memory[VALUE])
+	#define SEND_STRING(VALUE) puts((char*) &state->memory[VALUE]); fflush(stdout)
 	#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, EXECUTION_CODE, ...) \
 		if (operation->command_index == INDEX) {                         \
 			EXECUTION_CODE                                               \

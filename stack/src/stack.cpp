@@ -207,12 +207,12 @@ ValidityInfo (*VALIDATE_STACK_PTR)(const StackImpl* stack_impl_ptr) = &validate_
 #define UNREACHABLE
 #endif
 
-static void print_validity(ValidityFlag validity_flag) {
+static void print_validity(FILE* output_file, ValidityFlag validity_flag) {
 	switch (validity_flag) {
 
-		case VALID: 	  fprintf(stderr, "ok"); break;
-		case NOT_VALID:   fprintf(stderr, "BAD!"); break;
-		case NOT_CHECKED: fprintf(stderr, "NOT CHECKED"); break;
+		case VALID: 	  fprintf(output_file, "ok"); break;
+		case NOT_VALID:   fprintf(output_file, "BAD!"); break;
+		case NOT_CHECKED: fprintf(output_file, "NOT CHECKED"); break;
 
 		default: assert(0); UNREACHABLE;
 	}
@@ -223,9 +223,10 @@ static void print_validity(ValidityFlag validity_flag) {
 
 static void dump_stack(Variable variable,
 					   ValidityInfo validity,
-					   const StackImpl* stack_impl_ptr) {
+					   const StackImpl* stack_impl_ptr,
+					   FILE* output_file = stderr) {
 	fprintf(
-		stderr,
+		output_file,
 		"stack<%s>[%p] \"%s\" from %s(%zu), %s ",
 		
 		MACRO_TO_STR(STACK_ITEM_TYPE),
@@ -237,7 +238,7 @@ static void dump_stack(Variable variable,
 	);
 
 	fprintf(
-		stderr,
+		output_file,
 		"(issued for line %zu of \"%s\", function \"%s\"):\n",
 
 		variable.line,
@@ -246,71 +247,71 @@ static void dump_stack(Variable variable,
 	);
 
 	#if STACK_CANARY_PROTECTION_ENABLED
-		fprintf(stderr, "canary = %llx (", stack_impl_ptr->canary);
-		print_validity(validity.front_canary_validity);
-		fputs(")\n", stderr);
+		fprintf(output_file, "canary = %llx (", stack_impl_ptr->canary);
+		print_validity(output_file, validity.front_canary_validity);
+		fputs(")\n", output_file);
 	#endif
 
 	#if STACK_STRUCT_HASH_PROTECTION_ENABLED
-		fprintf(stderr, "struct hash = %llx\n", stack_impl_ptr->struct_hash);
+		fprintf(output_file, "struct hash = %llx\n", stack_impl_ptr->struct_hash);
 	#endif
 
 	#if STACK_DATA_HASH_PROTECTION_ENABLED
-		fprintf(stderr, "data hash = %llx\n", stack_impl_ptr->data_hash);
+		fprintf(output_file, "data hash = %llx\n", stack_impl_ptr->data_hash);
 	#endif
 
 	#if STACK_STRUCT_HASH_PROTECTION_ENABLED
-		fputs("--- Struct hash validity: ", stderr);
-		print_validity(validity.struct_validity);
-		fputs(" ---\n", stderr);
+		fputs("--- Struct hash validity: ", output_file);
+		print_validity(output_file, validity.struct_validity);
+		fputs(" ---\n", output_file);
 	#endif
 
-	fprintf(stderr, "size = %zu (", stack_impl_ptr->size);
-	print_validity(validity.size_validity);
-	fprintf(stderr, ")\ncapacity = %zu\n", stack_impl_ptr->capacity);
+	fprintf(output_file, "size = %zu (", stack_impl_ptr->size);
+	print_validity(output_file, validity.size_validity);
+	fprintf(output_file, ")\ncapacity = %zu\n", stack_impl_ptr->capacity);
 	// Variable location.
 
 	#if STACK_STRUCT_HASH_PROTECTION_ENABLED
-		fputs("------\n", stderr);
+		fputs("------\n", output_file);
 	#endif
 
 	#if STACK_DATA_HASH_PROTECTION_ENABLED
-		fputs("--- Data hash validity: ", stderr);
-		print_validity(validity.data_validity);
-		fputs(" ---\n", stderr);
+		fputs("--- Data hash validity: ", output_file);
+		print_validity(output_file, validity.data_validity);
+		fputs(" ---\n", output_file);
 	#endif
 
-	fprintf(stderr, "data[%p] {\n", (void*) stack_impl_ptr->data);
+	fprintf(output_file, "data[%p] {\n", (void*) stack_impl_ptr->data);
 
 	for (size_t i = 0; i < stack_impl_ptr->capacity; ++i) {
 
-		fprintf(stderr, "\t[%zu] = %d", i, stack_impl_ptr->data[i]);
+		fprintf(output_file, "\t[%zu] = %d", i, stack_impl_ptr->data[i]);
 
 		if (stack_impl_ptr->data[i] == STACK_POISON) {
-			fputs(" (POISON)", stderr);
+			fputs(" (POISON)", output_file);
 		}
 
-		fputs(",\n", stderr);
+		fputs(",\n", output_file);
 	}
 
-	fputs("}\n", stderr);
+	fputs("}\n", output_file);
 
 	#if STACK_DATA_HASH_PROTECTION_ENABLED
-		fputs("------\n", stderr);
+		fputs("------\n", output_file);
 	#endif
 
 	#if STACK_CANARY_PROTECTION_ENABLED
-		fprintf(stderr, "canary = %llx (", CANARY_AT_THE_END(stack_impl_ptr));
+		fprintf(output_file, "canary = %llx (", CANARY_AT_THE_END(stack_impl_ptr));
 
 		if (validity.back_canary_validity == NOT_CHECKED) {
 			validity.back_canary_validity = (ValidityFlag) (CANARY_AT_THE_END(stack_impl_ptr) == CANARY_VALUE);
 		}
-		print_validity(validity.back_canary_validity);
+		print_validity(output_file, validity.back_canary_validity);
 
-		fputs(")\n", stderr);
+		fputs(")\n", output_file);
 	#endif
 
-	fputs("}\n", stderr);
+	fputs("}\n", output_file);
 }
 
 #define VALIDATE_STACK(RETURN_VALUE_ON_ERROR) {                  \
@@ -494,5 +495,5 @@ void STACK_DUMP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr) {
 
 	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
 	ValidityInfo validity = validate_stack(stack_impl_ptr);
-	dump_stack(variable, validity, stack_impl_ptr);
+	dump_stack(variable, validity, stack_impl_ptr, stdout);
 }
