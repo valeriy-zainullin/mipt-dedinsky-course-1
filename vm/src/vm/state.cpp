@@ -46,13 +46,13 @@ bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* o
 	#define STACK_PUSH(VALUE) if (!stack_int_push(&state->stack, VALUE)) { return false; }
 	#define STACK_PUSH_FLOAT(VALUE) if (!stack_int_push(&state->stack, * (float*) &VALUE)) { return false; }
 	#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
-	#define OPERAND_FLOAT(NAME) int32_t int_ ## NAME = 0; STACK_POP(&NAME); float NAME = * (float*) & int_ ## NAME;
+	#define OPERAND_FLOAT(NAME) int32_t int_ ## NAME = 0; STACK_POP(&NAME); float NAME = * (float*) & int_ ## NAME
 	#define SET_IP(VALUE) state->ip = VALUE
 	#define GET_IP(VALUE) state->ip
 	#define IF(EXPR) if (EXPR) {
 	#define ENDIF() }
-	#define SEND_INT(VALUE) if (!vm_on_send_int(status, arg, VALUE)) { return false; };
-	#define SEND_BYTE(VALUE) if (!vm_on_send_byte(status, arg, (uint8_t) VALUE)) { return false; };
+	#define SEND_INT(VALUE) if (!vm_on_send_int(status, arg, VALUE)) { return false; }
+	#define SEND_BYTE(VALUE) if (!vm_on_send_byte(status, arg, (uint8_t) VALUE)) { return false; }
 	#define HALT() *status = VM_STATUS_HALT_REQUESTED; return true
 	#define TRAP()                                                                       \
 		bool continue_execution = true;                                                  \

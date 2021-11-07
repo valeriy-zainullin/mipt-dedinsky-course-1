@@ -49,6 +49,5 @@ int main(int argc, char** argv) {
 
 	vm_execute(input_stream, stdin, stdout, NULL);
 
-	// return (int) CLI_EXIT_CODE_SUCCESS;
 	return 0;
 }

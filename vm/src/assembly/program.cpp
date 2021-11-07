@@ -84,8 +84,6 @@ VmAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
 	}
 
 	for (size_t i = 0; i < lines->number_of_lines; ++i) {
-		printf("\ni = %zu.\n", i);
-		printf("*status = %d.\n", (int) *status);
 
 		TextLine* text_line = &lines->lines[i];
 

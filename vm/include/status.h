@@ -20,3 +20,5 @@ enum VmStatus {
 	VM_ERROR_DEBUGGER_NOT_PRESENT,
 	VM_STATUS_HALT_REQUESTED
 };
+
+const char* vm_status_to_string(VmStatus status);

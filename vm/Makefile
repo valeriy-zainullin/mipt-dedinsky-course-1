@@ -15,9 +15,9 @@ endif
 TARGETS=as vm db
 
 EXECUTABLES=as vm db
-SOURCES=$(wildcard src/assembly/*.cpp) $(wildcard src/assembler/*.cpp) $(wildcard src/bytecode/*.cpp) $(wildcard src/vm/*.cpp) $(wildcard src/support/*.cpp) $(wildcard src/db/*.cpp)
+SOURCES=$(wildcard src/*.cpp) $(wildcard src/assembly/*.cpp) $(wildcard src/assembler/*.cpp) $(wildcard src/bytecode/*.cpp) $(wildcard src/vm/*.cpp) $(wildcard src/support/*.cpp) $(wildcard src/db/*.cpp)
 
-as_OBJECTS=$(addsuffix .obj, $(wildcard src/assembler/*.cpp)) $(addsuffix .obj, $(wildcard src/assembly/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
+as_OBJECTS=$(addsuffix .obj, $(wildcard src/assembler/*.cpp)) src/status.cpp.obj $(addsuffix .obj, $(wildcard src/assembly/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
 as_LIBS=../text-sorting/build/libtext.a
 
 vm_OBJECTS=$(addsuffix .obj, $(wildcard src/vm/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj src/assembly/operation.cpp.obj src/assembly/argument.cpp.obj

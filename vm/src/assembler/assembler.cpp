@@ -85,8 +85,6 @@ bool vm_text_hook_on_directive(VmStatus* status, void* argument, VmAssemblyDirec
 		return false;
 	}
 
-	printf("vm_text_hook_on_directive\n");
-
 	return true;
 }
 
@@ -98,8 +96,6 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 	VmAssembler* assembler = (VmAssembler*) argument;
 
 	VmOperation vm_operation = {};
-
-	printf("operation->command = %s\n", operation->command);
 
 	#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, ...) \
 		if (strcmp(operation->command, #NAME) == 0) {    \
@@ -114,7 +110,6 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 	}
 
 	vm_operation.arg_type = operation->argument.arg_type;
-	printf("arg_type = %u.\n", (int) operation->argument.arg_type);
 	vm_operation.register_index = operation->argument.register_index;
 
 	if (operation->argument.immediate_const.is_label) {
@@ -125,8 +120,6 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 				break;
 			}
 		}
-
-		printf("label = %p.\n", operation->argument.immediate_const.label);
 
 		if (label == NULL) {
 			if (assembler->labels.nlabels >= VM_ASSEMBLY_MAX_NUMBER_OF_LABELS) {
@@ -194,7 +187,6 @@ bool vm_text_hook_on_label_decl(VmStatus* status, void* argument, char* label_na
 	}
 
 	if (label == NULL) {
-		printf("label %s is null.\n", label_name);
 		fflush(stdout);
 		assert(assembler->pass == 1);
 	
@@ -212,8 +204,6 @@ bool vm_text_hook_on_label_decl(VmStatus* status, void* argument, char* label_na
 
 	label->defined = true;
 	label->addr = assembler->ip;
-
-	printf("label_decl: %s.\n", label_name);
 
 	return true;
 
