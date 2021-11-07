@@ -1,5 +1,11 @@
 #pragma once
 
+#include "status.h"
+#include "vm/state.h"
+
+#include <stdbool.h>
 #include <stdio.h>
 
-void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream);
+bool vm_on_debugger_notified(VmStatus* status, VmState* state, bool* continue_execution, void* debugger_arg);
+
+void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream, void* debugger_arg);

@@ -24,4 +24,6 @@ struct VmState {
 bool vm_on_send_int(VmStatus* status, void* arg, int32_t value);
 bool vm_on_send_byte(VmStatus* status, void* arg, uint8_t value);
 
-bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* operation, void* arg);
+bool vm_on_trap_to_debugger(VmStatus* status, VmState* state, bool* continue_execution, void* debugger_arg);
+
+bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* operation, void* arg, void* debugger_arg);

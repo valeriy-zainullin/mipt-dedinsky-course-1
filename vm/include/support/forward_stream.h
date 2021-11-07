@@ -15,6 +15,7 @@ struct VmForwardStream {
 
 MAY_BE_UNUSED static const char VM_EOF = -1;
 
+// void ptr?
 bool vm_write_bytes(VmForwardStream* stream, const uint8_t* bytes, size_t length);
 bool vm_read_bytes(VmForwardStream* stream, uint8_t* bytes, size_t length);
 

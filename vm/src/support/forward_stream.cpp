@@ -7,8 +7,8 @@
 #include <stdint.h>
 
 bool vm_write_bytes(VmForwardStream* stream, const uint8_t* bytes, size_t length) {
-	assert(stream != nullptr);
-	assert(bytes != nullptr);
+	assert(stream != NULL);
+	assert(bytes != NULL);
 
 	if (stream->length < length) {
 		return false;
@@ -23,8 +23,8 @@ bool vm_write_bytes(VmForwardStream* stream, const uint8_t* bytes, size_t length
 }
 
 bool vm_read_bytes(VmForwardStream* stream, uint8_t* bytes, size_t length) {
-	assert(stream != nullptr);
-	assert(bytes != nullptr);
+	assert(stream != NULL);
+	assert(bytes != NULL);
 
 	if (stream->length < length) {
 		return false;

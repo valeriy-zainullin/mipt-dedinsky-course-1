@@ -7,11 +7,9 @@ bool vm_text_lookahead_line_is_label_decl(unsigned char* line, size_t length) {
 }
 
 bool vm_text_read_label_decl(VmStatus* status, VmForwardStream* input_stream, char* label) {
-	assert(status != nullptr);
-	assert(input_stream != nullptr);
-	assert(label != nullptr);
-
-	printf("vm_text_read_label_decl.\n");
+	assert(status != NULL);
+	assert(input_stream != NULL);
+	assert(label != NULL);
 
 	*status = VM_SUCCESS;
 

@@ -30,3 +30,4 @@ struct VmAssemblyArgument {
 };
 
 bool vm_text_read_arg(VmStatus* status, VmForwardStream* input_stream, VmAssemblyArgument* argument);
+bool vm_text_write_arg(VmStatus* status, VmForwardStream* output_stream, const VmAssemblyArgument* argument);

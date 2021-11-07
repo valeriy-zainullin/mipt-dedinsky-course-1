@@ -1,26 +1,22 @@
 #include "vm/state.h"
 
 #include "arg_type.h"
+#include "assembly/operation.h"
 #include "bytecode/operation.h"
 #include "status.h"
-#include "support/forward_stream.h"
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
-bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* operation, void* arg) {
-
-	printf(
-		"operation->arg_type = %d, operation->command_index = %d, operation->register_index = %d, operation->immediate_const = %d.\n",
-		operation->arg_type,
-		operation->command_index,
-		operation->register_index,
-		operation->immediate_const
-	);
+bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* operation, void* arg, void* debugger_arg) {
+	assert(status != NULL);
+	assert(state != NULL);
+	assert(operation != NULL);
 
 	int32_t argument_eval = 0; // evaluated if const or const + register or read if memory
-	int32_t* argument_memory = nullptr; // Write
+	int32_t* argument_memory = NULL; // Write
 
 	if ((operation->arg_type & VM_COMMAND_ARG_USES_REGISTER) != 0) {
 		uint8_t register_index = operation->register_index;
@@ -46,19 +42,31 @@ bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* o
 	#define ARGUMENT_MEMORY argument_memory
 	#define MEMORY(ADDRESS) (int32_t*) &state->memory[ADDRESS]
 	#define REGISTER(INDEX) (int32_t*) &state->registers[INDEX]
-	#define STACK_POP(VARIABLE_PTR) stack_int_pop(&state->stack, VARIABLE_PTR) // VERIFY!
-	#define STACK_PUSH(VALUE) stack_int_push(&state->stack, VALUE) // VERIFY!
+	#define STACK_POP(VARIABLE_PTR) if (!stack_int_pop(&state->stack, VARIABLE_PTR)) { return false; }
+	#define STACK_PUSH(VALUE) if (!stack_int_push(&state->stack, VALUE)) { return false; }
 	#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
 	#define SET_IP(VALUE) state->ip = VALUE
 	#define GET_IP(VALUE) state->ip
 	#define IF(EXPR) if (EXPR) {
 	#define ENDIF() }
-	#define SEND_INT(VALUE) vm_on_send_int(status, arg, VALUE)
-	#define SEND_BYTE(VALUE) vm_on_send_byte(status, arg, (uint8_t) VALUE)
+	#define SEND_INT(VALUE) if (!vm_on_send_int(status, arg, VALUE)) { return false; }
+	#define SEND_BYTE(VALUE) if (!vm_on_send_byte(status, arg, (uint8_t) VALUE)) { return false; }
 	#define HALT() *status = VM_STATUS_HALT_REQUESTED; return true
+	#define TRAP()                                                                       \
+		bool continue_execution = true;                                                  \
+		if (!vm_on_trap_to_debugger(status, state, &continue_execution, debugger_arg)) { \
+			return false;                                                                \
+		}                                                                                \
+		if (!continue_execution) {                                                       \
+			*status = VM_STATUS_HALT_REQUESTED;                                          \
+			return true;                                                                 \
+		}
+	#define READ(VARIABLE) int32_t VARIABLE = 0; scanf("%" SCNd32, &VARIABLE)
+	#define SQRT(VALUE) (int32_t) sqrt((double) (VALUE))
+	#define SEND_STRING(VALUE) puts((char*) &state->memory[VALUE])
 	#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, EXECUTION_CODE, ...) \
-		if (operation->command_index == INDEX) {                            \
-			EXECUTION_CODE                                                   \
+		if (operation->command_index == INDEX) {                         \
+			EXECUTION_CODE                                               \
 		} else
 	#include "commands.h"
 	#undef COMMAND

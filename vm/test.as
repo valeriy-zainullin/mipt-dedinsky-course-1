@@ -45,7 +45,9 @@ JMP_TO_HALT:
 	jmp HALT
 
 SEND_STRING:
+	pop bx
 	pop ax
+	push bx
 SEND_STRING_LOOP:
 	push [ax]
 	push 255
@@ -55,7 +57,7 @@ SEND_STRING_LOOP:
 	push [ax]
 	push 255
 	and
-	out
+	outb
 	push ax
 	push 1
 	add
@@ -65,6 +67,6 @@ SEND_STRING_EXIT:
 	ret
 
 OUTPUT_STRING:
-	.db "123, abacaba\n\0"
+	.db "123, abacaba\n\0", 0, 1234
 OUTPUT_NUMBER:
 	.db 1234

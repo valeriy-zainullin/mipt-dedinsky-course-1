@@ -488,3 +488,11 @@ bool STACK_POP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr, STAC
 
 	return true;
 }
+
+void STACK_DUMP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr) {
+	assert(stack_ptr != NULL);
+
+	StackImpl* stack_impl_ptr = (StackImpl*) *stack_ptr;
+	ValidityInfo validity = validate_stack(stack_impl_ptr);
+	dump_stack(variable, validity, stack_impl_ptr);
+}

@@ -7,9 +7,9 @@
 #include <assert.h>
 
 bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmAssemblyOperation* operation) {
-	assert(status != nullptr);
-	assert(input_stream != nullptr);
-	assert(operation != nullptr);
+	assert(status != NULL);
+	assert(input_stream != NULL);
+	assert(operation != NULL);
 
 	*status = VM_SUCCESS;
 
@@ -70,4 +70,28 @@ bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmA
 		*status = VM_ASSEMBLY_ERROR_INVALID_COMMAND;
 		return false;
 	}
+}
+
+bool vm_text_write_operation(VmStatus* status, VmForwardStream* output_stream, const VmAssemblyOperation* operation) {
+	assert(status != NULL);
+	assert(output_stream != NULL);
+	assert(operation != NULL);
+
+	*status = VM_SUCCESS;
+
+	if (!vm_write_bytes(output_stream, (const uint8_t*) operation->command, strlen(operation->command))) {
+		*status = VM_ERROR_INSUFFICIENT_BUFFER;
+		return false;
+	}
+
+	char tmp = ' ';
+	if (!vm_write_bytes(output_stream, (const uint8_t*) &tmp, sizeof(tmp))) {
+		return false;
+	}
+
+	if (!vm_text_write_arg(status, output_stream, &operation->argument)) {
+		return false;
+	}
+
+	return true;
 }

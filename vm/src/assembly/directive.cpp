@@ -37,12 +37,16 @@ static bool read_escape_character(VmForwardStream* stream, char* string, size_t*
 
 	if (next_char == '\\') {
 		string[*length] = '\\';
+		vm_read_char(stream);
 	} else if (next_char == 'n') {
 		string[*length] = '\n';
+		vm_read_char(stream);
 	} else if (next_char == 'r') {
 		string[*length] = '\r';
+		vm_read_char(stream);
 	} else if (next_char == 't') {
 		string[*length] = '\t';
+		vm_read_char(stream);
 	} else if ('0' <= next_char && next_char <= '9') {
 		uint8_t value = 0;
 		sscanf((char*) stream->bytes, "%" SCNu8, &value);
@@ -50,6 +54,7 @@ static bool read_escape_character(VmForwardStream* stream, char* string, size_t*
 		length += sizeof(uint8_t) - 1;
 	} else if (next_char == '"') {
 		string[*length] = '"';
+		vm_read_char(stream);
 	} else {
 		return false;
 	}
@@ -76,8 +81,6 @@ static bool read_string(VmForwardStream* stream, char* string, size_t* length) {
 			return false;
 		}
 	}
-
-	*length += 1;
 
 	while (*length + 1 <= VM_ASSEMBLY_DIRECTIVE_MAX_STRING_ARG_LENGTH && vm_peek_char(stream) != VM_EOF && vm_peek_char(stream) != '"') {
 		if (vm_peek_char(stream) == '\\') {

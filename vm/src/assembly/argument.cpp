@@ -14,9 +14,9 @@ bool vm_text_read_arg(
 
 	VmAssemblyArgument* argument
 ) {
-	assert(status != nullptr);
-	assert(input_stream != nullptr);
-	assert(argument != nullptr);
+	assert(status != NULL);
+	assert(input_stream != NULL);
+	assert(argument != NULL);
 
 	// *status = VM_SUCCESS;
 
@@ -197,44 +197,65 @@ bool vm_text_read_arg(
 	return true;
 }
 
-/*bool vm_text_write_arg(
-	VmStatus* status,
-	FILE* output_stream,
+#define WRITE_CHAR(CHARACTER) {                                           \
+	char copy = CHARACTER;                                                \
+	if (!vm_write_bytes(output_stream, (uint8_t*) &copy, sizeof(copy))) { \
+		*status = VM_ERROR_INSUFFICIENT_BUFFER;                           \
+		return false;                                                     \
+	}                                                                     \
+}
 
-	VmAssemblyArgument* argument
+bool vm_text_write_arg(
+	VmStatus* status,
+	VmForwardStream* output_stream,
+
+	const VmAssemblyArgument* argument
 ) {
-	assert(status != nullptr);
-	assert(output_stream != nullptr);
-	assert(argument != nullptr);
-*//*
-	bool uses_memory = (argument->arg_type & COMMAND_ARG_USES_MEMORY) != 0;
-	bool uses_register = (argument->arg_type & COMMAND_ARG_USES_REGISTER) != 0;
-	bool uses_immediate_const = (argument->arg_type & COMMAND_ARG_USES_IMMEDIATE_CONST) != 0;
+	assert(status != NULL);
+	assert(output_stream != NULL);
+	assert(argument != NULL);
+
+	bool uses_memory = (argument->arg_type & VM_COMMAND_ARG_USES_MEMORY) != 0;
+	bool uses_register = (argument->arg_type & VM_COMMAND_ARG_USES_REGISTER) != 0;
+	bool uses_immediate_const = (argument->arg_type & VM_COMMAND_ARG_USES_IMMEDIATE_CONST) != 0;
 
 	if (uses_memory) {
-		TEXT_WRITE_CHAR('[');
+		WRITE_CHAR('[');
 	}
 
 	if (uses_register) {
-		TEXT_WRITE_CHAR((char) ('a' + argument->register_index));
-		TEXT_WRITE_CHAR('x');
+		WRITE_CHAR((char) ('a' + argument->register_index));
+		WRITE_CHAR('x');
 
 		if (uses_immediate_const) {
-			TEXT_WRITE_CHAR('+');
+			WRITE_CHAR('+');
 		}
 	}
 
 	if (uses_immediate_const) {
 		if (argument->immediate_const.is_label) {
-			TEXT_WRITE_STRING(argument->immediate_const.label);
+			if (!vm_write_bytes(output_stream, (const uint8_t*) argument->immediate_const.label, strlen(argument->immediate_const.label))) {
+				*status = VM_ERROR_INSUFFICIENT_BUFFER;
+				return false;
+			}
 		} else {
-			TEXT_WRITE_INT32(argument->immediate_const);
+			int num_bytes_written = snprintf((char*) output_stream->bytes, output_stream->length, "%" PRId32, argument->immediate_const.value);
+			/*
+			// TODO: handle errors.
+			if (num_bytes_written <= 0) {
+				*status = 
+				return false;
+			}
+			*/
+			output_stream->bytes += num_bytes_written;
+			output_stream->offset += num_bytes_written;
+			output_stream->length -= num_bytes_written;
 		}
 	}
 
 	if (uses_memory) {
-		TEXT_WRITE_CHAR(']');
+		WRITE_CHAR(']');
 	}
-*/
-/*	return true;
-}*/
+
+	return true;
+}

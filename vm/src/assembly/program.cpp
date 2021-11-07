@@ -43,8 +43,6 @@ bool vm_text_process_operation(VmStatus* status, VmForwardStream* stream, void* 
 
 bool vm_text_process_label_decl(VmStatus* status, VmForwardStream* stream, void* argument) {
 
-	printf("vm_text_process_label_decl.\n");
-
 	char label_name[VM_ASSEMBLY_MAX_LABEL_LENGTH + 1] = {};
 
 	if (!vm_text_read_label_decl(status, stream, label_name)) {

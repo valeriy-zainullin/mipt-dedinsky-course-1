@@ -39,6 +39,7 @@ typedef STACK_TYPE_NAME##_STRUCT* STACK_TYPE_NAME;
 #define STACK_DEINIT_FUNCTION_NAME stack_int_deinit
 #define STACK_PUSH_FUNCTION_NAME stack_int_push
 #define STACK_POP_FUNCTION_NAME stack_int_pop
+#define STACK_DUMP_FUNCTION_NAME stack_int_dump
 // ------
 
 // Function definitions.
@@ -46,6 +47,7 @@ bool STACK_INIT_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);
 void STACK_DEINIT_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);
 bool STACK_PUSH_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_ACCEPTANCE_TYPE item);
 bool STACK_POP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr, STACK_ITEM_TYPE* item_ptr);
+void STACK_DUMP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);
 
 #if !defined(INCLUDED_FROM_STACK_IMPLEMENTATION)
 // Interfacing macros.
@@ -54,6 +56,7 @@ bool STACK_POP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr, STAC
 #define stack_int_deinit(STACK_PTR) stack_int_deinit(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR)
 #define stack_int_push(STACK_PTR, ITEM) stack_int_push(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR, ITEM)
 #define stack_int_pop(STACK_PTR, ITEM_PTR) stack_int_pop(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR, ITEM_PTR)
+#define stack_int_dump(STACK_PTR) stack_int_dump(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR)
 #endif
 
 #if !defined(INCLUDED_FROM_STACK_IMPLEMENTATION)
@@ -65,6 +68,7 @@ bool STACK_POP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr, STAC
 #undef STACK_DEINIT_FUNCTION_NAME
 #undef STACK_PUSH_FUNCTION_NAME
 #undef STACK_POP_FUNCTION_NAME
+#undef STACK_DUMP_FUNCTION_NAME
 #if defined(STACK_ACCEPTS_ITEMS_BY_POINTERS)
 #undef STACK_ACCEPTS_ITEMS_BY_POINTERS
 #endif

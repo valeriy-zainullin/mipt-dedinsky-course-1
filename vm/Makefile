@@ -12,16 +12,19 @@ ifndef AR
   AR = ar
 endif
 
-TARGETS=as vm
+TARGETS=as vm db
 
-EXECUTABLES=as vm
-SOURCES=$(wildcard src/assembly/*.cpp) $(wildcard src/assembler/*.cpp) $(wildcard src/bytecode/*.cpp) $(wildcard src/vm/*.cpp) $(wildcard src/support/*.cpp)
+EXECUTABLES=as vm db
+SOURCES=$(wildcard src/assembly/*.cpp) $(wildcard src/assembler/*.cpp) $(wildcard src/bytecode/*.cpp) $(wildcard src/vm/*.cpp) $(wildcard src/support/*.cpp) $(wildcard src/db/*.cpp)
 
 as_OBJECTS=$(addsuffix .obj, $(wildcard src/assembler/*.cpp)) $(addsuffix .obj, $(wildcard src/assembly/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
 as_LIBS=../text-sorting/build/libtext.a
 
-vm_OBJECTS=$(addsuffix .obj, $(wildcard src/vm/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj
+vm_OBJECTS=$(addsuffix .obj, $(wildcard src/vm/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj src/assembly/operation.cpp.obj src/assembly/argument.cpp.obj
 vm_LIBS=../stack/build/libstack_int.a
+
+db_OBJECTS=src/vm/state.cpp.obj src/vm/vm.cpp.obj src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj src/assembly/operation.cpp.obj src/assembly/argument.cpp.obj src/db/db.cpp.obj
+db_LIBS=../stack/build/libstack_int.a
 
 ifneq ($(NO_DOCS),1)
 #TARGETS += docs

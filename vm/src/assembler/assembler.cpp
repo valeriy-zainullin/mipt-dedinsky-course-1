@@ -12,8 +12,8 @@
 #include <string.h>
 
 bool vm_text_hook_on_program_start(VmStatus* status, void* argument) {
-	assert(status != nullptr);
-	assert(argument != nullptr);
+	assert(status != NULL);
+	assert(argument != NULL);
 
 	VmAssembler* assembler = (VmAssembler*) argument;
 
@@ -24,8 +24,8 @@ bool vm_text_hook_on_program_start(VmStatus* status, void* argument) {
 }
 
 bool vm_text_hook_on_program_end(VmStatus* status, void* argument) {
-	assert(status != nullptr);
-	assert(argument != nullptr);
+	assert(status != NULL);
+	assert(argument != NULL);
 
 	VmAssembler* assembler = (VmAssembler*) argument;
 
@@ -39,35 +39,44 @@ bool vm_text_hook_on_program_end(VmStatus* status, void* argument) {
 }
 
 bool vm_text_hook_on_directive(VmStatus* status, void* argument, VmAssemblyDirective* directive) {
-	assert(status != nullptr);
-	assert(argument != nullptr);
-	assert(directive != nullptr);
+	assert(status != NULL);
+	assert(argument != NULL);
+	assert(directive != NULL);
 
 	VmAssembler* assembler = (VmAssembler*) argument;
 
 	((void) assembler);
 	((void) directive);
 
-	if (strcmp(directive->name, "db")) {
-		for (size_t i = 0; i < )
-		switch (directive->argument_type) {
-			case VM_ASSEMBLY_DIRECTIVE_ARG_STRING:
-				if (fwrite(directive->string, sizeof(*directive->string), directive->string_length, assembler->output_file) != directive->string_length) {
-					*status = VM_ERROR_WHILE_WRITING;
-					return false;
-				}
-				break;
-			case VM_ASSEMBLY_DIRECTIVE_ARG_NUMBER:
-				if (fwrite(directive->number, sizeof(directive->number), 1, assembler->output_file) != 1) {
-					*status = VM_ERROR_WHILE_WRITING;
-					return false;
-				}
-				break;
-			default:
-				assert(false);
-				UNREACHABLE;
+	if (strcmp(directive->name, "db") == 0) {
+		for (size_t i = 0; i < directive->num_arguments; ++i) {
+			VmAssemblyDirectiveArgument* directive_argument = &directive->arguments[i];
+			switch (directive_argument->argument_type) {
+				case VM_ASSEMBLY_DIRECTIVE_ARG_STRING:
+					if (
+						fwrite(
+							directive_argument->string,
+							sizeof(*directive_argument->string),
+							directive_argument->string_length,
+							assembler->output_file
+						) !=
+						directive_argument->string_length
+					) {
+						*status = VM_ERROR_WHILE_WRITING;
+						return false;
+					}
+					break;
+				case VM_ASSEMBLY_DIRECTIVE_ARG_NUMBER:
+					if (fwrite(&directive_argument->number, sizeof(directive_argument->number), 1, assembler->output_file) != 1) {
+						*status = VM_ERROR_WHILE_WRITING;
+						return false;
+					}
+					break;
+				default:
+					assert(false);
+					UNREACHABLE;
+			}
 		}
-		fwrite(directive->assembler->output_file);
 	} else {
 		*status = VM_ASSEMBLY_ERROR_INVALID_DIRECTIVE;
 		return false;
@@ -79,9 +88,9 @@ bool vm_text_hook_on_directive(VmStatus* status, void* argument, VmAssemblyDirec
 }
 
 bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOperation* operation) {
-	assert(status != nullptr);
-	assert(argument != nullptr);
-	assert(operation != nullptr);
+	assert(status != NULL);
+	assert(argument != NULL);
+	assert(operation != NULL);
 
 	VmAssembler* assembler = (VmAssembler*) argument;
 
@@ -106,7 +115,7 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 	vm_operation.register_index = operation->argument.register_index;
 
 	if (operation->argument.immediate_const.is_label) {
-		VmAssemblyLabel* label = nullptr;
+		VmAssemblyLabel* label = NULL;
 		for (size_t i = 0; i < assembler->labels.nlabels; ++i) {
 			if (strcmp(assembler->labels.labels[i].name, operation->argument.immediate_const.label) == 0) {
 				label = &assembler->labels.labels[i];
@@ -116,7 +125,7 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 
 		printf("label = %p.\n", operation->argument.immediate_const.label);
 
-		if (label == nullptr) {
+		if (label == NULL) {
 			if (assembler->labels.nlabels >= VM_ASSEMBLY_MAX_NUMBER_OF_LABELS) {
 				*status = VM_ASSEMBLY_ERROR_TOO_MANY_LABELS;
 				return status;
@@ -161,13 +170,13 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 }
 
 bool vm_text_hook_on_label_decl(VmStatus* status, void* argument, char* label_name) {
-	assert(status != nullptr);
-	assert(argument != nullptr);
-	assert(label_name != nullptr);
+	assert(status != NULL);
+	assert(argument != NULL);
+	assert(label_name != NULL);
 
 	VmAssembler* assembler = (VmAssembler*) argument;
 	
-	VmAssemblyLabel* label = nullptr;
+	VmAssemblyLabel* label = NULL;
 
 	for (size_t i = 0; i < assembler->labels.nlabels; ++i) {
 		if (strcmp(assembler->labels.labels[i].name, label_name) == 0) {
@@ -181,7 +190,7 @@ bool vm_text_hook_on_label_decl(VmStatus* status, void* argument, char* label_na
 		}
 	}
 
-	if (label == nullptr) {
+	if (label == NULL) {
 		printf("label %s is null.\n", label_name);
 		fflush(stdout);
 		assert(assembler->pass == 1);
