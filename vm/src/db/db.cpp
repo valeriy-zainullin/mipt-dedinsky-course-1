@@ -6,6 +6,7 @@
 #include "vm/vm.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <inttypes.h>
 #include <stdbool.h>
 
@@ -113,14 +114,25 @@ static void read_commands(VmState* state, Debugger* debugger) {
 		// b(byte), h(halfword), w(word), g(giant, 8 bytes).
 		sscanf(line, " x /%" SCNd32 "%[oxdutfaicsz]%[bhwg] %" SCNu32 " %n", &repeat_count, format_letter, size_letter, &address, &num_chars_read);
 		if (num_chars_read != 0) {
-			if (format_letter[0] != 'x' || size_letter[0] != 'b' || repeat_count < 0) {
+			if ((format_letter[0] != 'x' && format_letter[0] != 'c') || size_letter[0] != 'b' || repeat_count < 0) {
 				printf("Unsupported arguments. Sorry.\n");
 				fflush(stdout);
 				continue;
 			}
 
-			for (size_t i = 0; i < (size_t) repeat_count; ++i) {
-				printf("%02" PRIx8 " ", state->memory[i]);
+			if (format_letter[0] == 'x') {
+				for (size_t i = 0; i < (size_t) repeat_count; ++i) {
+					printf("%02" PRIx8 " ", state->memory[address + i]);
+				}
+			} else if (format_letter[0] == 'c') {
+				for (size_t i = 0; i < (size_t) repeat_count; ++i) {
+					int character = * (char*) &state->memory[address + i];
+					if (isprint(character)) {
+						printf("%c ", character);
+					} else {
+						printf("%02" PRIx8 " ", state->memory[address + i]);
+					}
+				}
 			}
 			printf("\n");
 			fflush(stdout);
@@ -186,17 +198,17 @@ bool vm_on_debugger_notified(VmStatus* status, VmState* state, bool* continue_ex
 
 	Debugger* debugger = (Debugger*) debugger_arg;
 
+	if (debugger->nops_to_skip > 0) {
+		debugger->nops_to_skip -= 1;
+		return true;
+	}
+
 	print_operation(&state->memory[state->ip]);
 
 	read_commands(state, debugger);
 
 	if (debugger->exit_requested) {
 		*continue_execution = false;
-		return true;
-	}
-
-	if (debugger->nops_to_skip > 0) {
-		debugger->nops_to_skip -= 1;
 		return true;
 	}
 

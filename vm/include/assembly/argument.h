@@ -8,6 +8,7 @@
 #include <inttypes.h>
 
 #define VM_IMMEDIATE_CONST_SCANF_FORMAT "%10" SCNd32
+#define VM_FLOAT_IMMEDIATE_CONST_SCANF_FORMAT "%f"
 
 // 3 registers: ax, bx, cx.
 #define VM_REGISTER_NAME_SCANF_FORMAT " %1[a-c]x"

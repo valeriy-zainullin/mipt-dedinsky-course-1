@@ -1,10 +1,10 @@
-read
+readf
 pop ax
 
-read
+readf
 pop bx
 
-read
+readf
 pop cx
 
 push ax
@@ -15,11 +15,16 @@ jmp QUADRATIC_EQUATION
 LINEAR_EQUATION:
 	push bx
 	push 0
-	je B_IS_ZERO
+	subf
+	push EPS
+	push -1.0
+	mulf
+	jbf B_IS_ZERO
 	push cx
 	push -1
 	mul
 	push bx
+	div
 	out
 	halt
 B_IS_ZERO:
@@ -66,7 +71,8 @@ QUADRATIC_EQUATION:
 	out
 	halt
 
-
+EPS:
+	.db 0.05
 SQRT_DESCRIMINANT:
 	.db 0
 SPACE_CHARACTER:

@@ -44,7 +44,9 @@ bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* o
 	#define REGISTER(INDEX) (int32_t*) &state->registers[INDEX]
 	#define STACK_POP(VARIABLE_PTR) if (!stack_int_pop(&state->stack, VARIABLE_PTR)) { return false; }
 	#define STACK_PUSH(VALUE) if (!stack_int_push(&state->stack, VALUE)) { return false; }
+	#define STACK_PUSH_FLOAT(VALUE) if (!stack_int_push(&state->stack, * (float*) &VALUE)) { return false; }
 	#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
+	#define OPERAND_FLOAT(NAME) int32_t int_ ## NAME = 0; STACK_POP(&NAME); float NAME = * (float*) & int_ ## NAME;
 	#define SET_IP(VALUE) state->ip = VALUE
 	#define GET_IP(VALUE) state->ip
 	#define IF(EXPR) if (EXPR) {
@@ -62,8 +64,10 @@ bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* o
 			return true;                                                                 \
 		}
 	#define READ(VARIABLE) int32_t VARIABLE = 0; scanf("%" SCNd32, &VARIABLE)
+	#define READ_FLOAT(VARIABLE) float VARIABLE = 0; scanf("%f", &VARIABLE)
 	#define SQRT(VALUE) (int32_t) sqrt((double) (VALUE))
 	#define SEND_STRING(VALUE) puts((char*) &state->memory[VALUE]); fflush(stdout)
+	#define SEND_FLOAT(VALUE) printf("%f", VALUE); fflush(stdout);
 	#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, EXECUTION_CODE, ...) \
 		if (operation->command_index == INDEX) {                         \
 			EXECUTION_CODE                                               \

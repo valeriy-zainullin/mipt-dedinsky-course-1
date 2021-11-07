@@ -65,12 +65,15 @@ bool vm_text_hook_on_directive(VmStatus* status, void* argument, VmAssemblyDirec
 						*status = VM_ERROR_WHILE_WRITING;
 						return false;
 					}
+					assert(directive_argument->string_length <= INT32_MAX);
+					assembler->ip += (int32_t) directive_argument->string_length;
 					break;
 				case VM_ASSEMBLY_DIRECTIVE_ARG_NUMBER:
 					if (fwrite(&directive_argument->number, sizeof(directive_argument->number), 1, assembler->output_file) != 1) {
 						*status = VM_ERROR_WHILE_WRITING;
 						return false;
 					}
+					assembler->ip += sizeof(directive_argument->number);
 					break;
 				default:
 					assert(false);

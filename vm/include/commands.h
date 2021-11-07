@@ -15,7 +15,9 @@
 		#define REGISTER(INDEX) (int32_t*) &machine.registers[INDEX]
 		#define STACK_POP(INDEX) // VERIFY!
 		#define STACK_PUSH(VALUE) stack_int_push() // VERIFY!
+		#define STACK_PUSH_FLOAT(VALUE) stack_int_push() // VERIFY!
 		#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
+		#define OPERAND_FLOAT(NAME) int32_t int_ ## NAME = 0; STACK_POP(&NAME); float NAME = * (float*) & int_ ## NAME;
 		#define SET_IP(VALUE) state->ip = VALUE
 		#define GET_IP(VALUE) state->ip = VALUE
 		#define IF(EXPR) if (EXPR) {
@@ -26,9 +28,11 @@
 		#define HALT() break
 		#define TMP_VARIABLE(variable, value) (variable = value);
 		#define READ(VARIABLE) int32_t VARIABLE = 0; scanf("%" SCNd32, &VARIABLE)
+		#define READF(VARIABLE) float VARIABLE = 0; scanf("%f", &VARIABLE)
 		#define SQRT(VALUE) (int32_t) sqrt((double) (VALUE))
 		#define SEND_STRING(VALUE) puts(VALUE)
-
+		#define SEND_FLOAT(VALUE) printf("%f", VALUE)
+		#define FLOATING_POINT_COMMANDS(...)
 */
 
 COMMAND(
@@ -282,15 +286,16 @@ COMMAND(
 	),
 )
 
+/*
 COMMAND(
 	sqrt,
 	23,
 	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
 	CODE(
-		OPERAND(value);
+		OPERAND_FLOAT(value);
 		STACK_PUSH(SQRT(value));
 	),
-)
+)*/
 
 COMMAND(
 	outs,
@@ -301,3 +306,55 @@ COMMAND(
 		SEND_STRING(value);
 	),
 )
+
+/*
+COMMAND(
+	addf,
+	25,
+	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
+	CODE(
+		OPERAND_FLOAT(lhs);
+		OPERAND_FLOAT(rhs);
+		STACK_PUSH(lhs + rhs);
+	),
+)
+COMMAND(
+	subf,
+	26,
+	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
+	CODE(
+		OPERAND_FLOAT(lhs);
+		OPERAND_FLOAT(rhs);
+		STACK_PUSH(lhs - rhs);
+	),
+)
+COMMAND(
+	mulf,
+	27,
+	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
+	CODE(
+		OPERAND_FLOAT(lhs);
+		OPERAND_FLOAT(rhs);
+		STACK_PUSH(lhs * rhs);
+	),
+)
+COMMAND(
+	divf,
+	28,
+	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
+	CODE(
+		OPERAND_FLOAT(lhs);
+		OPERAND_FLOAT(rhs);
+		STACK_PUSH(lhs / rhs);
+	),
+)
+COMMAND(
+	outf,
+	29,
+	ARRAY_DEF(VM_COMMAND_ARG_NOT_PRESENT),
+	CODE(
+		READ_FLOAT(value);
+		STACK_PUSH_FLOAT(value);
+	),
+)
+*/
