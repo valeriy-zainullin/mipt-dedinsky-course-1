@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 		return 4;
 	}
 
-	VmAssembler* assembler = (VmAssembler*) calloc(sizeof(VmAssembler), 1);
+	VMAssembler* assembler = (VMAssembler*) calloc(sizeof(VMAssembler), 1);
 
 	// VmStream
 	assembler->output_file = output_stream;
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	assembler->pass = 1;
 	assembler->labels.nlabels = 0;
 
-	VmAssemblyStatus assembly_status = {};
+	VMAssemblyStatus assembly_status = {};
 
 	for (int i = 1; i <= VM_ASSEMBLER_NUMBER_OF_PASSES; ++i) {
 		rewind(output_stream);

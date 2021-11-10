@@ -6,7 +6,7 @@ bool vm_text_lookahead_line_is_label_decl(unsigned char* line, size_t length) {
 	return length >= 1 && line[length - 1] == ':';
 }
 
-bool vm_text_read_label_decl(VmStatus* status, VmForwardStream* input_stream, char* label) {
+bool vm_text_read_label_decl(VMStatus* status, VMForwardStream* input_stream, char* label) {
 	assert(status != NULL);
 	assert(input_stream != NULL);
 	assert(label != NULL);

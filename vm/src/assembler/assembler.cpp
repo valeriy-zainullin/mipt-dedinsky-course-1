@@ -11,11 +11,11 @@
 #include <stdint.h>
 #include <string.h>
 
-bool vm_text_hook_on_program_start(VmStatus* status, void* argument) {
+bool vm_text_hook_on_program_start(VMStatus* status, void* argument) {
 	assert(status != NULL);
 	assert(argument != NULL);
 
-	VmAssembler* assembler = (VmAssembler*) argument;
+	VMAssembler* assembler = (VMAssembler*) argument;
 
 	assembler->ip = 0;
 
@@ -23,11 +23,11 @@ bool vm_text_hook_on_program_start(VmStatus* status, void* argument) {
 
 }
 
-bool vm_text_hook_on_program_end(VmStatus* status, void* argument) {
+bool vm_text_hook_on_program_end(VMStatus* status, void* argument) {
 	assert(status != NULL);
 	assert(argument != NULL);
 
-	VmAssembler* assembler = (VmAssembler*) argument;
+	VMAssembler* assembler = (VMAssembler*) argument;
 
 	if (assembler->ip == 0) {
 		*status = VM_ASSEMBLY_ERROR_EMPTY_PROGRAM;
@@ -38,19 +38,19 @@ bool vm_text_hook_on_program_end(VmStatus* status, void* argument) {
 
 }
 
-bool vm_text_hook_on_directive(VmStatus* status, void* argument, VmAssemblyDirective* directive) {
+bool vm_text_hook_on_directive(VMStatus* status, void* argument, VMAssemblyDirective* directive) {
 	assert(status != NULL);
 	assert(argument != NULL);
 	assert(directive != NULL);
 
-	VmAssembler* assembler = (VmAssembler*) argument;
+	VMAssembler* assembler = (VMAssembler*) argument;
 
 	((void) assembler);
 	((void) directive);
 
 	if (strcmp(directive->name, "db") == 0) {
 		for (size_t i = 0; i < directive->num_arguments; ++i) {
-			VmAssemblyDirectiveArgument* directive_argument = &directive->arguments[i];
+			VMAssemblyDirectiveArgument* directive_argument = &directive->arguments[i];
 			switch (directive_argument->argument_type) {
 				case VM_ASSEMBLY_DIRECTIVE_ARG_STRING:
 					if (
@@ -88,14 +88,14 @@ bool vm_text_hook_on_directive(VmStatus* status, void* argument, VmAssemblyDirec
 	return true;
 }
 
-bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOperation* operation) {
+bool vm_text_hook_on_operation(VMStatus* status, void* argument, VMAssemblyOperation* operation) {
 	assert(status != NULL);
 	assert(argument != NULL);
 	assert(operation != NULL);
 
-	VmAssembler* assembler = (VmAssembler*) argument;
+	VMAssembler* assembler = (VMAssembler*) argument;
 
-	VmOperation vm_operation = {};
+	VMOperation vm_operation = {};
 
 	#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, ...) \
 		if (strcmp(operation->command, #NAME) == 0) {    \
@@ -113,7 +113,7 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 	vm_operation.register_index = operation->argument.register_index;
 
 	if (operation->argument.immediate_const.is_label) {
-		VmAssemblyLabel* label = NULL;
+		VMAssemblyLabel* label = NULL;
 		for (size_t i = 0; i < assembler->labels.nlabels; ++i) {
 			if (strcmp(assembler->labels.labels[i].name, operation->argument.immediate_const.label) == 0) {
 				label = &assembler->labels.labels[i];
@@ -143,12 +143,12 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 	}
 
 	unsigned char output[VM_BYTECODE_MAX_OPERATION_LENGTH];
-	VmForwardStream output_stream = {};
+	VMForwardStream output_stream = {};
 	output_stream.bytes = output;
 	output_stream.offset = 0;
 	output_stream.length = VM_BYTECODE_MAX_OPERATION_LENGTH;
 
-	VmStatus vm_status;
+	VMStatus vm_status;
 	if (!vm_bytecode_write_operation(&vm_status, &output_stream, &vm_operation)) {
 		return false;
 	}
@@ -165,14 +165,14 @@ bool vm_text_hook_on_operation(VmStatus* status, void* argument, VmAssemblyOpera
 
 }
 
-bool vm_text_hook_on_label_decl(VmStatus* status, void* argument, char* label_name) {
+bool vm_text_hook_on_label_decl(VMStatus* status, void* argument, char* label_name) {
 	assert(status != NULL);
 	assert(argument != NULL);
 	assert(label_name != NULL);
 
-	VmAssembler* assembler = (VmAssembler*) argument;
+	VMAssembler* assembler = (VMAssembler*) argument;
 	
-	VmAssemblyLabel* label = NULL;
+	VMAssemblyLabel* label = NULL;
 
 	for (size_t i = 0; i < assembler->labels.nlabels; ++i) {
 		if (strcmp(assembler->labels.labels[i].name, label_name) == 0) {

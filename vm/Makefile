@@ -44,8 +44,8 @@ CFLAGS=-pedantic -Werror -std=c99 -Iinclude -I../text-sorting/include -I../stack
   -Wno-missing-field-initializers -Wnarrowing -Wno-old-style-cast -Wvarargs -Waligned-new \
   -Walloc-size-larger-than=1073741824 -Walloc-zero -Walloca -Walloca-larger-than=8192 \
   -Wdangling-else -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 -Wmissing-attributes \
-  -Wmultistatement-macros -Wrestrict -Wshadow=global -Wsuggest-attribute=malloc -fcheck-new \
-  -fsized-deallocation -fstack-check -fstrict-overflow -flto-odr-type-merging
+  -Wmultistatement-macros -Wrestrict -Wshadow=global -Wsuggest-attribute=malloc -Wno-unsued-result \
+  -fcheck-new -fsized-deallocation -fstack-check -fstrict-overflow -flto-odr-type-merging
 CFLAGS_RELEASE=-O2 -DVM_DEBUG=0
 CFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
 
@@ -64,7 +64,7 @@ CXXFLAGS= \
   -Wno-missing-field-initializers -Wnarrowing -Wno-old-style-cast -Wvarargs -Waligned-new \
   -Walloc-size-larger-than=1073741824 -Walloc-zero -Walloca -Walloca-larger-than=8192 -Wdangling-else \
   -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 -Wrestrict -Wshadow=global -fcheck-new \
-  -fsized-deallocation -fstrict-overflow -flto-odr-type-merging
+  -Wno-unused-result -fsized-deallocation -fstrict-overflow -flto-odr-type-merging
 # Disabling -fstack-check, otherwise doesn't not compile on linux.
 CXXFLAGS_RELEASE=-O2 -DVM_DEBUG=0
 CXXFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1

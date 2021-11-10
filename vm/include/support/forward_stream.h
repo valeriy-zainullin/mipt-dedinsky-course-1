@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
-struct VmForwardStream {
+struct VMForwardStream {
 	uint8_t* bytes;
 	size_t offset;
 	size_t length;
@@ -16,8 +16,8 @@ struct VmForwardStream {
 MAY_BE_UNUSED static const char VM_EOF = -1;
 
 // void ptr?
-bool vm_write_bytes(VmForwardStream* stream, const uint8_t* bytes, size_t length);
-bool vm_read_bytes(VmForwardStream* stream, uint8_t* bytes, size_t length);
+bool vm_write_bytes(VMForwardStream* stream, const uint8_t* bytes, size_t length);
+bool vm_read_bytes(VMForwardStream* stream, uint8_t* bytes, size_t length);
 
-char vm_peek_char(VmForwardStream* stream);
-char vm_read_char(VmForwardStream* stream);
+char vm_peek_char(VMForwardStream* stream);
+char vm_read_char(VMForwardStream* stream);

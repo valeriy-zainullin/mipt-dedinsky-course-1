@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 
-bool vm_on_trap_to_debugger(VmStatus* status, VmState* state, bool* continue_execution, void* debugger_arg) {
+bool vm_on_trap_to_debugger(VMStatus* status, VMState* state, bool* continue_execution, void* debugger_arg) {
 	assert(status != NULL);
 	assert(state != NULL);
 	assert(continue_execution != NULL);
@@ -23,7 +23,7 @@ bool vm_on_trap_to_debugger(VmStatus* status, VmState* state, bool* continue_exe
 	return false;
 }
 
-bool vm_on_debugger_notified(VmStatus* status, VmState* state, bool* continue_execution, void* debugger_arg) {
+bool vm_on_debugger_notified(VMStatus* status, VMState* state, bool* continue_execution, void* debugger_arg) {
 	assert(status != NULL);
 	assert(state != NULL);
 	assert(continue_execution != NULL);

@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-enum VmStatus {
+enum VMStatus {
 	VM_SUCCESS = 0,
 	// VM_ASSEMBLY_ERROR_EMPTY_LABEL,
 	VM_ASSEMBLY_ERROR_EMPTY_PROGRAM,
@@ -21,4 +21,4 @@ enum VmStatus {
 	VM_STATUS_HALT_REQUESTED
 };
 
-const char* vm_status_to_string(VmStatus status);
+const char* vm_status_to_string(VMStatus status);

@@ -8,10 +8,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-struct VmAssemblyOperation {
+struct VMAssemblyOperation {
 	char command[VM_ASSEMBLY_MAX_COMMAND_LENGTH + 1];
-	VmAssemblyArgument argument;
+	VMAssemblyArgument argument;
 };
 
-bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmAssemblyOperation* operation);
-bool vm_text_write_operation(VmStatus* status, VmForwardStream* output_stream, const VmAssemblyOperation* operation);
+bool vm_text_read_operation(VMStatus* status, VMForwardStream* input_stream, VMAssemblyOperation* operation);
+bool vm_text_write_operation(VMStatus* status, VMForwardStream* output_stream, const VMAssemblyOperation* operation);

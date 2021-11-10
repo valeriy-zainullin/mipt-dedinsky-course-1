@@ -16,27 +16,27 @@ struct Debugger {
 };
 
 static void print_operation(uint8_t* operation_ptr) {
-	VmOperation operation = {};
+	VMOperation operation = {};
 
-	VmForwardStream stream = {};
+	VMForwardStream stream = {};
 	stream.bytes = operation_ptr;
 	stream.length = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int32_t);
 	stream.offset = 0;
 
-	VmStatus status = VM_SUCCESS;
+	VMStatus status = VM_SUCCESS;
 
 	if (!vm_bytecode_read_operation(&status, &stream, &operation)) {
 		printf("Failed to decode the operation.\n");
 		return;
 	}
 
-	VmForwardStream forward_stream = {};
+	VMForwardStream forward_stream = {};
 	char buffer[1024] = {};
 	forward_stream.bytes = (uint8_t*) buffer;
 	forward_stream.offset = 0;
 	forward_stream.length = 1024;
 	
-	VmAssemblyOperation assembly_operation = {};
+	VMAssemblyOperation assembly_operation = {};
 
 	#define COMMAND(NAME, INDEX, ...)                  \
 		if (operation.command_index == INDEX) {        \
@@ -63,7 +63,7 @@ static void print_operation(uint8_t* operation_ptr) {
 	fflush(stdout);
 }
 
-static void read_commands(VmState* state, Debugger* debugger) {
+static void read_commands(VMState* state, Debugger* debugger) {
 	while (true) {
 		printf("(db) ");
 		fflush(stdout);
@@ -164,7 +164,7 @@ static void read_commands(VmState* state, Debugger* debugger) {
 	}
 }
 
-bool vm_on_trap_to_debugger(VmStatus* status, VmState* state, bool* continue_execution, void* debugger_arg) {
+bool vm_on_trap_to_debugger(VMStatus* status, VMState* state, bool* continue_execution, void* debugger_arg) {
 	assert(status != NULL);
 	assert(state != NULL);
 	assert(continue_execution != NULL);
@@ -189,7 +189,7 @@ bool vm_on_trap_to_debugger(VmStatus* status, VmState* state, bool* continue_exe
 	return true;
 }
 
-bool vm_on_debugger_notified(VmStatus* status, VmState* state, bool* continue_execution, void* debugger_arg) {
+bool vm_on_debugger_notified(VMStatus* status, VMState* state, bool* continue_execution, void* debugger_arg) {
 	assert(status != NULL);
 	assert(state != NULL);
 	assert(continue_execution != NULL);

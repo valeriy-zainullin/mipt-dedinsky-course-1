@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-const char* vm_status_to_string(VmStatus status) {
+const char* vm_status_to_string(VMStatus status) {
 	switch (status) {
 		case VM_SUCCESS:                                     return "успешно";
 		case VM_ASSEMBLY_ERROR_EMPTY_PROGRAM:                return "пустая программа";

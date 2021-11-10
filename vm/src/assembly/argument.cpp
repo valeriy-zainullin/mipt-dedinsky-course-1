@@ -9,10 +9,10 @@
 
 // TODO: hex numbers.
 bool vm_text_read_arg(
-	VmStatus* status,
-	VmForwardStream* input_stream,
+	VMStatus* status,
+	VMForwardStream* input_stream,
 
-	VmAssemblyArgument* argument
+	VMAssemblyArgument* argument
 ) {
 	assert(status != NULL);
 	assert(input_stream != NULL);
@@ -206,10 +206,10 @@ bool vm_text_read_arg(
 }
 
 bool vm_text_write_arg(
-	VmStatus* status,
-	VmForwardStream* output_stream,
+	VMStatus* status,
+	VMForwardStream* output_stream,
 
-	const VmAssemblyArgument* argument
+	const VMAssemblyArgument* argument
 ) {
 	assert(status != NULL);
 	assert(output_stream != NULL);

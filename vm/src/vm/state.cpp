@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-bool vm_execute_operation(VmStatus* status, VmState* state, const VmOperation* operation, void* arg, void* debugger_arg) {
+bool vm_execute_operation(VMStatus* status, VMState* state, const VMOperation* operation, void* arg, void* debugger_arg) {
 	assert(status != NULL);
 	assert(state != NULL);
 	assert(operation != NULL);

@@ -13,9 +13,9 @@
 		return false;                 \
 	}
 
-bool vm_text_process_directive(VmStatus* status, VmForwardStream* stream, void* argument) {
+bool vm_text_process_directive(VMStatus* status, VMForwardStream* stream, void* argument) {
 
-	VmAssemblyDirective directive = {};
+	VMAssemblyDirective directive = {};
 
 	if (!vm_text_read_directive(status, stream, &directive)) {
 		return false;
@@ -27,9 +27,9 @@ bool vm_text_process_directive(VmStatus* status, VmForwardStream* stream, void* 
 
 }
 
-bool vm_text_process_operation(VmStatus* status, VmForwardStream* stream, void* argument) {
+bool vm_text_process_operation(VMStatus* status, VMForwardStream* stream, void* argument) {
 
-	VmAssemblyOperation operation = {};
+	VMAssemblyOperation operation = {};
 
 	if (!vm_text_read_operation(status, stream, &operation)) {
 		return false;
@@ -41,7 +41,7 @@ bool vm_text_process_operation(VmStatus* status, VmForwardStream* stream, void* 
 
 }
 
-bool vm_text_process_label_decl(VmStatus* status, VmForwardStream* stream, void* argument) {
+bool vm_text_process_label_decl(VMStatus* status, VMForwardStream* stream, void* argument) {
 
 	char label_name[VM_ASSEMBLY_MAX_LABEL_LENGTH + 1] = {};
 
@@ -55,8 +55,8 @@ bool vm_text_process_label_decl(VmStatus* status, VmForwardStream* stream, void*
 
 }
 
-bool vm_text_process_line(VmStatus* status, unsigned char* line, size_t length, void* argument) {
-	VmForwardStream stream = {};
+bool vm_text_process_line(VMStatus* status, unsigned char* line, size_t length, void* argument) {
+	VMForwardStream stream = {};
 	stream.bytes = (uint8_t*) line;
 	stream.offset = 0;
 	stream.length = length;
@@ -72,12 +72,12 @@ bool vm_text_process_line(VmStatus* status, unsigned char* line, size_t length, 
 	return vm_text_process_operation(status, &stream, argument);
 }
 
-VmAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
-	VmAssemblyStatus assembly_status;
+VMAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
+	VMAssemblyStatus assembly_status;
 	assembly_status.line = 0;
 	assembly_status.error = VM_SUCCESS;
 
-	VmStatus* status = &assembly_status.error;
+	VMStatus* status = &assembly_status.error;
 
 	if (!vm_text_hook_on_program_start(status, argument)) {
 		return assembly_status;

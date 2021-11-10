@@ -11,4 +11,4 @@
 
 bool vm_text_lookahead_line_is_label_decl(unsigned char* line, size_t length);
 
-bool vm_text_read_label_decl(VmStatus* status, VmForwardStream* input_stream, char* label);
+bool vm_text_read_label_decl(VMStatus* status, VMForwardStream* input_stream, char* label);

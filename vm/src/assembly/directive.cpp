@@ -11,7 +11,7 @@ bool vm_text_lookahead_line_is_directive(unsigned char* line, size_t length) {
 	return length >= 1 && * (char*) line == VM_ASSEMBLY_DIRECTIVE_PREFIX;
 }
 
-static bool read_literal_character(VmForwardStream* stream, char* string, size_t* length) {
+static bool read_literal_character(VMForwardStream* stream, char* string, size_t* length) {
 	char next_char = vm_read_char(stream);
 
 	if (next_char != VM_EOF && next_char != '"') {
@@ -28,7 +28,7 @@ static bool read_literal_character(VmForwardStream* stream, char* string, size_t
 // Directive = '.' directive_name ' ' {' '} {argument}
 // Escape_character = '\' ('\' | 'n' | 'r' | | 't' | byte | "')
 // Literal_character = ^('\' | '"')
-static bool read_escape_character(VmForwardStream* stream, char* string, size_t* length) {
+static bool read_escape_character(VMForwardStream* stream, char* string, size_t* length) {
 	if (vm_read_char(stream) != '\\') {
 		return false;
 	}
@@ -73,7 +73,7 @@ static bool read_escape_character(VmForwardStream* stream, char* string, size_t*
 // Escape_character = '\' ('\' | '\n' | '\r' | | '\t' | byte | "')
 // Literal_character = ^('\' | '"')
 // String = '"'  (escape_character | literal_character) {escape_character | literal_character} '"'
-static bool read_string(VmForwardStream* stream, char* string, size_t* length) {
+static bool read_string(VMForwardStream* stream, char* string, size_t* length) {
 	if (vm_read_char(stream) != '"') {
 		return false;
 	}
@@ -110,7 +110,7 @@ static bool read_string(VmForwardStream* stream, char* string, size_t* length) {
 // String = '"'  (escape_character | literal_character) {escape_character | literal_character} '"'
 // Number = ['-'] 0'..'9' ... // SCANF_INT32_FORMAT 
 // Argument = (string | number) {' '} [',' {' '}]
-bool vm_text_read_directive_arg(VmStatus* status, VmForwardStream* stream, VmAssemblyDirectiveArgument* directive_argument) {
+bool vm_text_read_directive_arg(VMStatus* status, VMForwardStream* stream, VMAssemblyDirectiveArgument* directive_argument) {
 	((void) status);
 
 	char next_char = vm_peek_char(stream);
@@ -151,7 +151,7 @@ bool vm_text_read_directive_arg(VmStatus* status, VmForwardStream* stream, VmAss
 	return true;
 }
 
-bool vm_text_read_directive(VmStatus* status, VmForwardStream* stream, VmAssemblyDirective* directive) {
+bool vm_text_read_directive(VMStatus* status, VMForwardStream* stream, VMAssemblyDirective* directive) {
 	char prefix = 0;
 
 	if (!vm_read_bytes(stream, (uint8_t*) &prefix, sizeof(char))) {

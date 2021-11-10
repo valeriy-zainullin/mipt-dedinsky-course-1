@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 
-struct VmAssemblyStatus {
+struct VMAssemblyStatus {
 	size_t line;
-	VmStatus error;
+	VMStatus error;
 };

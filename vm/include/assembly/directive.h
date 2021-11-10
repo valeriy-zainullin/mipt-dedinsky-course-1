@@ -14,13 +14,13 @@ static const char VM_ASSEMBLY_DIRECTIVES[][VM_ASSEMBLY_MAX_DIRECTIVE_LENGTH + 1]
 static const size_t VM_ASSEMBLY_DIRECTIVE_MAX_NUMBER_OF_ARGUMENTS = 10;
 static const size_t VM_ASSEMBLY_DIRECTIVE_MAX_STRING_ARG_LENGTH = 256;
 
-enum VmAssemblyDirectiveType {
+enum VMAssemblyDirectiveType {
 	VM_ASSEMBLY_DIRECTIVE_ARG_STRING,
 	VM_ASSEMBLY_DIRECTIVE_ARG_NUMBER
 };
 
-struct VmAssemblyDirectiveArgument {
-	VmAssemblyDirectiveType argument_type;
+struct VMAssemblyDirectiveArgument {
+	VMAssemblyDirectiveType argument_type;
 
 	char string[VM_ASSEMBLY_DIRECTIVE_MAX_STRING_ARG_LENGTH + 1];
 	size_t string_length;
@@ -29,9 +29,9 @@ struct VmAssemblyDirectiveArgument {
 	int32_t number;
 };
 
-struct VmAssemblyDirective {
+struct VMAssemblyDirective {
 	char name[VM_ASSEMBLY_MAX_DIRECTIVE_LENGTH + 1];
-	VmAssemblyDirectiveArgument arguments[VM_ASSEMBLY_DIRECTIVE_MAX_NUMBER_OF_ARGUMENTS];
+	VMAssemblyDirectiveArgument arguments[VM_ASSEMBLY_DIRECTIVE_MAX_NUMBER_OF_ARGUMENTS];
 	size_t num_arguments;
 };
 
@@ -43,5 +43,5 @@ struct VmAssemblyDirective {
 // Number = ['-'] 0'..'9' ... // SCANF_INT32_FORMAT 
 // Argument = string | number
 bool vm_text_lookahead_line_is_directive(unsigned char* line, size_t length);
-bool vm_text_read_directive_arg(VmStatus* status, VmForwardStream* stream, VmAssemblyDirectiveArgument* directive_argument);
-bool vm_text_read_directive(VmStatus* status, VmForwardStream* stream, VmAssemblyDirective* directive);
+bool vm_text_read_directive_arg(VMStatus* status, VMForwardStream* stream, VMAssemblyDirectiveArgument* directive_argument);
+bool vm_text_read_directive(VMStatus* status, VMForwardStream* stream, VMAssemblyDirective* directive);

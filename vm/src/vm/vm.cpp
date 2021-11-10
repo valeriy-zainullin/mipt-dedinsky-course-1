@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-static bool vm_read_program(FILE* program, VmState* state) {
+static bool vm_read_program(FILE* program, VMState* state) {
 	assert(program != NULL);
 	assert(state != NULL);
 
@@ -31,7 +31,7 @@ static bool vm_read_program(FILE* program, VmState* state) {
 	return true;
 }
 
-bool vm_on_send_int(VmStatus* status, void* arg, int32_t value) {
+bool vm_on_send_int(VMStatus* status, void* arg, int32_t value) {
 	(void) status;
 
 	FILE* output_stream = (FILE*) arg;
@@ -41,7 +41,7 @@ bool vm_on_send_int(VmStatus* status, void* arg, int32_t value) {
 	return true;
 }
 
-bool vm_on_send_byte(VmStatus* status, void* arg, uint8_t value) {
+bool vm_on_send_byte(VMStatus* status, void* arg, uint8_t value) {
 	(void) status;
 
 	FILE* output_stream = (FILE*) arg;
@@ -56,7 +56,7 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream, void* de
 	assert(input_stream != NULL);
 	assert(output_stream != NULL);
 
-	VmState* state = (VmState*) calloc(1, sizeof(VmState));
+	VMState* state = (VMState*) calloc(1, sizeof(VMState));
 	if (state == NULL) {
 		return;
 	}
@@ -65,7 +65,7 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream, void* de
 
 	vm_read_program(program, state);
 
-	VmStatus status = VM_SUCCESS;
+	VMStatus status = VM_SUCCESS;
 
 	while (true) {
 
@@ -75,9 +75,9 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream, void* de
 			break;
 		}
 
-		VmOperation operation = {};
+		VMOperation operation = {};
 
-		VmForwardStream stream = {};
+		VMForwardStream stream = {};
 		stream.bytes = &state->memory[state->ip];
 		stream.length = sizeof(state->memory) / sizeof(*state->memory) - state->ip;
 		stream.offset = 0;

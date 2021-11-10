@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-bool vm_write_bytes(VmForwardStream* stream, const uint8_t* bytes, size_t length) {
+bool vm_write_bytes(VMForwardStream* stream, const uint8_t* bytes, size_t length) {
 	assert(stream != NULL);
 	assert(bytes != NULL);
 
@@ -22,7 +22,7 @@ bool vm_write_bytes(VmForwardStream* stream, const uint8_t* bytes, size_t length
 	return true;
 }
 
-bool vm_read_bytes(VmForwardStream* stream, uint8_t* bytes, size_t length) {
+bool vm_read_bytes(VMForwardStream* stream, uint8_t* bytes, size_t length) {
 	assert(stream != NULL);
 	assert(bytes != NULL);
 
@@ -38,7 +38,7 @@ bool vm_read_bytes(VmForwardStream* stream, uint8_t* bytes, size_t length) {
 	return true;
 }
 
-char vm_peek_char(VmForwardStream* stream) {
+char vm_peek_char(VMForwardStream* stream) {
 	if (stream->length == 0) {
 		return VM_EOF;
 	}
@@ -46,7 +46,7 @@ char vm_peek_char(VmForwardStream* stream) {
 	return (char) *stream->bytes;
 }
 
-char vm_read_char(VmForwardStream* stream) {
+char vm_read_char(VMForwardStream* stream) {
 	char result = vm_peek_char(stream);
 
 	stream->bytes += 1;

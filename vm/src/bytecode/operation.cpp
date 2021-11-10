@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-bool vm_bytecode_write_operation(VmStatus* status, VmForwardStream* output_stream, const VmOperation* operation) {
+bool vm_bytecode_write_operation(VMStatus* status, VMForwardStream* output_stream, const VMOperation* operation) {
 	uint8_t operation_code = (uint8_t) ((operation->arg_type << 5) | operation->command_index);
 	WRITE(operation_code);
 
@@ -25,7 +25,7 @@ bool vm_bytecode_write_operation(VmStatus* status, VmForwardStream* output_strea
 	return true;
 }
 
-bool vm_bytecode_read_operation(VmStatus* status, VmForwardStream* input_stream, VmOperation* operation) {
+bool vm_bytecode_read_operation(VMStatus* status, VMForwardStream* input_stream, VMOperation* operation) {
 	uint8_t operation_code = 0;
 	READ(operation_code);
 

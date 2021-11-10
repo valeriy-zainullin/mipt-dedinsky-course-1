@@ -6,7 +6,7 @@
 
 #include <assert.h>
 
-bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmAssemblyOperation* operation) {
+bool vm_text_read_operation(VMStatus* status, VMForwardStream* input_stream, VMAssemblyOperation* operation) {
 	assert(status != NULL);
 	assert(input_stream != NULL);
 	assert(operation != NULL);
@@ -34,7 +34,7 @@ bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmA
 	input_stream->offset += arg_start;
 	input_stream->length -= arg_start;
 
-	VmAssemblyArgument argument = {};
+	VMAssemblyArgument argument = {};
 
 	if (!vm_text_read_arg(status, input_stream, &argument)) {
 		return false;		
@@ -72,7 +72,7 @@ bool vm_text_read_operation(VmStatus* status, VmForwardStream* input_stream, VmA
 	}
 }
 
-bool vm_text_write_operation(VmStatus* status, VmForwardStream* output_stream, const VmAssemblyOperation* operation) {
+bool vm_text_write_operation(VMStatus* status, VMForwardStream* output_stream, const VMAssemblyOperation* operation) {
 	assert(status != NULL);
 	assert(output_stream != NULL);
 	assert(operation != NULL);
