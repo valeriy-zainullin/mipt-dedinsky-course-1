@@ -7,6 +7,7 @@ pop cx
 push ax
 push bx
 push cx
+; Summing up the items
 add
 add
 add

@@ -166,13 +166,9 @@ bool vm_text_read_directive(VMStatus* status, VMForwardStream* stream, VMAssembl
 		return false;
 	}
 
-	stream->bytes += (size_t) num_bytes_read;
-	stream->offset += num_bytes_read;
-	stream->length -= num_bytes_read;
+	vm_advance_stream(stream, num_bytes_read);
 
-	while (vm_peek_char(stream) == ' ') {
-		vm_read_char(stream);
-	}
+	vm_skip_repeats(stream, ' ');
 
 	for (size_t i = 0; stream->length != 0 && i < VM_ASSEMBLY_DIRECTIVE_MAX_NUMBER_OF_ARGUMENTS; ++i) {
 

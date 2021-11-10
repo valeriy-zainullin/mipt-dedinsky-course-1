@@ -67,7 +67,7 @@ bool vm_execute_operation(VMStatus* status, VMState* state, const VMOperation* o
 	#define READ_FLOAT(VARIABLE) float VARIABLE = 0; scanf("%f", &VARIABLE)
 	#define SQRT(VALUE) (int32_t) sqrt((double) (VALUE))
 	#define SEND_STRING(VALUE) puts((char*) &state->memory[VALUE]); fflush(stdout)
-	#define SEND_FLOAT(VALUE) printf("%f", VALUE); fflush(stdout);
+	#define SEND_FLOAT(VALUE) printf("%f", VALUE); fflush(stdout)
 	#define COMMAND(NAME, INDEX, ALLOWED_ARG_TYPES, EXECUTION_CODE, ...) \
 		if (operation->command_index == INDEX) {                         \
 			EXECUTION_CODE                                               \

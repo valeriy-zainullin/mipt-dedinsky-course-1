@@ -30,9 +30,7 @@ bool vm_text_read_operation(VMStatus* status, VMForwardStream* input_stream, VMA
 
 	assert(arg_start >= 0);
 
-	input_stream->bytes += arg_start;
-	input_stream->offset += arg_start;
-	input_stream->length -= arg_start;
+	vm_advance_stream(input_stream, arg_start);
 
 	VMAssemblyArgument argument = {};
 

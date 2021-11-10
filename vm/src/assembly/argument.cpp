@@ -176,12 +176,10 @@ bool vm_text_read_arg(
 	}
 
 	if (!read) {
-		while (input_stream->length > 0 && isspace(*(char*) input_stream->bytes)) {
-			input_stream->bytes += 1;
-			input_stream->offset += 1;
-			input_stream->length -= 1;
+		while (isspace(vm_peek_char(input_stream))) {
+			vm_read_char(input_stream);
 		}
-		if (input_stream->length == 0) {
+		if (vm_peek_char(input_stream) == VM_EOF) {
 			argument->arg_type = VM_COMMAND_ARG_NOT_PRESENT;
 			read = true;
 		}
@@ -247,9 +245,7 @@ bool vm_text_write_arg(
 				return false;
 			}
 			*/
-			output_stream->bytes += num_bytes_written;
-			output_stream->offset += num_bytes_written;
-			output_stream->length -= num_bytes_written;
+			vm_advance_stream(output_stream, num_bytes_written);
 		}
 	}
 

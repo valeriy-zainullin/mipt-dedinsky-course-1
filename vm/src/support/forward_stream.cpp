@@ -15,9 +15,8 @@ bool vm_write_bytes(VMForwardStream* stream, const uint8_t* bytes, size_t length
 	}
 
 	memcpy(stream->bytes, bytes, length);
-	stream->bytes += length;
-	stream->length -= length;
-	stream->offset += length;
+
+	vm_advance_stream(stream, length);
 
 	return true;
 }
@@ -31,14 +30,15 @@ bool vm_read_bytes(VMForwardStream* stream, uint8_t* bytes, size_t length) {
 	}
 
 	memcpy(bytes, stream->bytes, length);
-	stream->bytes += length;
-	stream->length -= length;
-	stream->offset += length;
+
+	vm_advance_stream(stream, length);
 
 	return true;
 }
 
 char vm_peek_char(VMForwardStream* stream) {
+	assert(stream != NULL);
+
 	if (stream->length == 0) {
 		return VM_EOF;
 	}
@@ -47,11 +47,20 @@ char vm_peek_char(VMForwardStream* stream) {
 }
 
 char vm_read_char(VMForwardStream* stream) {
+	assert(stream != NULL);
+
 	char result = vm_peek_char(stream);
 
-	stream->bytes += 1;
-	stream->length -= 1;
-	stream->offset += 1;
+	vm_advance_stream(stream, 1);
 
 	return result;
+}
+
+void vm_skip_repeats(VMForwardStream* stream, char character) {
+	assert(stream != NULL);
+	assert(character != VM_EOF);
+
+	while (vm_peek_char(stream) == character) {
+		vm_read_char(stream);
+	}
 }

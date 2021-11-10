@@ -57,9 +57,7 @@ bool vm_text_process_label_decl(VMStatus* status, VMForwardStream* stream, void*
 
 bool vm_text_process_line(VMStatus* status, unsigned char* line, size_t length, void* argument) {
 	VMForwardStream stream = {};
-	stream.bytes = (uint8_t*) line;
-	stream.offset = 0;
-	stream.length = length;
+	vm_init_stream(&stream, (uint8_t*) line, length);
 
 	if (vm_text_lookahead_line_is_directive(line, length)) {
 		return vm_text_process_directive(status, &stream, argument);
@@ -70,6 +68,19 @@ bool vm_text_process_line(VMStatus* status, unsigned char* line, size_t length, 
 	}
 
 	return vm_text_process_operation(status, &stream, argument);
+}
+
+static void skip_leading_spaces(unsigned char** line, size_t* length) {
+	while (*length >= 1 && isspace(**line)) {
+		++*line;
+		--*length;
+	}
+}
+
+static bool is_comment(unsigned char* line, size_t length) {
+	(void) length;
+
+	return line[0] == ';';
 }
 
 VMAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
@@ -92,12 +103,13 @@ VMAssemblyStatus vm_text_process_program(TextLines* lines, void* argument) {
 		unsigned char* line = text_line->first_character;
 		size_t length = (size_t) (text_line->after_the_last_character - text_line->first_character);
 
-		while (length >= 1 && isspace(*line)) {
-			++line;
-			--length;
-		}
+		skip_leading_spaces(&line, &length);
 
 		if (length == 0) {
+			continue;
+		}
+
+		if (is_comment(line, length)) {
 			continue;
 		}
 
