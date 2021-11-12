@@ -5,6 +5,8 @@
 #include "bytecode/operation.h"
 #include "status.h"
 
+#include "stack_vm.h"
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -42,11 +44,10 @@ bool vm_execute_operation(VMStatus* status, VMState* state, const VMOperation* o
 	#define ARGUMENT_MEMORY argument_memory
 	#define MEMORY(ADDRESS) (int32_t*) &state->memory[ADDRESS]
 	#define REGISTER(INDEX) (int32_t*) &state->registers[INDEX]
-	#define STACK_POP(VARIABLE_PTR) if (!stack_int_pop(&state->stack, VARIABLE_PTR)) { return false; }
-	#define STACK_PUSH(VALUE) if (!stack_int_push(&state->stack, VALUE)) { return false; }
-	#define STACK_PUSH_FLOAT(VALUE) if (!stack_int_push(&state->stack, * (float*) &VALUE)) { return false; }
+	#define STACK_POP(VARIABLE_PTR) if (!stack_4b_pop(&state->stack, (uint32_t*) VARIABLE_PTR)) { return false; } state->registers[VM_MACHINE_STACK_REGISTER_INDEX] -= sizeof(uint32_t)
+	#define STACK_PUSH(VALUE) if (!stack_4b_push(&state->stack, * (uint32_t*) &VALUE)) { return false; }  state->registers[VM_MACHINE_STACK_REGISTER_INDEX] += sizeof(uint32_t)
 	#define OPERAND(NAME) int32_t NAME = 0; STACK_POP(&NAME)
-	#define OPERAND_FLOAT(NAME) int32_t int_ ## NAME = 0; STACK_POP(&NAME); float NAME = * (float*) & int_ ## NAME
+	#define OPERAND_FLOAT(NAME) float NAME = 0; { int32_t int_ ## NAME = 0; STACK_POP(&NAME); NAME = * (float*) & int_ ## NAME }
 	#define SET_IP(VALUE) state->ip = VALUE
 	#define GET_IP(VALUE) state->ip
 	#define IF(EXPR) if (EXPR) {

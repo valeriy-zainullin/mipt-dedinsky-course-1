@@ -5,7 +5,7 @@
 #include "status.h"
 #include "vm/state.h"
 
-#include "stack.h"
+#include "stack_vm.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -61,7 +61,8 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream, void* de
 		return;
 	}
 
-	stack_int_init(&state->stack);
+	stack_4b_init(&state->stack, state->memory + VM_MACHINE_MEMORY_SIZE - VM_MACHINE_STACK_SIZE, VM_MACHINE_STACK_SIZE / sizeof(uint32_t));
+	state->registers[VM_MACHINE_STACK_REGISTER_INDEX] = (uint32_t) ((uint8_t*) stack_4b_get_content_address(&state->stack) - state->memory);
 
 	vm_read_program(program, state);
 
@@ -99,6 +100,6 @@ void vm_execute(FILE* program, FILE* input_stream, FILE* output_stream, void* de
 
 	}
 
-	stack_int_deinit(&state->stack);
+	stack_4b_deinit(&state->stack);
 	free(state);
 }

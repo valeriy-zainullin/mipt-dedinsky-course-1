@@ -13,9 +13,9 @@ ifndef AR
 endif
 
 ifneq ($(IS_CYGWIN),CYGWIN)
-TARGETS=build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan build/libstack_int.a
+TARGETS=build/main build/main_debug build/main_asan build/main_ubsan build/main_lsan build/libstack_vm.a
 else
-TARGETS=build/main build/main_debug build/libstack_int.a
+TARGETS=build/main build/main_debug build/libstack_vm.a
 endif
 
 ifneq ($(NO_DOCS),1)
@@ -50,7 +50,7 @@ build/main_ubsan: build/main.cpp.ubsan.o build/stack.cpp.ubsan.o | build
 	$(CXX) -o $@ $^ -lubsan
 build/main_lsan: build/main.cpp.lsan.o build/stack.cpp.lsan.o | build
 	# $(CXX) -o $@ $^ -llsan
-build/libstack_int.a: build/stack.cpp.o | build
+build/libstack_vm.a: build/stack_vm.cpp.o | build
 	$(AR) -r $@ $@ $^
 
 build/%.cpp.o: src/%.cpp | build build/deps

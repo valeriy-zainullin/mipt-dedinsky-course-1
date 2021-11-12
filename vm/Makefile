@@ -21,10 +21,10 @@ as_OBJECTS=$(addsuffix .obj, $(wildcard src/assembler/*.cpp)) src/status.cpp.obj
 as_LIBS=../text-sorting/build/libtext.a
 
 vm_OBJECTS=$(addsuffix .obj, $(wildcard src/vm/*.cpp)) src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj src/assembly/operation.cpp.obj src/assembly/argument.cpp.obj
-vm_LIBS=../stack/build/libstack_int.a
+vm_LIBS=../stack/build/libstack_vm.a
 
 db_OBJECTS=src/vm/state.cpp.obj src/vm/vm.cpp.obj src/bytecode/operation.cpp.obj src/support/forward_stream.cpp.obj src/assembly/operation.cpp.obj src/assembly/argument.cpp.obj src/db/db.cpp.obj
-db_LIBS=../stack/build/libstack_int.a
+db_LIBS=../stack/build/libstack_vm.a
 
 ifneq ($(NO_DOCS),1)
 #TARGETS += docs

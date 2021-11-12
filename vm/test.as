@@ -46,9 +46,8 @@ JMP_TO_HALT:
 	jmp HALT
 
 SEND_STRING:
-	pop bx
-	pop ax
-	push bx
+	pop [dx+-4]
+	push ax
 SEND_STRING_LOOP:
 	push [ax]
 	push 255

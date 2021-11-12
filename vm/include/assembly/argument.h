@@ -11,9 +11,9 @@
 #define VM_FLOAT_IMMEDIATE_CONST_SCANF_FORMAT "%f"
 
 // 3 registers: ax, bx, cx.
-#define VM_REGISTER_NAME_SCANF_FORMAT " %1[a-c]x"
+#define VM_REGISTER_NAME_SCANF_FORMAT " %1[a-d]x"
 
-static const size_t VM_MAX_REGISTER_INDEX = 2;
+static const size_t VM_MAX_REGISTER_INDEX = 3;
 
 struct VMAssemblyImmediateConst {
 	int32_t value;

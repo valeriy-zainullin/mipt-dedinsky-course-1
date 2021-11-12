@@ -80,7 +80,7 @@ static void read_commands(VMState* state, Debugger* debugger) {
 		num_chars_read = 0;		
 		sscanf(line, " info stack %n", &num_chars_read);
 		if (num_chars_read != 0) {
-			stack_int_dump(&state->stack);
+			stack_4b_dump(&state->stack);
 			fflush(stdout);
 			continue;
 		}
