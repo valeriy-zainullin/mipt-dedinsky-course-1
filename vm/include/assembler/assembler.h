@@ -23,5 +23,8 @@ struct VMAssembler {
 	int pass;
 
 	int32_t ip;
-	VMAssemblyLabels labels;
+	VMAssemblyLabels* labels;
 };
+
+bool vm_init_assembler(VMAssembler* assembler);
+bool vm_deinit_assembler(VMAssembler* assembler);

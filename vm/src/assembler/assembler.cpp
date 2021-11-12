@@ -9,7 +9,26 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+
+bool vm_init_assembler(VMAssembler* assembler) {
+	assert(assembler != NULL);
+
+	uint8_t* buffer = calloc(VM_ASSEMBLER_MAX_OUTPUT_PROGRAM_LENGTH, sizeof(uint8_t));
+	if (buffer == NULL) {
+		return false;
+	}
+
+	assembler->buffer = buffer;
+
+	assembler->ip = 0;
+	assembler->pass = 0;
+	assembler->labels.nlabels = 0;
+
+}
+
+void vm_deinit_assembler(VMAssembler* assembler);
 
 bool vm_text_hook_on_program_start(VMStatus* status, void* argument) {
 	assert(status != NULL);
