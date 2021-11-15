@@ -1,6 +1,8 @@
 #include "tree/tree.h"
 
+#include "database.h"
 #include "macro_utils.h"
+#include "tts.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -8,15 +10,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define PRODUCE_OUTPUT(...) printf(__VA_ARGS__); say(__VA_ARGS__)
+#define PRODUCE_OUTPUT(...) printf(__VA_ARGS__); tts_say(__VA_ARGS__)
 
-#define LOG_ERROR(...) (void) (__VA_ARGS__)
+#define MAX_LINE_LENGTH_MACRO 1024
 
-#define MAX_SAID_STRING_LENGTH_MACRO 1024
-#define MAX_COMMAND_LENGTH_MACRO 2048
-
-static const size_t MAX_SAID_STRING_LENGTH = MAX_SAID_STRING_LENGTH_MACRO;
-static const size_t MAX_COMMAND_LENGTH = MAX_COMMAND_LENGTH_MACRO;
+static const size_t MAX_LINE_LENGTH = MAX_LINE_LENGTH_MACRO;
 
 enum AkinatorMode {
 	AKINATOR_MODE_GUESS,
@@ -26,39 +24,27 @@ enum AkinatorMode {
 	AKINATOR_MODE_COUNT
 };
 
-// Запретить одинарную и двойную ковычки.
-static void say(const char * format, ...) {
-	va_list list;
+static bool read_line(char* line) {
+	assert(line != NULL);
 
-	char said_string[MAX_SAID_STRING_LENGTH + 1] = {};
+	line[0] = '\0';
 
-	va_start(list, format);
-	vsnprintf(said_string, MAX_SAID_STRING_LENGTH, format, list);
-	va_end(list);
+	int num_chars_read = 0;
 
-	char command[MAX_COMMAND_LENGTH + 1] = {};
+	// 0 if '\n' immediately follows.
+	int num_read = scanf(" %" EXPANDED_TO_STRING(MAX_LINE_LENGTH_MACRO) "[^\n]%n", line, &num_chars_read);
 
-	snprintf(
-		command,
-		MAX_COMMAND_LENGTH,
+	if (num_read < 0) {
+		return false;
+	}
 
-		"festival \""
-		"(set! male1 voice_msu_ru_nsh_clunits)"
-		"(male1)"
-		"(Parameter.set 'Language 'russian)"
-		"(SayText \\\"%s\\\")"
-		"\"",
+	return true;
 
-		said_string
-	);
-
-	fputs(command, stderr);
-
-	system(command);
 }
 
 static AkinatorMode read_mode() {
-	PRODUCE_OUTPUT("Что хочешь, дорогой?");
+
+	PRODUCE_OUTPUT("Что хочешь, дорогой?\n");
 	PRODUCE_OUTPUT("0 --- угадать объект.\n");
 	PRODUCE_OUTPUT("1 --- сравнить объекты.\n");
 	PRODUCE_OUTPUT("2 --- дать определение объекту.\n");
@@ -68,46 +54,122 @@ static AkinatorMode read_mode() {
 
 	int choice = 0;
 
-	while (true) {
-		int num_read = scanf("%d", &choice);
+	char line[MAX_LINE_LENGTH + 1] = {};
+
+	while (read_line(line)) {
+		int num_read = sscanf(line, "%d", &choice);
 
 		if (num_read < 0) {
 			LOG_ERROR("Не удалось прочитать выбор.\n");
-
-			if (feof(stdin)) {
-				break;
-			}
+			continue;
 		}
-	
+
 		if (0 <= choice && choice < (int) AKINATOR_MODE_COUNT) {
 			return (AkinatorMode) choice;
 		}
 	}
 
 	return AKINATOR_MODE_EXIT;
+
 }
 
-static void process_guess() {}
+static int guess_object(Node* node) {
+	printf("Это %s? [Да/Нет]\n", node->value);
+	fflush(stdout);
 
-static void process_compare() {}
 
-static void process_get_definition() {}
+}
 
-int main() {
+static void process_guess_request(Tree* tree) {
+	tree_visit_depth_first(tree, guess_object, NULL);
+}
+
+static void process_comparison_request(Tree* tree) {
+	(void) tree;
+}
+
+static void process_definition_request(Tree* tree) {
+	(void) tree;
+}
+
+static bool read_database(Tree* tree, const char* filename) {
+	FILE* stream = fopen(filename, "r");
+	if (stream == NULL) {
+		return false;
+	}
+
+	if (!database_read(tree, stream)) {
+		fclose(stream);
+		return false;
+	}
+
+	fclose(stream);
+
+	return true;
+}
+
+static bool save_database(Tree* tree, const char* filename) {
+	FILE* stream = fopen(filename, "w");
+	if (stream == NULL) {
+		return false;
+	}
+
+	if (!database_save(tree, stream)) {
+		fclose(stream);
+		return false;
+	}
+
+	fclose(stream);
+
+	return true;
+}
+
+static const int AKINATOR_EXIT_FAILED_TO_SAVE_DATABASE = 4;
+static const int AKINATOR_EXIT_FAILED_TO_READ_DATABASE = 3;
+static const int AKINATOR_EXIT_INVALID_ARGUMENTS = 2;
+static const int AKINATOR_EXIT_ERROR = 1;
+static const int AKINATOR_EXIT_SUCCESS = 0;
+
+int main(int argc, const char** argv) {
+	if (argc != 2) {
+		return AKINATOR_EXIT_INVALID_ARGUMENTS;
+	}
+
+	Tree tree = {};
+
+	tree_init(&tree);
+
+	if (!read_database(&tree, argv[1])) {
+		tree_deinit(&tree);
+		return AKINATOR_EXIT_FAILED_TO_READ_DATABASE;
+	}
 
 	while (true) {
 		AkinatorMode mode = read_mode();
 
-		switch (mode) {
-			case AKINATOR_MODE_GUESS:          process_guess();          break;
-			case AKINATOR_MODE_COMPARE:        process_compare();        break;
-			case AKINATOR_MODE_GET_DEFINITION: process_get_definition(); break;
-			case AKINATOR_MODE_EXIT:                                     break;
+		if (mode == AKINATOR_MODE_EXIT) {
+			break;
+		}
 
+		switch (mode) {
+			case AKINATOR_MODE_GUESS:          process_guess_request(&tree);      break;
+			case AKINATOR_MODE_COMPARE:        process_comparison_request(&tree); break;
+			case AKINATOR_MODE_GET_DEFINITION: process_definition_request(&tree); break;
+
+			case AKINATOR_MODE_EXIT:
 			case AKINATOR_MODE_COUNT:
 			default: UNREACHABLE;
 		}
 	}
 
-	return 0;
+	if (!save_database(&tree, argv[1])) {
+		tree_deinit(&tree);
+		return AKINATOR_EXIT_FAILED_TO_SAVE_DATABASE;
+	}
+
+	if (!tree_deinit(&tree)) {
+		return AKINATOR_EXIT_ERROR;
+	}
+
+	return AKINATOR_EXIT_SUCCESS;
 }

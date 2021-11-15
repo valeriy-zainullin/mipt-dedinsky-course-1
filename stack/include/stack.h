@@ -20,7 +20,7 @@
 static const int STACK_INT_VERIFICATION_FAILED_EXIT_CODE = 1;
 #define STACK_VERIFICATION_FAILED_EXIT_CODE STACK_INT_VERIFICATION_FAILED_EXIT_CODE
 static const STACK_ITEM_TYPE STACK_INT_POISON = -120304010;
-#define STACK_POISON STACK_INT_POISON
+#define STACK_POISON (STACK_ITEM_TYPE) STACK_INT_POISON
 
 typedef void* STACK_TYPE_NAME; // Implicit cast to void* is allowed in this case.
 /*
@@ -41,6 +41,8 @@ typedef STACK_TYPE_NAME##_STRUCT* STACK_TYPE_NAME;
 #define STACK_POP_FUNCTION_NAME stack_int_pop
 #define STACK_DUMP_FUNCTION_NAME stack_int_dump
 // ------
+
+#define STACK_PRINT_ITEM(STREAM, ITEM) fprintf(STREAM, "%d", ITEM)
 
 // Function definitions.
 bool STACK_INIT_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);

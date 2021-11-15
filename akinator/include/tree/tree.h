@@ -8,9 +8,14 @@ struct Tree {
 	TreeNode* root;
 };
 
+#define TREE_MAX_STRING_LENGTH_MACRO 256
+static const int TREE_MAX_STRING_LENGTH = TREE_MAX_STRING_LENGTH_MACRO;
+
 struct TreeNode {
 	TreeNode* left;
 	TreeNode* right;
+
+	char value[TREE_MAX_STRING_LENGTH + 1];
 };
 
 MAY_BE_UNUSED static int TREE_DIRECTION_NONE = 0;
@@ -19,4 +24,7 @@ MAY_BE_UNUSED static int TREE_DIRECTION_RIGHT = 2;
 
 typedef int (*TreeOnNodeVisitedCallback)(TreeNode* node, void* arg);
 
-void tree_visit_depth_first(Tree* tree, TreeOnNodeVisitedCallback callback);
+void tree_init(Tree* tree);
+bool tree_deinit(Tree* tree);
+
+bool tree_visit_depth_first(Tree* tree, TreeOnNodeVisitedCallback callback, void* arg);

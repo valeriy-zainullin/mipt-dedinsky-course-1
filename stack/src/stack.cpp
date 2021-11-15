@@ -10,9 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if STACK_CANARY_PROTECTION_ENABLED
+
 #define CANARY_TYPE unsigned long long
 #define CANARY_SIZE sizeof(unsigned long long)
 static unsigned long long CANARY_VALUE = 0xCD07B10913AE98FALL;
+
+#endif
 
 typedef enum ValidityFlags {
 
@@ -101,8 +105,8 @@ static unsigned long long get_gnu_hash(const unsigned char* bytes, size_t length
 
 #if STACK_STRUCT_HASH_PROTECTION_ENABLED
 static unsigned long long calculate_struct_hash(const StackImpl* stack_impl_ptr) {
-	return get_gnu_hash((const unsigned char*) &stack_impl_ptr->size, (size_t) ((char*) stack_impl_ptr->data -
-																				(char*) &stack_impl_ptr->size));
+	return get_gnu_hash((const unsigned char*) &stack_impl_ptr->size, (size_t) ((const char*) stack_impl_ptr->data -
+																				(const char*) &stack_impl_ptr->size));
 }
 #endif
 
@@ -195,9 +199,6 @@ static ValidityInfo validate_stack(const StackImpl* stack_impl_ptr) {
 	// TODO: struct hash protection is not enabled.
 	return validity;
 }
-ValidityInfo (*VALIDATE_STACK_PTR)(const StackImpl* stack_impl_ptr) = &validate_stack;
-
-#define validate_stack (*VALIDATE_STACK_PTR) // To make the program more reliable.
 
 #if defined(__GNUC__)
 #define UNREACHABLE __builtin_unreachable()
@@ -285,7 +286,8 @@ static void dump_stack(Variable variable,
 
 	for (size_t i = 0; i < stack_impl_ptr->capacity; ++i) {
 
-		fprintf(output_file, "\t[%zu] = %d", i, stack_impl_ptr->data[i]);
+		fprintf(output_file, "\t[%zu] = ", i);
+		STACK_PRINT_ITEM(output_file, stack_impl_ptr->data[i]);
 
 		if (stack_impl_ptr->data[i] == STACK_POISON) {
 			fputs(" (POISON)", output_file);
@@ -312,6 +314,7 @@ static void dump_stack(Variable variable,
 	#endif
 
 	fputs("}\n", output_file);
+	// fflush here?
 }
 
 #define VALIDATE_STACK(RETURN_VALUE_ON_ERROR) {                  \
@@ -342,9 +345,11 @@ bool STACK_INIT_FUNCTION_NAME(Variable definition, STACK_TYPE_NAME* stack_ptr) {
 	stack_impl_ptr->size = 0;
 	stack_impl_ptr->capacity = INITIAL_CAPACITY;
 
-	// Dropping constnesses and initializing canaries.
-	* (CANARY_TYPE*) &stack_impl_ptr->canary = CANARY_VALUE;
-	* (CANARY_TYPE*) &CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
+	#if STACK_CANARY_PROTECTION_ENABLED
+		// Dropping constnesses and initializing canaries.
+		* (CANARY_TYPE*) &stack_impl_ptr->canary = CANARY_VALUE;
+		* (CANARY_TYPE*) &CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
+	#endif
 
 	stack_impl_ptr->definition = definition;
 
@@ -395,7 +400,9 @@ static bool ensure_space(STACK_TYPE_NAME* stack_ptr) {
 	}
 
 	stack_impl_ptr->capacity = new_capacity;
-	* (CANARY_TYPE*) &CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
+	#if STACK_CANARY_PROTECTION_ENABLED
+		* (CANARY_TYPE*) &CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
+	#endif
 
 	return true;
 }
@@ -461,7 +468,9 @@ static void free_unused_space(STACK_TYPE_NAME* stack_ptr) {
 		stack_impl_ptr = (StackImpl*) *stack_ptr;
 
 		stack_impl_ptr->capacity = new_capacity;
-		* (CANARY_TYPE*) &CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
+		#if STACK_CANARY_PROTECTION_ENABLED
+			* (CANARY_TYPE*) &CANARY_AT_THE_END(stack_impl_ptr) = CANARY_VALUE;
+		#endif
 	}
 }
 

@@ -15,14 +15,14 @@
 #define STACK_DATA_HASH_PROTECTION_ENABLED 0
 #define STACK_ANY_HASH_PROTECTION_ENABLED STACK_STRUCT_HASH_PROTECTION_ENABLED || STACK_DATA_HASH_PROTECTION_ENABLED
 
-#define STACK_ITEM_TYPE 
+#define STACK_ITEM_TYPE TreeNode*
 #define STACK_TYPE_NAME StackTreeNode
-#define STACK_ACCEPTS_ITEMS_BY_POINTERS 1
+#define STACK_ACCEPTS_ITEMS_BY_POINTERS 0
 
 static const int STACK_INT_VERIFICATION_FAILED_EXIT_CODE = 1;
 #define STACK_VERIFICATION_FAILED_EXIT_CODE STACK_INT_VERIFICATION_FAILED_EXIT_CODE
-static const STACK_ITEM_TYPE STACK_TREE_NODE_POISON = TreeNode{(TreeNode*) 0xBD796DED, (TreeNode*) 0xBD796DED};
-#define STACK_POISON STACK_INT_POISON
+MAY_BE_UNUSED static const STACK_ITEM_TYPE STACK_TREE_NODE_POISON = (const TreeNode*) 0xBD796DEDLL;
+#define STACK_POISON (STACK_ITEM_TYPE) STACK_TREE_NODE_POISON
 
 typedef void* STACK_TYPE_NAME; // Implicit cast to void* is allowed in this case.
 /*
@@ -44,6 +44,8 @@ typedef STACK_TYPE_NAME##_STRUCT* STACK_TYPE_NAME;
 #define STACK_DUMP_FUNCTION_NAME stack_tree_node_dump
 // ------
 
+#define STACK_PRINT_ITEM(STREAM, ITEM) fprintf(STREAM, "%p", (void*) ITEM)
+
 // Function definitions.
 bool STACK_INIT_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);
 void STACK_DEINIT_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);
@@ -54,11 +56,11 @@ void STACK_DUMP_FUNCTION_NAME(Variable variable, STACK_TYPE_NAME* stack_ptr);
 #if !defined(INCLUDED_FROM_STACK_IMPLEMENTATION)
 // Interfacing macros.
 // Don't define them for stack implementation as stack implementation function names from definitions (for example, "bool STACK_INIT_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr);") will be macro-expanded to real function names (in example, "bool stack_int_init(VariableLocation variable_location, void** stack_ptr);") and then they will be expanded to these function-like macros ("stack_int_init" in example), but then number of arguments will mismatch. And still it would be a wrong behaviour.
-#define stack_tree_node_init(STACK_PTR) stack_int_init(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR)
-#define stack_tree_node_deinit(STACK_PTR) stack_int_deinit(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR)
-#define stack_tree_node_push(STACK_PTR, ITEM) stack_int_push(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR, ITEM)
-#define stack_tree_node_pop(STACK_PTR, ITEM_PTR) stack_int_pop(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR, ITEM_PTR)
-#define stack_tree_node_dump(STACK_PTR) stack_int_dump(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR)
+#define stack_tree_node_init(STACK_PTR) stack_tree_node_init(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR)
+#define stack_tree_node_deinit(STACK_PTR) stack_tree_node_deinit(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR)
+#define stack_tree_node_push(STACK_PTR, ITEM) stack_tree_node_push(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR, ITEM)
+#define stack_tree_node_pop(STACK_PTR, ITEM_PTR) stack_tree_node_pop(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR, ITEM_PTR)
+#define stack_tree_node_dump(STACK_PTR) stack_tree_node_dump(MAKE_VARIABLE_LOCATION(STACK_PTR), STACK_PTR)
 #endif
 
 #if !defined(INCLUDED_FROM_STACK_IMPLEMENTATION)
