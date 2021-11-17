@@ -18,6 +18,7 @@ static bool database_read_node(TreeNode** node, FILE* stream) {
 
 	fscanf(stream, " { \"%" EXPANDED_TO_STRING(DATABASE_MAX_STRING_LENGTH_MACRO) "[^\"]\"%n", string, &num_chars_read);
 
+	// Могли пропустить пробелы, а по формату всё равно не совпать.
 	if (num_chars_read == 0) {
 		
 		if (feof(stream)) {

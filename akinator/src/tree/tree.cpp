@@ -74,6 +74,7 @@ bool tree_visit_depth_first(Tree* tree, TreeOnNodeVisitedCallback callback, void
 		return false;
 	}
 
+	// Удалось занести?
 	stack_tree_node_push(&stack, tree->root);
 
 	while (true) {
