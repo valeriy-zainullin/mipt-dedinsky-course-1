@@ -9,6 +9,25 @@
 
 #define LOG_ERROR_FOR_NODE(NODE, ...) fprintf(stderr, "Node@%p: ", (void*) NODE); LOG_ERROR(__VA_ARGS__)
 
+void tree_node_init(TreeNode** node, const char* value) {
+	*node = (TreeNode*) calloc(1, sizeof(TreeNode));
+	if (*node == NULL) {
+		return false;
+	}
+	
+	object_node->left = NULL;
+	object_node->right = NULL;
+	strcpy(object_node->value, line);
+
+	return true;
+}
+
+void tree_node_deinit(TreeNode** node) {
+	memset(*node, 0, sizeof(TreeNode));
+	free(*node);
+	*node = NULL;
+}
+
 void tree_init(Tree* tree) {
 	tree->root = NULL;
 }
@@ -51,8 +70,7 @@ bool tree_deinit(Tree* tree) {
 			return false;
 		}
 
-		memset(node, 0, sizeof(TreeNode));
-		free(node);
+		tree_node_deinit(&node);
 	}
 
 	stack_tree_node_deinit(&stack);

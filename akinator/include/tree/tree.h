@@ -18,6 +18,9 @@ struct TreeNode {
 	char value[TREE_MAX_STRING_LENGTH + 1];
 };
 
+bool tree_node_init(TreeNode** node, const char* value);
+void tree_node_deinit(TreeNode** node);
+
 MAY_BE_UNUSED static int TREE_DIRECTION_NONE = 0;
 MAY_BE_UNUSED static int TREE_DIRECTION_LEFT = 1;
 MAY_BE_UNUSED static int TREE_DIRECTION_RIGHT = 2;

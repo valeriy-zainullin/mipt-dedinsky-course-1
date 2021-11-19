@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// fflush here?
 #define PRODUCE_OUTPUT(...) printf(__VA_ARGS__); tts_say(__VA_ARGS__)
 
 #define MAX_LINE_LENGTH_MACRO 1024
@@ -116,19 +117,15 @@ static int guess_object(TreeNode* node, void* arg) {
 					return false;
 				}
 
-				TreeNode* object_node = (TreeNode*) calloc(1, sizeof(TreeNode));
-				if (object_node == NULL) {
+				TreeNode* object_node = NULL;
+				if (!tree_node_init(&object_node, line)) {
 					return TREE_DIRECTION_NONE;
 				}
-				object_node->left = NULL;
-				object_node->right = NULL;
-				strcpy(object_node->value, line);
 
-				TreeNode* question_node = (TreeNode*) calloc(1, sizeof(TreeNode));
-				if (node == NULL) {
+				TreeNode* question_node = NULL;
+				if (tree_node_init(&question_node, question_node->value)) {
 					return TREE_DIRECTION_NONE;
 				}
-				strcpy(question_node->value, difference);
 
 				question_node->left = object_node;
 				question_node->right = node;
@@ -151,7 +148,7 @@ static void process_guess_request(Tree* tree) {
 }
 
 static void process_comparison_request(Tree* tree) {
-	(void) tree;
+	
 }
 
 static void process_definition_request(Tree* tree) {
