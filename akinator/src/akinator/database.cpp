@@ -1,8 +1,7 @@
-#include "database.h"
+#include "akinator/database.h"
 
+#include "support/macro_utils.h"
 #include "tree/tree.h"
-
-#include "macro_utils.h"
 
 #include <assert.h>
 #include <stddef.h>

@@ -15,9 +15,9 @@ endif
 TARGETS=main
 
 EXECUTABLES=main
-SOURCES=$(wildcard src/*.cpp) $(wildcard src/tree/*.cpp) $(wildcard src/akinator/*.cpp)
+SOURCES=$(wildcard src/*.cpp) $(wildcard src/tree/*.cpp) $(wildcard src/akinator/*.cpp) $(wildcard src/support/*.cpp)
 
-main_OBJECTS=$(addsuffix .obj, $(wildcard src/*.cpp)) $(addsuffix .obj, $(wildcard src/akinator/*.cpp)) $(addsuffix .obj, $(wildcard src/tree/*.cpp))
+main_OBJECTS=$(addsuffix .obj, $(wildcard src/*.cpp)) $(addsuffix .obj, $(wildcard src/akinator/*.cpp)) $(addsuffix .obj, $(wildcard src/tree/*.cpp)) $(addsuffix .obj, $(wildcard src/support/*.cpp))
 main_LIBS=
 
 ifneq ($(NO_DOCS),1)

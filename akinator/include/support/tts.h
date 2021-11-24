@@ -1,6 +1,6 @@
 #pragma once
 
-#include "macro_utils.h"
+#include "support/macro_utils.h"
 
 #define TTS_MAX_SAID_STRING_LENGTH_MACRO 1024
 #define TTS_MAX_COMMAND_LENGTH_MACRO 2048

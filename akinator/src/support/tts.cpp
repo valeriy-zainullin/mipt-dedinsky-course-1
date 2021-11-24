@@ -1,7 +1,8 @@
-#include "tts.h"
+#include "support/tts.h"
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
 
 static const size_t MAX_SAID_STRING_LENGTH = TTS_MAX_SAID_STRING_LENGTH_MACRO;
 static const size_t MAX_COMMAND_LENGTH = TTS_MAX_COMMAND_LENGTH_MACRO;

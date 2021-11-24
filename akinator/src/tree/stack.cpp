@@ -1,7 +1,7 @@
 #define INCLUDED_FROM_STACK_IMPLEMENTATION
 #include "tree/stack.h"
 
-#include "tree/variable_location.h"
+#include "support/variable_location.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -281,7 +281,7 @@ static void dump_stack(Variable variable,
 		fprintf(output_file, "\t[%zu] = ", i);
 		STACK_PRINT_ITEM(output_file, stack_impl_ptr->data[i]);
 
-		if (stack_impl_ptr->data[i] == STACK_POISON) {
+		if (STACK_ITEMS_EQUAL(stack_impl_ptr->data[i], STACK_POISON)) {		
 			fputs(" (POISON)", output_file);
 		}
 
@@ -411,7 +411,7 @@ bool STACK_PUSH_FUNCTION_NAME(Variable variable,
 	}
 	stack_impl_ptr = (StackImpl*) *stack_ptr;
 
-	if (stack_impl_ptr->data[stack_impl_ptr->size] != STACK_POISON) {
+	if (!STACK_ITEMS_EQUAL(stack_impl_ptr->data[stack_impl_ptr->size], STACK_POISON)) {
 
 		ValidityInfo stack_validity = validate_stack(stack_impl_ptr);
 
