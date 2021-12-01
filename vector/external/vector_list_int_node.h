@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../linked-list/include/list.h"
+
 #include "variable_location.h"
 
 #include <stdbool.h>
@@ -12,14 +14,14 @@
 #define VECTOR_STRUCT_HASH_PROTECTION_ENABLED 0
 #define VECTOR_ANY_HASH_PROTECTION_ENABLED VECTOR_STRUCT_HASH_PROTECTION_ENABLED
 
-#define VECTOR_ITEM_TYPE const char*
-#define VECTOR_TYPE_NAME VectorString
+#define VECTOR_ITEM_TYPE ListIntNode
+#define VECTOR_TYPE_NAME VectorListIntNode
 #define VECTOR_ACCEPTS_ITEMS_BY_POINTERS 0
 #define VECTOR_COMPARES_ITEMS_WITH_MEMCMP 0
 
 static const int VECTOR_INT_VERIFICATION_FAILED_EXIT_CODE = 1;
 #define VECTOR_VERIFICATION_FAILED_EXIT_CODE VECTOR_INT_VERIFICATION_FAILED_EXIT_CODE
-MAY_BE_UNUSED static VECTOR_ITEM_TYPE const VECTOR_STRING_POISON = (VECTOR_ITEM_TYPE) 0xBD796DEDLL;
+MAY_BE_UNUSED static VECTOR_ITEM_TYPE const VECTOR_STRING_POISON = {0xBD796DEDLL, 0x73786DEDLL, 798274019};
 #define VECTOR_POISON (VECTOR_ITEM_TYPE) VECTOR_STRING_POISON
 
 typedef void* VECTOR_TYPE_NAME; // Implicit cast to void* is allowed in this case.
@@ -44,7 +46,7 @@ typedef STACK_TYPE_NAME##_STRUCT* STACK_TYPE_NAME;
 #define VECTOR_GET_DATA_START_FUNCTION_NAME vector_string_get_data_start
 // ------
 
-#define VECTOR_PRINT_ITEM(STREAM, ITEM) fprintf(STREAM, "%p", (void*) ITEM)
+#define VECTOR_PRINT_ITEM(STREAM, ITEM) fprintf(STREAM, "ListIntNode{prev = %zu, next = %zu, item = %d}", ITEM->prev, ITEM->next, ITEM->item)
 
 // Function definitions.
 bool VECTOR_INIT_FUNCTION_NAME(Variable variable, VECTOR_TYPE_NAME* vector_ptr);
@@ -83,3 +85,5 @@ void* VECTOR_GET_DATA_START_FUNCTION_NAME(Variable variable, VECTOR_TYPE_NAME* v
 #endif
 #undef VECTOR_ITEM_ACCEPTANCE_TYPE
 #endif
+#pragma once
+
