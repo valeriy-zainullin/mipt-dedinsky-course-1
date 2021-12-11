@@ -28,6 +28,8 @@ void tree_node_init(TreeNode* node);
 void tree_node_deinit(TreeNode* node);
 void tree_node_deallocate(TreeNode** node);
 
+void tree_node_deinit_deallocate_subtree(TreeNode** node);
+
 bool tree_node_make_number_node(TreeNode** node, int number);
 bool tree_node_make_operation_node(TreeNode** node, char operation, TreeNode* lhs, TreeNode* rhs);
 bool tree_node_make_function_node(TreeNode** node, const char* function, TreeNode* inner);

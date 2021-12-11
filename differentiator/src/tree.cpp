@@ -22,6 +22,23 @@ void tree_node_deallocate(TreeNode** node) {
 	*node = NULL;
 }
 
+void tree_node_deinit_deallocate_subtree(TreeNode** node) {
+	if ((*node)->lhs != NULL) {
+		tree_node_deinit_deallocate_subtree(&(*node)->lhs);
+	}
+
+	if ((*node)->rhs != NULL) {
+		tree_node_deinit_deallocate_subtree(&(*node)->rhs);
+	}
+	
+	if ((*node->inner != NULL) {
+		tree_node_deinit_deallocate_subtree(&(*node)->inner);
+	}
+	
+	tree_node_deinit(&node);
+	tree_node_deallocate(node);
+}
+
 bool tree_node_make_number_node(TreeNode** node, int number) {
 	assert(node != NULL);
 	
