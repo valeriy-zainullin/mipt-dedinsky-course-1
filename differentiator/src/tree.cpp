@@ -50,15 +50,16 @@ bool tree_node_make_operation_node(TreeNode** node, char operation, TreeNode* lh
 	return true;
 }
 
-bool tree_node_make_function_node(TreeNode** node, char* function, TreeNode* inner) {
+bool tree_node_make_function_node(TreeNode** node, const char* function, TreeNode* inner) {
 	assert(node != NULL);
+	assert(strlen(function) <= TREE_MAX_FUNCTION_LENGTH);
 	
 	if (!tree_node_allocate(node)) {
 		return false;
 	}
 	
 	(*node)->type = TREE_NODE_TYPE_FUNCTION;
-	(*node)->operation = operation;
+	strcpy(node->function, function);
 	(*node)->inner = inner;
 	
 	return true;

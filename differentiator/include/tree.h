@@ -30,5 +30,5 @@ void tree_node_deallocate(TreeNode** node);
 
 bool tree_node_make_number_node(TreeNode** node, int number);
 bool tree_node_make_operation_node(TreeNode** node, char operation, TreeNode* lhs, TreeNode* rhs);
-bool tree_node_make_function_node(TreeNode** node, char* function, TreeNode* inner);
+bool tree_node_make_function_node(TreeNode** node, const char* function, TreeNode* inner);
 
