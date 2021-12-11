@@ -14,7 +14,7 @@ struct TreeNode {
 	TreeNodeType type;
 	
 	int number;
-	// BigInteger number;
+	//BigInteger number;
 	char operation;
 	char function[MAX_FUNCTION_LENGTH + 1];
 	
@@ -22,4 +22,13 @@ struct TreeNode {
 	TreeNode* rhs;
 	TreeNode* inner;
 };
+
+void tree_node_allocate(TreeNode** node);
+void tree_node_init(TreeNode* node);
+void tree_node_deinit(TreeNode* node);
+void tree_node_deallocate(TreeNode** node);
+
+bool tree_node_make_number_node(TreeNode** node, int number);
+bool tree_node_make_operation_node(TreeNode** node, char operation, TreeNode* lhs, TreeNode* rhs);
+bool tree_node_make_function_node(TreeNode** node, char* function, TreeNode* inner);
 
