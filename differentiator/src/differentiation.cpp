@@ -26,62 +26,52 @@
 bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
-	#define OPERATION_NODE(OPERATION, LHS, RHS) {                         \
-		TreeNode* dsl_cur_node = (TreeNode*) calloc(1, sizeof(TreeNode)); \
-		if (dsl_cur_node == NULL) {                                       \
-			success = false;                                              \
-		} else {                                                          \
-			dsl_cur_node->type = TREE_NODE_TYPE_OPERATION;                \
-			dsl_cur_node->operation = OPERATION;                          \
-			TreeNode** dsl_old_output = dsl_output;                       \
-			TreeNode** dsl_output = &dsl_cur_node->lhs;                   \
-			LHS                                                           \
-			if (!success) {                                               \
-				free(dsl_cur_node);                                       \
-			} else {                                                      \
-				dsl_output = &dsl_cur_node->rhs;                          \
-				RHS                                                       \
-				if (!success) {                                           \
-					free(dsl_cur_node->lhs);                              \
-					free(dsl_cur_node);                                   \
-				} else {                                                  \
-					*dsl_old_output = dsl_cur_node;                       \
-				}                                                         \
-			}                                                             \
-		}                                                                 \
+	#define OPERATION_NODE(OPERATION, LHS, RHS) {                                             \
+		TreeNode** dsl_old_output = dsl_output;                                               \
+		                                                                                      \
+		TreeNode* lhs = NULL;                                                                 \
+		dsl_output = &lhs;                                                                    \
+		LHS                                                                                   \
+		                                                                                      \
+		if (success) {                                                                        \
+			TreeNode* rhs = NULL;                                                             \
+			dsl_output = &rhs;                                                                \
+			RHS                                                                               \
+			                                                                                  \
+			if (!success) {                                                                   \
+				tree_node_deinit(lhs);                                                        \
+				tree_node_deallocate(&lhs);                                                   \
+			} else if (!tree_node_make_operation_node(dsl_old_output, OPERATION, lhs, rhs)) { \
+				success = false;                                                              \
+				                                                                              \
+				tree_node_deinit_deallocate_subtree(&lhs);                                    \
+				tree_node_deinit_deallocate_subtree(&rhs);                                    \
+			}                                                                                 \
+		}                                                                                     \
 	}
 	
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
-	#define NUMBER_NODE(NUMBER) {                                         \
-		TreeNode* dsl_cur_node = (TreeNode*) calloc(1, sizeof(TreeNode)); \
-		if (dsl_cur_node == NULL) {                                       \
-			success = false;                                              \
-		} else {                                                          \
-			dsl_cur_node->type = TREE_NODE_TYPE_NUMBER;                   \
-			dsl_cur_node->number = NUMBER;                                \
-			*dsl_output = dsl_cur_node;                                   \
-		}                                                                 \
+	#define NUMBER_NODE(NUMBER) {                              \
+		if (!tree_node_make_number_node(dsl_output, NUMBER)) { \
+			success = false;                                   \
+		}                                                      \
 	}
 	
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
-	#define FUNCTION_NODE(FUNCTION, INNER) {                              \
-		TreeNode* dsl_cur_node = (TreeNode*) calloc(1, sizeof(TreeNode)); \
-		if (dsl_cur_node == NULL) {                                       \
-			success = false;                                              \
-		} else {                                                          \
-			dsl_cur_node->type = TREE_NODE_TYPE_FUNCTION;                 \
-			strcpy(dsl_cur_node->function, FUNCTION);                     \
-			TreeNode** dsl_old_output = dsl_output;                       \
-			TreeNode** dsl_output = &dsl_cur_node->inner;                 \
-			INNER                                                         \
-			if (!success) {                                               \
-				free(dsl_cur_node);                                       \
-			} else {                                                      \
-				*dsl_old_output = dsl_cur_node;                           \
-			}                                                             \
-		}                                                                 \
+	#define FUNCTION_NODE(FUNCTION, INNER) {                                  \
+		TreeNode** dsl_old_output = dsl_output;                               \
+		                                                                      \
+		TreeNode* inner = NULL;                                               \
+		dsl_output = &inner;                                                  \
+		INNER                                                                 \
+		                                                                      \
+		if (!tree_node_make_function_node(dsl_old_output, FUNCTION, inner)) { \
+			success = false;                                                  \
+			                                                                  \
+			tree_node_deinit_deallocate_subtree(&inner);                      \
+		}                                                                     \
 	}
 
 	#define LHS   *dsl_output = node->lhs;
@@ -90,13 +80,13 @@ bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
 	
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
-	#define DIFFERENTIATE(INNER) {                                 \
-		TreeNode** dsl_old_output = dsl_output;                    \
-		TreeNode* dsl_cur_node = NULL;                             \
-		TreeNode** dsl_output = &dsl_cur_node;                     \
-		INNER                                                      \
-		if (success) {                                             \
-			success = differentiate(dsl_cur_node, dsl_old_output); \
+	#define DIFFERENTIATE(INNER) {                                               \
+		TreeNode** dsl_old_output = dsl_output;                                  \
+		TreeNode* dsl_cur_node = NULL;                                           \
+		TreeNode** dsl_output = &dsl_cur_node;                                   \
+		INNER                                                                    \
+		if (success) {                                                           \
+			success = differentiate(dsl_cur_node, dsl_old_output, callback_arg); \
 		}                                                          \
 	}
 	
