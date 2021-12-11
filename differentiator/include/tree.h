@@ -8,7 +8,7 @@ enum TreeNodeType {
 	TREE_NODE_TYPE_FUNCTION
 };
 
-static const size_t MAX_FUNCTION_LENGTH = 16;
+static const size_t TREE_MAX_FUNCTION_LENGTH = 16;
 
 struct TreeNode {
 	TreeNodeType type;
@@ -16,7 +16,7 @@ struct TreeNode {
 	int number;
 	//BigInteger number;
 	char operation;
-	char function[MAX_FUNCTION_LENGTH + 1];
+	char function[TREE_MAX_FUNCTION_LENGTH + 1];
 	
 	TreeNode* lhs;
 	TreeNode* rhs;
