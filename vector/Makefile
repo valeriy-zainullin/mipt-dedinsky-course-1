@@ -15,12 +15,12 @@ endif
 TARGETS=main
 
 EXECUTABLES=main
-SOURCES=$(wildcard src/*.cpp) $(wildcard external/*.cpp)
+SOURCES=$(wildcard src/*.cpp) $(wildcard exported/*.cpp)
 
 main_OBJECTS=$(addsuffix .obj, $(wildcard src/*.cpp))
 main_LIBS=
 
-vectors = $(basename $(notdir $(wildcard external/*.cpp)))
+exported = $(basename $(notdir $(wildcard exported/*.cpp)))
 
 ifneq ($(NO_DOCS),1)
 #TARGETS += docs
@@ -124,6 +124,6 @@ build/obj/release build/obj/debug build/obj/asan build/obj/ubsan build/obj/lsan:
 
 include $(wildcard $(patsubst %, build/obj/*/%.d, $(SOURCES)))
 
-vectors: $(vectors:%=build/release/%.a)
-$(vectors:%=build/release/%.a): build/release/%.a : build/obj/release/external/%.cpp.obj
+exported: $(exported:%=build/release/%.a)
+$(exported:%=build/release/%.a): build/release/%.a : build/obj/release/exported/%.cpp.obj
 	$(AR) -r $@ $@ $^
