@@ -124,6 +124,6 @@ build/obj/release build/obj/debug build/obj/asan build/obj/ubsan build/obj/lsan:
 
 include $(wildcard $(patsubst %, build/obj/*/%.d, $(SOURCES)))
 
-exported: $(exported:%=build/release/%.a)
-$(exported:%=build/release/%.a): build/release/%.a : build/obj/release/exported/%.cpp.obj
+exported: $(exported:%=build/release/lib%.a)
+$(exported:%=build/release/lib%.a): build/release/lib%.a : build/obj/release/exported/%.cpp.obj
 	$(AR) -r $@ $@ $^
