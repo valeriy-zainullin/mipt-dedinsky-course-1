@@ -23,6 +23,10 @@ struct TreeNode {
 	TreeNode* inner;
 };
 
+struct Tree {
+	TreeNode* root;
+};
+
 void tree_node_allocate(TreeNode** node);
 void tree_node_init(TreeNode* node);
 void tree_node_deinit(TreeNode* node);
