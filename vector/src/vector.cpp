@@ -241,7 +241,7 @@ static void dump_vector(Variable variable,
 		VECTOR_PRINT_ITEM(output_file, vector_impl_ptr->data[i]);
 
 		#if VECTOR_COMPARES_ITEMS_WITH_MEMCMP
-			if (memcmp(vector_impl_ptr->data[i], VECTOR_POISON) == 0) {
+			if (memcmp((const void*) &vector_impl_ptr->data[i], (const void*) &VECTOR_POISON, sizeof(VECTOR_ITEM_TYPE)) == 0) {
 				fputs(" (POISON)", output_file);
 			}
 		#else
