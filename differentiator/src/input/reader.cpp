@@ -1,4 +1,4 @@
-#include "reader.h"
+#include "input/reader.h"
 
 #include <assert.h>
 #include <stdio.h>

@@ -15,9 +15,9 @@ endif
 TARGETS=main
 
 EXECUTABLES=main
-SOURCES=$(wildcard src/*.cpp)
+SOURCES=$(wildcard src/differentiation/*.cpp) $(wildcard src/input/*.cpp) $(wildcard src/output/*.cpp) $(wildcard src/*.cpp)
 
-main_OBJECTS=$(addsuffix .obj, $(wildcard src/*.cpp))
+main_OBJECTS=$(addsuffix .obj, $(wildcard src/differentiation/*.cpp) $(wildcard src/input/*.cpp) $(wildcard src/output/*.cpp) $(wildcard src/*.cpp))
 main_LIBS=
 
 ifneq ($(NO_DOCS),1)

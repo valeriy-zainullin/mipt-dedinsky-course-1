@@ -10,7 +10,7 @@ struct Reader {
 	bool stop_at_lf;
 };
 
-void reader_init(Reader* reader, FILE* stream);
+void reader_init(Reader* reader, FILE* stream, bool stop_at_lf = false);
 void reader_deinit(Reader* reader);
 
 void reader_stop_at_lf(Reader* reader);

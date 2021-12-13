@@ -1,4 +1,4 @@
-#include "differentiation.h"
+#include "differentiation/differentiation.h"
 
 #include "tree.h"
 
@@ -87,7 +87,7 @@ bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
 		INNER                                                                    \
 		if (success) {                                                           \
 			success = differentiate(dsl_cur_node, dsl_old_output, callback_arg); \
-		}                                                          \
+		}                                                                        \
 	}
 	
 	on_differentiation_started(node, callback_arg);
@@ -123,7 +123,7 @@ bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
 
 		case TREE_NODE_TYPE_NUMBER: NUMBER_NODE(node->number); break;
 		
-		#include "rules.h"
+		#include "differentiation/rules.h"
 		
 		default: assert(false); UNREACHABLE;
 		

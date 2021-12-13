@@ -1,6 +1,6 @@
-#include "parsing.h"
+#include "input/parsing.h"
 
-#include "reader.h"
+#include "input/reader.h"
 #include "tree.h"
 
 #include <assert.h>
@@ -89,8 +89,8 @@ static bool parsing_read_2nd_order_sequence(Reader* reader, TreeNode** output_no
 			return false;
 		}
 	}
-
-	return true;	
+	
+	return true;
 }
 
 
