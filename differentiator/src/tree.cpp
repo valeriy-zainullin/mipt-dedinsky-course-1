@@ -1,8 +1,11 @@
 #include "tree.h"
 
+#include <assert.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
-void tree_node_allocate(TreeNode** node) {
+bool tree_node_allocate(TreeNode** node) {
 	assert(node != NULL);
 	
 	*node = (TreeNode*) calloc(1, sizeof(TreeNode));
@@ -10,9 +13,15 @@ void tree_node_allocate(TreeNode** node) {
 	return *node != NULL;
 }
 
-void tree_node_init(TreeNode* node) {}
+void tree_node_init(TreeNode* node) {
+	// memset? All fields zero.
+	(void) node;
+}
 
-void tree_node_deinit(TreeNode* node) {}
+void tree_node_deinit(TreeNode* node) {
+	// memset? All fields zero.
+	(void) node;
+}
 
 void tree_node_deallocate(TreeNode** node) {
 	assert(node != NULL);
@@ -31,11 +40,11 @@ void tree_node_deinit_deallocate_subtree(TreeNode** node) {
 		tree_node_deinit_deallocate_subtree(&(*node)->rhs);
 	}
 	
-	if ((*node->inner != NULL) {
+	if ((*node)->inner != NULL) {
 		tree_node_deinit_deallocate_subtree(&(*node)->inner);
 	}
 	
-	tree_node_deinit(&node);
+	tree_node_deinit(*node);
 	tree_node_deallocate(node);
 }
 
