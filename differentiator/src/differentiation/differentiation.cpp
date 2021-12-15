@@ -23,7 +23,7 @@
 #pragma warning( disable : 4456 ) // объявление "идентификатор" скрывает предыдущее локальное объявление
 #endif
 
-bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
+static bool differentiate_node(TreeNode* node, TreeNode** output, DifferentiationCallbacks* callbacks) {
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
 	#define OPERATION_NODE(OPERATION, LHS, RHS) {                                             \
@@ -80,17 +80,17 @@ bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
 	
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
-	#define DIFFERENTIATE(INNER) {                                               \
-		TreeNode** dsl_old_output = dsl_output;                                  \
-		TreeNode* dsl_cur_node = NULL;                                           \
-		TreeNode** dsl_output = &dsl_cur_node;                                   \
-		INNER                                                                    \
-		if (success) {                                                           \
-			success = differentiate(dsl_cur_node, dsl_old_output, callback_arg); \
-		}                                                                        \
+	#define DIFFERENTIATE(INNER) {                                                    \
+		TreeNode** dsl_old_output = dsl_output;                                       \
+		TreeNode* dsl_cur_node = NULL;                                                \
+		TreeNode** dsl_output = &dsl_cur_node;                                        \
+		INNER                                                                         \
+		if (success) {                                                                \
+			success = differentiate_node(dsl_cur_node, dsl_old_output, callbacks);    \
+		}                                                                             \
 	}
 	
-	on_differentiation_started(node, callback_arg);
+	(*callbacks->on_differentiation_started)(callbacks->arg, node);
 	
 	bool success = true;
 	TreeNode** dsl_output = output;
@@ -110,9 +110,9 @@ bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
 
 		#define BEGIN_FUNCTION_RULES()      \
 			case TREE_NODE_TYPE_FUNCTION: {
-		#define FUNCTION_RULE(FUNCTION, CONVOLUTION)       \
-				if (strcmp(node->function, FUNCTION) == 0) \
-					CONVOLUTION                            \
+		#define FUNCTION_RULE(FUNCTION, CONVOLUTION)            \
+				if (strcmp(node->name, FUNCTION) == 0)          \
+					CONVOLUTION                                 \
 				else
 		#define END_FUNCTION_RULES()                 \
 				{                                    \
@@ -139,7 +139,7 @@ bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
 	#undef NUMBER_NODE
 	#undef FUNCTION_NODE
 	
-	on_differentiation_ended(node, output, callback_arg);
+	(*callbacks->on_differentiation_ended)(callbacks->arg, node, output);
 	
 	return success;
 }
@@ -149,4 +149,8 @@ bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg) {
 #elif defined(_MSC_VER)
 #pragma warning( pop )
 #endif
+
+bool differentiate(Tree* input_tree, Tree* output_tree, DifferentiationCallbacks* callbacks) {
+	return differentiate_node(input_tree->root, &output_tree->root, callbacks);
+}
 

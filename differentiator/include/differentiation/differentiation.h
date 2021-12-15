@@ -4,8 +4,14 @@
 
 #include <stdbool.h>
 
-bool differentiate(TreeNode* node, TreeNode** output, void* callback_arg);
+typedef void (*OnDifferentiationStartedFunction)(void* callback_arg, TreeNode* node);
+typedef void (*OnDifferentiationEndedFunction)(void* callback_arg, TreeNode* node, TreeNode** output_node);
 
-void on_differentiation_started(TreeNode* node, void* callback_arg);
-void on_differentiation_ended(TreeNode* node, TreeNode** output_node, void* callback_arg);
+struct DifferentiationCallbacks {
+	OnDifferentiationStartedFunction on_differentiation_started;
+	OnDifferentiationEndedFunction on_differentiation_ended;
+	void* arg;
+};
+
+bool differentiate(Tree* input_tree, Tree* output_tree, DifferentiationCallbacks* callbacks);
 
