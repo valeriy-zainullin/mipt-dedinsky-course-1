@@ -122,6 +122,7 @@ static bool differentiate_node(TreeNode* node, TreeNode** output, Differentiatio
 			}
 
 		case TREE_NODE_TYPE_NUMBER: NUMBER_NODE(node->number); break;
+		case TREE_NODE_TYPE_VARIABLE: NUMBER_NODE(1); break;
 		
 		#include "differentiation/rules.h"
 		

@@ -52,6 +52,20 @@ bool tree_node_make_number_node(TreeNode** node, int number) {
 	return true;
 }
 
+bool tree_node_make_variable_node(TreeNode** node, const char* name) {
+	assert(node != NULL);
+	assert(strlen(name) <= TREE_MAX_NAME_LENGTH);
+	
+	if (!tree_node_allocate(node)) {
+		return false;
+	}
+	
+	(*node)->type = TREE_NODE_TYPE_VARIABLE;
+	strcpy((*node)->name, name);
+	
+	return true;
+}
+
 bool tree_node_make_operation_node(TreeNode** node, char operation, TreeNode* lhs, TreeNode* rhs) {
 	assert(node != NULL);
 	
@@ -69,14 +83,14 @@ bool tree_node_make_operation_node(TreeNode** node, char operation, TreeNode* lh
 
 bool tree_node_make_function_node(TreeNode** node, const char* function, TreeNode* inner) {
 	assert(node != NULL);
-	assert(strlen(function) <= TREE_MAX_FUNCTION_LENGTH);
+	assert(strlen(function) <= TREE_MAX_NAME_LENGTH);
 	
 	if (!tree_node_allocate(node)) {
 		return false;
 	}
 	
 	(*node)->type = TREE_NODE_TYPE_FUNCTION;
-	strcpy(node->function, function);
+	strcpy((*node)->name, function);
 	(*node)->inner = inner;
 	
 	return true;
