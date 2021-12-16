@@ -152,6 +152,14 @@ static bool differentiate_node(TreeNode* node, TreeNode** output, Differentiatio
 #endif
 
 bool differentiate(Tree* input_tree, Tree* output_tree, DifferentiationCallbacks* callbacks) {
-	return differentiate_node(input_tree->root, &output_tree->root, callbacks);
+	(*callbacks->before_differentiation)(callbacks->arg, input_tree);
+	
+	if (!differentiate_node(input_tree->root, &output_tree->root, callbacks)) {
+		return false;
+	}
+	
+	(*callbacks->after_differentiation)(callbacks->arg, output_tree);
+
+	return true;
 }
 
