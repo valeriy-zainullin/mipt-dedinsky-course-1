@@ -40,8 +40,8 @@ CFLAGS=-pedantic -Werror -std=c99 -Iinclude -I../text-sorting/include -I../stack
   -Wdangling-else -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 -Wmissing-attributes \
   -Wmultistatement-macros -Wrestrict -Wshadow=global -Wsuggest-attribute=malloc -Wno-unsued-result \
   -fcheck-new -fsized-deallocation -fstack-check -fstrict-overflow -flto-odr-type-merging
-CFLAGS_RELEASE=-O2 -DVM_DEBUG=0
-CFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
+CFLAGS_RELEASE=-O2
+CFLAGS_DEBUG=-g -O0
 
 CXXFLAGS= \
   -pedantic -Werror -std=c++11 -Iinclude -DCLI_SUPPORTS_STDIN=0 \
@@ -60,8 +60,8 @@ CXXFLAGS= \
   -Wrestrict -Wshadow=global -fcheck-new -Wno-unused-result -fsized-deallocation -fstrict-overflow \
   -flto-odr-type-merging
 # Disabling -fstack-check, otherwise doesn't not compile on linux.
-CXXFLAGS_RELEASE=-O2 -DVM_DEBUG=0
-CXXFLAGS_DEBUG=-g -O0 -DVM_DEBUG=1
+CXXFLAGS_RELEASE=-O2
+CXXFLAGS_DEBUG=-g -O0
 
 define EXECUTABLE_RULE =
 build/release/$(1): $$(addprefix build/obj/release/, $$($(1)_OBJECTS)) $$($(1)_LIBS) | build/release
