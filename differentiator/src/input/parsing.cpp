@@ -197,7 +197,7 @@ static bool parsing_read_1st_order_sequence(Reader* reader, TreeNode** output_no
 		}
 	}
 
-	return true;	
+	return true;
 }
 
 bool parsing_read_expression(Reader* reader, Tree* output_tree) {
