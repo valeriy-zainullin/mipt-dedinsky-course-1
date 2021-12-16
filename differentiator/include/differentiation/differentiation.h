@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 
-typedef void (*BeforeDifferentiationFunction)(void* callback_arg, const Tree* tree);
+typedef void (*BeforeDifferentiationFunction)(void* callback_arg, const Tree* tree, Tree* simplified_tree);
 typedef void (*OnDifferentiationStartedFunction)(void* callback_arg, const TreeNode* node);
 typedef void (*OnDifferentiationEndedFunction)(void* callback_arg, const TreeNode* node, TreeNode** output_node);
 typedef void (*AfterDifferentiationFunction)(void* callback_arg, const Tree* differentiated_tree);

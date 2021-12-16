@@ -271,13 +271,22 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 #endif
 
 bool differentiate(const Tree* input_tree, Tree* output_tree, DifferentiationCallbacks* callbacks) {
-	(*callbacks->before_differentiation)(callbacks->arg, input_tree);
+	Tree simplified_tree = {};
 	
-	if (!differentiate_node(input_tree->root, &output_tree->root, callbacks)) {
+	if (!tree_node_copy_subtree(input_tree->root, &simplified_tree.root)) {
+		return false;
+	}
+	simplify_recursively(&simplified_tree.root); 
+	
+	(*callbacks->before_differentiation)(callbacks->arg, input_tree, &simplified_tree);
+	
+	if (!differentiate_node(simplified_tree.root, &output_tree->root, callbacks)) {
 		return false;
 	}
 	
 	(*callbacks->after_differentiation)(callbacks->arg, output_tree);
+	
+	tree_node_deinit_deallocate_subtree(&simplified_tree.root);
 
 	return true;
 }
