@@ -186,18 +186,15 @@ int main(int argc, char** argv) {
 		return ERROR_WHILE_READING;
 	}
 	
-	/*
-	
 	DifferentiationCallbacks callbacks = {};
 	
-	if (!init_differentiation_callbacks(&args, &tree, &callbacks)) {
+	if (!init_differentiation_callbacks(&args, &callbacks)) {
 		return ERROR_WHILE_READING;// ERROR_WHILE_INITIALIZING;
 	}
 	
 	do_differentiation(&tree, &callbacks);
 	
 	deinit_differentiation_callbacks(&args, &callbacks);
-	*/
 	
 	(void) &init_differentiation_callbacks;
 	(void) &do_differentiation;
@@ -205,6 +202,8 @@ int main(int argc, char** argv) {
 	
 	// TODO: tree destructor, tree constructor?
 	tree_node_deinit_deallocate_subtree(&tree.root);
+	
+	fclose(args.output_stream);
 	
 	return 0;
 }
