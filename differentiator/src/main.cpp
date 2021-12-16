@@ -1,6 +1,7 @@
 #include "differentiation/differentiation.h"
 #include "input/parsing.h"
 #include "macroutils.h"
+#include "output/graphviz.h"
 #include "output/latex.h"
 #include "output/text.h"
 
@@ -20,7 +21,7 @@ static void print_help(const char* program_name) {
 
 enum OutputType {
 	OUTPUT_TYPE_TEXT,
-	OUTPUT_TYPE_PICTURE,
+	OUTPUT_TYPE_GRAPHVIZ, // TREE_PICTURE ?
 	OUTPUT_TYPE_PDF
 };
 
@@ -56,7 +57,7 @@ static bool process_args(int argc, char** argv, Args* args) {
 	}
 	switch (argv[2][1]) {
 		case 't': args->output_type = OUTPUT_TYPE_TEXT;     break;
-		case 'g': args->output_type = OUTPUT_TYPE_PICTURE;  break;
+		case 'g': args->output_type = OUTPUT_TYPE_GRAPHVIZ; break;
 		case 'p': args->output_type = OUTPUT_TYPE_PDF;      break;
 		default: {
 			print_help(argv[0]);
@@ -107,22 +108,25 @@ static bool init_differentiation_callbacks(Args* args, DifferentiationCallbacks*
 			break;
 		}
 		
-		/*
-		
-		case OUTPUT_TYPE_PICTURE: {
+		case OUTPUT_TYPE_GRAPHVIZ: {
 			// Picture writer?
-			GraphvizWriter graphviz_writer = {};
-			graphviz_writer_init(&graphviz_writer, output_file, is_debug_mode);
+			GraphvizWriter* graphviz_writer = (GraphvizWriter*) calloc(1, sizeof(GraphvizWriter));
+			if (graphviz_writer == NULL) {
+				return false;
+			}
+			graphviz_writer_init(graphviz_writer, args->output_stream, args->is_debug_mode);
 			
-			callbacks.on_differentiation_started = &text_writer_on_differentiation_started;
-			callbacks.on_differentiation_ended = &text_writer_on_differentiation_ended;
-			callbacks.arg = &graphviz_writer;
-			
-			graphviz_writer_before_differentiation(&graphviz_writer);
+			callbacks->before_differentiation = &graphviz_writer_before_differentiation;
+			callbacks->on_differentiation_started = &graphviz_writer_on_differentiation_started;
+			callbacks->on_differentiation_ended = &graphviz_writer_on_differentiation_ended;
+			callbacks->after_differentiation = &graphviz_writer_after_differentiation;
+			callbacks->arg = graphviz_writer;
 			
 			break;
 		}
-
+		
+		/*
+		
 		case OUTPUT_TYPE_PDF: {
 			PdfWriter pdf_writer = {};
 			pdf_writer_init(&pdf_writer, output_file, is_debug_mode);
@@ -152,6 +156,7 @@ static bool do_differentiation(Tree* tree, DifferentiationCallbacks* callbacks) 
 	}
 	// TODO: tree destructor, tree constructor?
 	tree_node_deinit_deallocate_subtree(&output_tree.root);
+	
 	return true;
 }
 
@@ -162,6 +167,15 @@ static void deinit_differentiation_callbacks(Args* args, DifferentiationCallback
 			
 			// text_writer_after_differentiation(text_writer, tree);
 			text_writer_deinit(text_writer);
+			
+			break;
+		}
+		
+		case OUTPUT_TYPE_GRAPHVIZ: {
+			GraphvizWriter* graphviz_writer = (GraphvizWriter*) callbacks->arg;
+			
+			// graphviz_writer_after_differentiation(graphviz_writer, tree);
+			graphviz_writer_deinit(graphviz_writer);
 			
 			break;
 		}
