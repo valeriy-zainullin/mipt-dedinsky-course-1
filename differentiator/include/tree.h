@@ -33,6 +33,7 @@ void tree_node_init(TreeNode* node);
 void tree_node_deinit(TreeNode* node);
 void tree_node_deallocate(TreeNode** node);
 
+bool tree_node_copy_subtree(TreeNode* node, TreeNode** output_node);
 void tree_node_deinit_deallocate_subtree(TreeNode** node);
 
 bool tree_node_make_number_node(TreeNode** node, int number);

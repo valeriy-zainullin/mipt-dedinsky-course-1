@@ -31,6 +31,67 @@ void tree_node_deallocate(TreeNode** node) {
 	*node = NULL;
 }
 
+bool tree_node_copy_subtree(TreeNode* node, TreeNode** output_node) {
+	assert(node != NULL);
+	
+	switch (node->type) {
+		case TREE_NODE_TYPE_OPERATION: {
+			TreeNode* lhs = NULL;
+			if (!tree_node_copy_subtree(node->lhs, &lhs)) {
+				return false;
+			}
+			
+			TreeNode* rhs = NULL;
+			if (!tree_node_copy_subtree(node->rhs, &rhs)) {
+				tree_node_deinit_deallocate_subtree(&lhs);
+				return false;
+			}
+			
+			if (!tree_node_make_operation_node(output_node, node->operation, lhs, rhs)) {
+				tree_node_deinit_deallocate_subtree(&lhs);
+				tree_node_deinit_deallocate_subtree(&rhs);
+				return false;
+			}
+			
+			break;
+		}
+		
+		case TREE_NODE_TYPE_FUNCTION: {
+			TreeNode* inner = NULL;
+			if (!tree_node_copy_subtree(node->inner, &inner)) {
+				return false;
+			}
+			
+			if (!tree_node_make_function_node(output_node, node->name, inner)) {
+				tree_node_deinit_deallocate_subtree(&inner);
+				return false;
+			}
+			
+			break;
+		}
+		
+		case TREE_NODE_TYPE_NUMBER: {
+			if (!tree_node_make_number_node(output_node, node->number)) {
+				return false;
+			}
+			
+			break;
+		}
+		
+		case TREE_NODE_TYPE_VARIABLE: {
+			if (!tree_node_make_variable_node(output_node, node->name)) {
+				return false;
+			}
+			
+			break;
+		}
+		
+		default: assert(false); UNREACHABLE;
+	}
+
+	return true;
+}
+
 void tree_node_deinit_deallocate_subtree(TreeNode** node) {
 	if ((*node)->lhs != NULL) {
 		tree_node_deinit_deallocate_subtree(&(*node)->lhs);
