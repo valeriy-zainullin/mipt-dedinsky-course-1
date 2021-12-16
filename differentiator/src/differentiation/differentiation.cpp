@@ -175,20 +175,23 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 	#define LHS {                                             \
 		if (!tree_node_copy_subtree(node->lhs, dsl_output)) { \
 			success = false;                                  \
+		} else {                                              \
+			simplify_recursively(dsl_output);                 \
 		}                                                     \
-		simplify_recursively(dsl_output);                       \
 	}
 	#define RHS {                                             \
 		if (!tree_node_copy_subtree(node->rhs, dsl_output)) { \
 			success = false;                                  \
+		} else {                                              \
+			simplify_recursively(dsl_output);                 \
 		}                                                     \
-		simplify_recursively(dsl_output);                       \
 	}
 	#define INNER {                                             \
 		if (!tree_node_copy_subtree(node->inner, dsl_output)) { \
 			success = false;                                    \
+		} else {                                                \
+			simplify_recursively(dsl_output);                   \
 		}                                                       \
-		simplify_recursively(dsl_output);                       \
 	}
 	
 	// bool success = false;
