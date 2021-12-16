@@ -138,6 +138,17 @@ static bool init_differentiation_callbacks(Args* args, Tree* tree, Differentiati
 	
 	return true;
 }
+
+static bool do_differentiation(Tree* tree, DifferentiationCallbacks* callbacks) {
+	Tree output_tree = {};
+	if (!differentiate(tree, &output_tree, callbacks)) {
+		fprintf(stderr, "Не удалось продифференцировать выражение.\n");
+		return false;
+	}
+	// TODO: tree destructor, tree constructor?
+	tree_node_deinit_deallocate_subtree(&output_tree.root);
+	return true;
+}
 int main(int argc, char** argv) {
 	
 	return 0;
