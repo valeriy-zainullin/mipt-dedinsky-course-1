@@ -61,21 +61,28 @@ static bool process_args(int argc, char** argv, Args* args) {
 	
 	return true;
 }
+
+static bool read_expression(Tree* tree) {
 	printf("Введите выражение: ");
 	fflush(stdout);
 	
-	Tree tree = {};
+	Reader reader = {};
+	reader_init(&reader, stdin, true);
 	
-	if (!parsing_read_expression(reader, tree)) {
-		fprintf(stderr, "Не удалось разобрать выражение.\n");
-		fclose(output_stream);
-		return 4;
+	if (!parsing_read_expression(&reader, tree)) {
+		fprintf(stderr, "Не удалось прочитать и разобрать выражение.\n");
+		return false;
 	}
 	
-	latex_write(output_stream, tree);
+	TextWriter text_writer = {};
+	text_writer_init(&text_writer, stdout);
+	text_writer_before_differentiation(&text_writer, tree);
+	text_writer_deinit(&text_writer);
 	
 	reader_deinit(&reader);
-	fclose(output_stream);
+	
+	return true;
+}
 int main(int argc, char** argv) {
 	
 	return 0;
