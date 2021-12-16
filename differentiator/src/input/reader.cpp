@@ -10,10 +10,12 @@ void reader_init(Reader* reader, FILE* stream, bool stop_at_lf) {
 	reader->next_char = '\0';
 	reader->stop_at_lf = stop_at_lf;
 	
-	reader_read(reader, stream);
+	reader_read(reader);
 }
 
-void reader_deinit(Reader* reader) {}
+void reader_deinit(Reader* reader) {
+	(void) reader;
+}
 
 char reader_get_next_char(Reader* reader) {
 	return reader->next_char;
@@ -28,9 +30,9 @@ char reader_read(Reader* reader) {
 	}
 	
 	char current_char = reader->next_char;
-	reader->next_char = fgetc(reader->stream);
+	reader->next_char = (char) fgetc(reader->stream);
 	
-	if (ferror(stream) || feof(stream)) {
+	if (ferror(reader->stream) || feof(reader->stream)) {
 		reader->next_char = READER_EOF;
 	}
 	
