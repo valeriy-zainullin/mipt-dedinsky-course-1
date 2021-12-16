@@ -16,6 +16,10 @@ bool tree_node_allocate(TreeNode** node) {
 void tree_node_init(TreeNode* node) {
 	// memset? All fields zero.
 	(void) node;
+	node->lhs = NULL;
+	node->rhs = NULL;
+	node->inner = NULL;
+	// TODO: other fields.
 }
 
 void tree_node_deinit(TreeNode* node) {
