@@ -89,7 +89,7 @@ static bool read_expression(Tree* tree) {
 	return true;
 }
 
-static bool init_differentiation_callbacks(Args* args, Tree* tree, DifferentiationCallbacks* callbacks) {
+static bool init_differentiation_callbacks(Args* args, DifferentiationCallbacks* callbacks) {
 	switch (EXPECT(args->output_type, OUTPUT_TYPE_PDF)) {
 		case OUTPUT_TYPE_TEXT: {
 			TextWriter* text_writer = (TextWriter*) calloc(1, sizeof(TextWriter));
@@ -98,11 +98,11 @@ static bool init_differentiation_callbacks(Args* args, Tree* tree, Differentiati
 			}
 			text_writer_init(text_writer, args->output_stream);
 			
+			callbacks->before_differentiation = &text_writer_before_differentiation;
 			callbacks->on_differentiation_started = &text_writer_on_differentiation_started;
 			callbacks->on_differentiation_ended = &text_writer_on_differentiation_ended;
+			callbacks->after_differentiation = &text_writer_after_differentiation;
 			callbacks->arg = text_writer;
-			
-			text_writer_before_differentiation(text_writer, tree);
 			
 			break;
 		}
