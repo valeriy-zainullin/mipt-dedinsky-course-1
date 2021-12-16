@@ -4,6 +4,15 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+static void print_help(const char* program_name) {
+	// Наоборот, сначала флаги?
+	fprintf(stderr, "Использование: %s <путь к выходному файлу> [-t | -g | -p] [-d]\n", program_name);
+	fprintf(stderr, "Дифференцирует выражение из стандартного ввода и выдаёт шаги дифференцирования и ответ в выходной файл.\n");
+	fprintf(stderr, "Типы вывода: вывод в текстовом виде (-t), вывод деревьев выражений в виде картинки с помощью graphviz (-g), вывод pdf-файла (-p, по умолчанию).");
+	fprintf(stderr, "Флаг -d при выводе деревьев выражений с помощью graphviz (-g) выдаёт исходный текст для graphviz в stdout, при выводе pdf-файла выдаёт код для pdflatex в stdout, для остальных случаев он игнорируется.\n");
+	fprintf(stderr, "Синтаксис и поддерживаемые функции: TODO.\n");
+}
+
 enum OutputType {
 	OUTPUT_TYPE_TEXT,
 	OUTPUT_TYPE_PICTURE,
