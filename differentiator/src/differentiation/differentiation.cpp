@@ -74,9 +74,21 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 		}                                                                     \
 	}
 
-	#define LHS   *dsl_output = node->lhs;
-	#define RHS   *dsl_output = node->rhs;
-	#define INNER *dsl_output = node->inner;
+	#define LHS {                                             \
+		if (!tree_node_copy_subtree(node->lhs, dsl_output)) { \
+			success = false;                                  \
+		}                                                     \
+	}
+	#define RHS {                                             \
+		if (!tree_node_copy_subtree(node->rhs, dsl_output)) { \
+			success = false;                                  \
+		}                                                     \
+	}
+	#define INNER {                                             \
+		if (!tree_node_copy_subtree(node->inner, dsl_output)) { \
+			success = false;                                    \
+		}                                                       \
+	}
 	
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
