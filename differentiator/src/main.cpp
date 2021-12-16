@@ -26,14 +26,41 @@ struct Args {
 	bool is_debug_mode;
 };
 
+static bool process_args(int argc, char** argv, Args* args) {
+	if (argc < 2 || argc > 4) {
+		fprintf(stderr, "Неправильное количество аргументов.\n");
+		print_help(argv[0]);
+		return false;
 	}
-	FILE* output_stream = fopen(argv[1]);
-	if (output_stream == NULL) {
+	args->output_stream = fopen(argv[1], "w");
+	if (args->output_stream == NULL) {
 		fprintf(stderr, "Не удалось открыть выходной файл.\n");
-		return 2;
-	}
+		print_help(argv[0]);
+		return false;
 	}
 	
+	if (argc == 2) {
+		args->output_type = OUTPUT_TYPE_PDF;
+		return true;
+	}
+	
+	if (argv[2][0] != '-') {
+		fprintf(stderr, "Неверный параметр \"%s\".\n", argv[2]);
+		print_help(argv[0]);
+		return false;
+	}
+	switch (argv[2][1]) {
+		case 't': args->output_type = OUTPUT_TYPE_TEXT;     break;
+		case 'g': args->output_type = OUTPUT_TYPE_PICTURE;  break;
+		case 'p': args->output_type = OUTPUT_TYPE_PDF;      break;
+		default: {
+			print_help(argv[0]);
+			return false;
+		}
+	}
+	
+	return true;
+}
 	printf("Введите выражение: ");
 	fflush(stdout);
 	
