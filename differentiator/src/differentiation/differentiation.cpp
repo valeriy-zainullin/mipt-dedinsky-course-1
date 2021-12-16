@@ -23,6 +23,88 @@
 #pragma warning( disable : 4456 ) // объявление "идентификатор" скрывает предыдущее локальное объявление
 #endif
 
+// TODO: codestyle для C. _ref.
+static void simplify(TreeNode** node_ref) {
+	(void) simplify;
+	TreeNode* node = *node_ref;
+	
+	#define REPLACE_NODE_WITH_LHS() {                    \
+		*node_ref = node->lhs;                           \
+		                                                 \
+		tree_node_deinit_deallocate_subtree(&node->rhs); \
+		                                                 \
+		tree_node_deinit(node);                          \
+		tree_node_deallocate(&node);                     \
+	}
+	
+	#define REPLACE_NODE_WITH_RHS() {                    \
+		*node_ref = node->rhs;                           \
+		                                                 \
+		tree_node_deinit_deallocate_subtree(&node->lhs); \
+		                                                 \
+		tree_node_deinit(node);                          \
+		tree_node_deallocate(&node);                     \
+	}
+	
+	#define REPLACE_NODE_WITH_NUMBER(NUMBER) {               \
+		if (!tree_node_make_number_node(node_ref, NUMBER)) { \
+			return;                                          \
+		}                                                    \
+		                                                     \
+		tree_node_deinit_deallocate_subtree(&node);          \
+	}
+	
+	if (node->type == TREE_NODE_TYPE_OPERATION && node->operation == '*') {
+		assert(node->lhs != NULL);
+		assert(node->rhs != NULL);
+		
+		if (node->lhs->type == TREE_NODE_TYPE_NUMBER && node->rhs->type == TREE_NODE_TYPE_NUMBER) {
+			REPLACE_NODE_WITH_NUMBER(node->lhs->number * node->rhs->number);
+			return;
+		}
+		
+		if (node->lhs->type == TREE_NODE_TYPE_NUMBER && node->lhs->number == 0) {
+			REPLACE_NODE_WITH_NUMBER(0);
+			return;
+		}
+		
+		if (node->rhs->type == TREE_NODE_TYPE_NUMBER && node->rhs->number == 0) {
+			REPLACE_NODE_WITH_NUMBER(0);
+			return;
+		}
+		
+		if (node->lhs->type == TREE_NODE_TYPE_NUMBER && node->lhs->number == 1) {
+			REPLACE_NODE_WITH_RHS();
+			return;
+		}
+		
+		if (node->rhs->type == TREE_NODE_TYPE_NUMBER && node->rhs->number == 1) {
+			REPLACE_NODE_WITH_LHS();
+			return;
+		}
+	}
+	
+	if (node->type == TREE_NODE_TYPE_OPERATION && node->operation == '+') {
+		assert(node->lhs != NULL);
+		assert(node->rhs != NULL);
+		
+		if (node->lhs->type == TREE_NODE_TYPE_NUMBER && node->rhs->type == TREE_NODE_TYPE_NUMBER) {
+			REPLACE_NODE_WITH_NUMBER(node->lhs->number + node->rhs->number);
+			return;
+		}
+		
+		if (node->lhs->type == TREE_NODE_TYPE_NUMBER && node->lhs->number == 0) {
+			REPLACE_NODE_WITH_RHS();
+			return;
+		}
+		
+		if (node->rhs->type == TREE_NODE_TYPE_NUMBER && node->rhs->number == 0) {
+			REPLACE_NODE_WITH_LHS();
+			return;
+		}
+	}
+}
+
 static bool differentiate_node(const TreeNode* node, TreeNode** output, DifferentiationCallbacks* callbacks) {
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
@@ -46,6 +128,8 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 				                                                                              \
 				tree_node_deinit_deallocate_subtree(&lhs);                                    \
 				tree_node_deinit_deallocate_subtree(&rhs);                                    \
+			} else {                                                                          \
+				simplify(dsl_old_output);                                                     \
 			}                                                                                 \
 		}                                                                                     \
 	}
@@ -71,6 +155,8 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 			success = false;                                                  \
 			                                                                  \
 			tree_node_deinit_deallocate_subtree(&inner);                      \
+		} else {                                                              \
+			simplify(dsl_old_output);                                         \
 		}                                                                     \
 	}
 
