@@ -121,8 +121,7 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 			RHS                                                                               \
 			                                                                                  \
 			if (!success) {                                                                   \
-				tree_node_deinit(lhs);                                                        \
-				tree_node_deallocate(&lhs);                                                   \
+				tree_node_deinit_deallocate_subtree(&lhs);                                    \
 			} else if (!tree_node_make_operation_node(dsl_old_output, OPERATION, lhs, rhs)) { \
 				success = false;                                                              \
 				                                                                              \
