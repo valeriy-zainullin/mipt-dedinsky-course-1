@@ -23,7 +23,7 @@
 #pragma warning( disable : 4456 ) // объявление "идентификатор" скрывает предыдущее локальное объявление
 #endif
 
-static bool differentiate_node(TreeNode* node, TreeNode** output, DifferentiationCallbacks* callbacks) {
+static bool differentiate_node(const TreeNode* node, TreeNode** output, DifferentiationCallbacks* callbacks) {
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
 	#define OPERATION_NODE(OPERATION, LHS, RHS) {                                             \
@@ -151,7 +151,7 @@ static bool differentiate_node(TreeNode* node, TreeNode** output, Differentiatio
 #pragma warning( pop )
 #endif
 
-bool differentiate(Tree* input_tree, Tree* output_tree, DifferentiationCallbacks* callbacks) {
+bool differentiate(const Tree* input_tree, Tree* output_tree, DifferentiationCallbacks* callbacks) {
 	(*callbacks->before_differentiation)(callbacks->arg, input_tree);
 	
 	if (!differentiate_node(input_tree->root, &output_tree->root, callbacks)) {
