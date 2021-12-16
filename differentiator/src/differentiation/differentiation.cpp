@@ -105,6 +105,19 @@ static void simplify(TreeNode** node_ref) {
 	}
 }
 
+static void simplify_recursively(TreeNode** node_ref) {
+	TreeNode* node = *node_ref;
+	
+	if (node->type == TREE_NODE_TYPE_OPERATION) {
+		simplify_recursively(&node->lhs);
+		simplify_recursively(&node->rhs);
+	} else if (node->type == TREE_NODE_TYPE_FUNCTION) {
+		simplify_recursively(&node->inner);
+	}
+	
+	simplify(node_ref);
+}
+
 static bool differentiate_node(const TreeNode* node, TreeNode** output, DifferentiationCallbacks* callbacks) {
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
@@ -163,16 +176,19 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 		if (!tree_node_copy_subtree(node->lhs, dsl_output)) { \
 			success = false;                                  \
 		}                                                     \
+		simplify_recursively(dsl_output);                       \
 	}
 	#define RHS {                                             \
 		if (!tree_node_copy_subtree(node->rhs, dsl_output)) { \
 			success = false;                                  \
 		}                                                     \
+		simplify_recursively(dsl_output);                       \
 	}
 	#define INNER {                                             \
 		if (!tree_node_copy_subtree(node->inner, dsl_output)) { \
 			success = false;                                    \
 		}                                                       \
+		simplify_recursively(dsl_output);                       \
 	}
 	
 	// bool success = false;
