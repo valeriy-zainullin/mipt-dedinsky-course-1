@@ -1,6 +1,11 @@
 #include "differentiation/differentiation.h"
 #include "input/parsing.h"
+#include "macroutils.h"
+#include "output/latex.h"
+#include "output/text.h"
 
+#include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -165,7 +170,41 @@ static void deinit_differentiation_callbacks(Args* args, DifferentiationCallback
 	}
 }
 
+static const int SUCCESS = 0;
+static const int WRONG_USAGE = 1;
+static const int ERROR_WHILE_READING = 2;
+
 int main(int argc, char** argv) {
+	Args args = {};
+	if (!process_args(argc, argv, &args)) {
+		return WRONG_USAGE;
+	}
+	
+	Tree tree = {};
+	if (!read_expression(&tree)) {
+		fclose(args.output_stream);
+		return ERROR_WHILE_READING;
+	}
+	
+	/*
+	
+	DifferentiationCallbacks callbacks = {};
+	
+	if (!init_differentiation_callbacks(&args, &tree, &callbacks)) {
+		return ERROR_WHILE_READING;// ERROR_WHILE_INITIALIZING;
+	}
+	
+	do_differentiation(&tree, &callbacks);
+	
+	deinit_differentiation_callbacks(&args, &callbacks);
+	*/
+	
+	(void) &init_differentiation_callbacks;
+	(void) &do_differentiation;
+	(void) &deinit_differentiation_callbacks;
+	
+	// TODO: tree destructor, tree constructor?
+	tree_node_deinit_deallocate_subtree(&tree.root);
 	
 	return 0;
 }
