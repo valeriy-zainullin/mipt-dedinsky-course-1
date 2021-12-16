@@ -198,14 +198,15 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 	
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
-	#define DIFFERENTIATE(INNER) {                                                    \
-		TreeNode** dsl_old_output = dsl_output;                                       \
-		TreeNode* dsl_cur_node = NULL;                                                \
-		TreeNode** dsl_output = &dsl_cur_node;                                        \
-		INNER                                                                         \
-		if (success) {                                                                \
-			success = differentiate_node(dsl_cur_node, dsl_old_output, callbacks);    \
-		}                                                                             \
+	#define DIFFERENTIATE(INNER) {                                                 \
+		TreeNode** dsl_old_output = dsl_output;                                    \
+		TreeNode* dsl_cur_node = NULL;                                             \
+		TreeNode** dsl_output = &dsl_cur_node;                                     \
+		INNER                                                                      \
+		if (success) {                                                             \
+			success = differentiate_node(dsl_cur_node, dsl_old_output, callbacks); \
+			tree_node_deinit_deallocate_subtree(&dsl_cur_node);                    \
+		}                                                                          \
 	}
 	
 	(*callbacks->on_differentiation_started)(callbacks->arg, node);
