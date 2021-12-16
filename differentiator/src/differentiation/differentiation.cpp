@@ -156,20 +156,22 @@ static bool differentiate_node(const TreeNode* node, TreeNode** output, Differen
 	
 	// bool success = false;
 	// TreeNode** dsl_output = ...;
-	#define FUNCTION_NODE(FUNCTION, INNER) {                                  \
-		TreeNode** dsl_old_output = dsl_output;                               \
-		                                                                      \
-		TreeNode* inner = NULL;                                               \
-		dsl_output = &inner;                                                  \
-		INNER                                                                 \
-		                                                                      \
-		if (!tree_node_make_function_node(dsl_old_output, FUNCTION, inner)) { \
-			success = false;                                                  \
-			                                                                  \
-			tree_node_deinit_deallocate_subtree(&inner);                      \
-		} else {                                                              \
-			simplify(dsl_old_output);                                         \
-		}                                                                     \
+	#define FUNCTION_NODE(FUNCTION, INNER) {                                      \
+		TreeNode** dsl_old_output = dsl_output;                                   \
+		                                                                          \
+		TreeNode* inner = NULL;                                                   \
+		dsl_output = &inner;                                                      \
+		INNER                                                                     \
+		                                                                          \
+		if (success) {                                                            \
+			if (!tree_node_make_function_node(dsl_old_output, FUNCTION, inner)) { \
+				success = false;                                                  \
+				                                                                  \
+				tree_node_deinit_deallocate_subtree(&inner);                      \
+			} else {                                                              \
+				simplify(dsl_old_output);                                         \
+			}                                                                     \
+		}                                                                         \
 	}
 
 	#define LHS {                                             \
