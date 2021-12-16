@@ -1,5 +1,7 @@
 #include "tree.h"
 
+#include "macroutils.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
