@@ -83,6 +83,61 @@ static bool read_expression(Tree* tree) {
 	
 	return true;
 }
+
+static bool init_differentiation_callbacks(Args* args, Tree* tree, DifferentiationCallbacks* callbacks) {
+	switch (EXPECT(args->output_type, OUTPUT_TYPE_PDF)) {
+		case OUTPUT_TYPE_TEXT: {
+			TextWriter* text_writer = (TextWriter*) calloc(1, sizeof(TextWriter));
+			if (text_writer == NULL) {
+				return false;
+			}
+			text_writer_init(text_writer, args->output_stream);
+			
+			callbacks->on_differentiation_started = &text_writer_on_differentiation_started;
+			callbacks->on_differentiation_ended = &text_writer_on_differentiation_ended;
+			callbacks->arg = text_writer;
+			
+			text_writer_before_differentiation(text_writer, tree);
+			
+			break;
+		}
+		
+		/*
+		
+		case OUTPUT_TYPE_PICTURE: {
+			// Picture writer?
+			GraphvizWriter graphviz_writer = {};
+			graphviz_writer_init(&graphviz_writer, output_file, is_debug_mode);
+			
+			callbacks.on_differentiation_started = &text_writer_on_differentiation_started;
+			callbacks.on_differentiation_ended = &text_writer_on_differentiation_ended;
+			callbacks.arg = &graphviz_writer;
+			
+			graphviz_writer_before_differentiation(&graphviz_writer);
+			
+			break;
+		}
+
+		case OUTPUT_TYPE_PDF: {
+			PdfWriter pdf_writer = {};
+			pdf_writer_init(&pdf_writer, output_file, is_debug_mode);
+			
+			callbacks.on_differentiation_started = &pdf_writer_on_differentiation_started;
+			callbacks.on_differentiation_ended = &pdf_writer_on_differentiation_ended;
+			callbacks.arg = &pdf_writer;
+			
+			pdf_writer_before_differentiation(&pdf_writer);
+			
+			break;
+		}
+		
+		*/
+		
+		default: assert(false); UNREACHABLE;
+	}
+	
+	return true;
+}
 int main(int argc, char** argv) {
 	
 	return 0;
