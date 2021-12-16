@@ -149,6 +149,22 @@ static bool do_differentiation(Tree* tree, DifferentiationCallbacks* callbacks) 
 	tree_node_deinit_deallocate_subtree(&output_tree.root);
 	return true;
 }
+
+static void deinit_differentiation_callbacks(Args* args, DifferentiationCallbacks* callbacks) {
+	switch (EXPECT(args->output_type, OUTPUT_TYPE_PDF)) {
+		case OUTPUT_TYPE_TEXT: {
+			TextWriter* text_writer = (TextWriter*) callbacks->arg;
+			
+			// text_writer_after_differentiation(text_writer, tree);
+			text_writer_deinit(text_writer);
+			
+			break;
+		}
+		
+		default: assert(false); UNREACHABLE;
+	}
+}
+
 int main(int argc, char** argv) {
 	
 	return 0;
