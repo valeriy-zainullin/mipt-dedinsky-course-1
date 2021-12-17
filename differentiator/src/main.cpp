@@ -168,6 +168,8 @@ static void deinit_differentiation_callbacks(Args* args, DifferentiationCallback
 			// text_writer_after_differentiation(text_writer, tree);
 			text_writer_deinit(text_writer);
 			
+			free(text_writer);
+			
 			break;
 		}
 		
@@ -176,6 +178,8 @@ static void deinit_differentiation_callbacks(Args* args, DifferentiationCallback
 			
 			// graphviz_writer_after_differentiation(graphviz_writer, tree);
 			graphviz_writer_deinit(graphviz_writer);
+			
+			free(graphviz_writer);
 			
 			break;
 		}
