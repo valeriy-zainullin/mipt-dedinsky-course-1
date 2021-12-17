@@ -15,12 +15,17 @@ void text_writer_deinit(TextWriter* text_writer) {
 	(void) text_writer;
 }
 
-void text_writer_before_differentiation(void* callback_arg, const Tree* tree) {
+void text_writer_before_differentiation(void* callback_arg, const Tree* tree, Tree* simplified_tree) {
 	TextWriter* text_writer = (TextWriter*) callback_arg;
 	
 	fprintf(text_writer->stream, "Исходное выражение: ");
 	text_writer->parent_operation_order = OPERATION_ORDER_MAX;
 	text_writer_print_expression(text_writer, tree->root);
+	fprintf(text_writer->stream, ".\n");
+	
+	fprintf(text_writer->stream, "После упрощения: ");
+	text_writer->parent_operation_order = OPERATION_ORDER_MAX;
+	text_writer_print_expression(text_writer, simplified_tree->root);
 	fprintf(text_writer->stream, ".\n");
 }
 
