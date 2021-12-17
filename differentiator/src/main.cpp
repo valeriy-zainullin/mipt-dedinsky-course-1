@@ -80,11 +80,6 @@ static bool read_expression(Tree* tree) {
 		return false;
 	}
 	
-	TextWriter text_writer = {};
-	text_writer_init(&text_writer, stdout);
-	text_writer_before_differentiation(&text_writer, tree);
-	text_writer_deinit(&text_writer);
-	
 	reader_deinit(&reader);
 	
 	return true;
