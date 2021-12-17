@@ -15,7 +15,7 @@ void graphviz_writer_deinit(GraphvizWriter* graphviz_writer) {
 	(void) graphviz_writer;
 }
 
-void graphviz_writer_before_differentiation(void* callback_arg, const Tree* tree) {
+void graphviz_writer_before_differentiation(void* callback_arg, const Tree* tree, Tree* simplified_tree) {
 	GraphvizWriter* graphviz_writer = (GraphvizWriter*) callback_arg;
 	
 	fprintf(graphviz_writer->stream, "digraph {\n");
@@ -23,6 +23,11 @@ void graphviz_writer_before_differentiation(void* callback_arg, const Tree* tree
 	fprintf(graphviz_writer->stream, "subgraph cluster_source {\n");
 	fprintf(graphviz_writer->stream, "label=\"Исходное выражение\";\n");	
 	graphviz_writer_print_expression(graphviz_writer, tree->root);
+	fprintf(graphviz_writer->stream, "}\n");
+	
+	fprintf(graphviz_writer->stream, "subgraph cluster_simplified {\n");
+	fprintf(graphviz_writer->stream, "label=\"Упрощенное выражение\";\n");	
+	graphviz_writer_print_expression(graphviz_writer, simplified_tree->root);
 	fprintf(graphviz_writer->stream, "}\n");
 	
 	graphviz_writer->step = 1;
