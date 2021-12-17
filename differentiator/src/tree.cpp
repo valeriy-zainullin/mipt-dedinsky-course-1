@@ -37,7 +37,7 @@ void tree_node_deallocate(TreeNode** node) {
 	*node = NULL;
 }
 
-bool tree_node_copy_subtree(TreeNode* node, TreeNode** output_node) {
+bool tree_node_copy_subtree(const TreeNode* node, TreeNode** output_node) {
 	assert(node != NULL);
 	
 	switch (node->type) {
