@@ -19,8 +19,9 @@ void graphviz_writer_before_differentiation(void* callback_arg, const Tree* tree
 	GraphvizWriter* graphviz_writer = (GraphvizWriter*) callback_arg;
 	
 	fprintf(graphviz_writer->stream, "digraph {\n");
-	fprintf(graphviz_writer->stream, "subgraph {\n");
-	fprintf(graphviz_writer->stream, "label=\"Исходное выражение\"\n");	
+
+	fprintf(graphviz_writer->stream, "subgraph cluster_source {\n");
+	fprintf(graphviz_writer->stream, "label=\"Исходное выражение\";\n");	
 	graphviz_writer_print_expression(graphviz_writer, tree->root);
 	fprintf(graphviz_writer->stream, "}\n");
 	
@@ -35,15 +36,23 @@ void graphviz_writer_on_differentiation_started(void* callback_arg, const TreeNo
 void graphviz_writer_on_differentiation_ended(void* callback_arg, const TreeNode* node, TreeNode** output_node) {
 	GraphvizWriter* graphviz_writer = (GraphvizWriter*) callback_arg;
 	
-	fprintf(graphviz_writer->stream, "subgraph {\n");
-	fprintf(graphviz_writer->stream, "label=\"#%d до дифференцирования\"\n", graphviz_writer->step);
+	fprintf(graphviz_writer->stream, "subgraph cluster_step%d {\n", graphviz_writer->step);
+	fprintf(graphviz_writer->stream, "label = \"Шаг %d\";\n", graphviz_writer->step);
+	
+	// The only way I've found to make the subgraphs follow in chronological order is to reverse them in source code.
+	
+	fprintf(graphviz_writer->stream, "subgraph cluster_step%d_2 {\n", graphviz_writer->step);
+	fprintf(graphviz_writer->stream, "label = \"После дифференцирования\";\n");
+	graphviz_writer_print_expression(graphviz_writer, *output_node);
+	fprintf(graphviz_writer->stream, "}\n");
+
+	fprintf(graphviz_writer->stream, "subgraph cluster_step%d_1 {\n", graphviz_writer->step);
+	fprintf(graphviz_writer->stream, "label = \"До дифференцирования\";\n");
 	graphviz_writer_print_expression(graphviz_writer, node);
 	fprintf(graphviz_writer->stream, "}\n");
 	
-	fprintf(graphviz_writer->stream, "subgraph {\n");
-	fprintf(graphviz_writer->stream, "label=\"#%d после дифференцирования\"\n", graphviz_writer->step);
-	graphviz_writer_print_expression(graphviz_writer, *output_node);
 	fprintf(graphviz_writer->stream, "}\n");
+	
 	
 	graphviz_writer->step += 1;
 }
@@ -51,8 +60,8 @@ void graphviz_writer_on_differentiation_ended(void* callback_arg, const TreeNode
 void graphviz_writer_after_differentiation(void* callback_arg, const Tree* tree) {
 	GraphvizWriter* graphviz_writer = (GraphvizWriter*) callback_arg;
 	
-	fprintf(graphviz_writer->stream, "subgraph {\n");
-	fprintf(graphviz_writer->stream, "label=\"Производная\"\n");	
+	fprintf(graphviz_writer->stream, "subgraph cluster_derivative {\n");
+	fprintf(graphviz_writer->stream, "label = \"Производная\";\n");	
 	graphviz_writer_print_expression(graphviz_writer, tree->root);
 	fprintf(graphviz_writer->stream, "}\n");
 	
@@ -64,7 +73,7 @@ void graphviz_writer_print_expression(GraphvizWriter* graphviz_writer, const Tre
 
 	switch (node->type) {
 		case TREE_NODE_TYPE_OPERATION: {
-			fprintf(graphviz_writer->stream, "node_%d_%p [shape=record,label=\"{ %c | <left> %p | <right> %p}\" ];\n", graphviz_writer->step, (void*) node, node->operation, (void*) node->lhs, (void*) node->rhs);
+			fprintf(graphviz_writer->stream, "node_%d_%p [shape=record,label=\" { %c | { <left> %p | <right> %p } } \" ];\n", graphviz_writer->step, (void*) node, node->operation, (void*) node->lhs, (void*) node->rhs);
 			fprintf(graphviz_writer->stream, "node_%d_%p:<left> -> node_%d_%p [label=\"LHS\"]", graphviz_writer->step, (void*) node, graphviz_writer->step, (void*) node->lhs);
 			fprintf(graphviz_writer->stream, "node_%d_%p:<right> -> node_%d_%p [label=\"RHS\"]", graphviz_writer->step, (void*) node, graphviz_writer->step, (void*) node->rhs);
 			
