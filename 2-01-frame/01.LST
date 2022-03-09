@@ -1,0 +1,86 @@
+Turbo Assembler	 Version 4.1	    02/11/22 13:49:29	    Page 1
+01.asm
+
+
+
+      1	0000			     ﻿.model tiny
+      2
+      3	0000			     .code
+      4
+      5				     org 100h
+      6
+      7	      =001C		     ENTER_SCANCODE = 1ch
+      8	      =B800		     VIDEO_SEG = 0b800h
+      9
+     10	0100			     start:
+     11	0100  FC				     cld
+     12
+     13	0101  BA B800				     mov dx, VIDEO_SEG
+     14	0104  8E C2				     mov es, dx
+     15
+     16	0106  B8 1003				     mov ax, 1003h
+     17	0109  B3 00				     mov bl, 00h
+     18	010B  CD 10				     int 10h
+     19
+     20	010D  33 FF				     xor di, di			   ; DI	= current address in video segment
+     21	010F			     read_keypress_loop:
+     22	010F  32 E4				     xor ah, ah
+     23	0111  CD 16				     int 16h
+     24
+     25	0113  80 FC 1C				     cmp ah, ENTER_SCANCODE
+     26	0116  74 0D				     je	read_keypress_loop_end
+     27
+     28	0118  32 E4				     xor ah, ah			    ; AX = ascii code of the symbol.
+     29	011A  50				     push ax
+     30
+     31	011B  32 E4				     xor ah, ah
+     32	011D  CD 1A				     int 1ah			    ; int 1ah: read system clocks (ticks)
+     33
+     34	011F  58				     pop ax
+     35	0120  8A E2				     mov ah, dl
+     36
+     37	0122  AB				     stosw
+     38
+     39	0123  EB EA				     jmp read_keypress_loop
+     40	0125			     read_keypress_loop_end:
+     41
+     42	0125  B8 4C00				     mov ax, 4c00h
+     43	0128  CD 21				     int 21h
+     44
+     45				     end start
+Turbo Assembler	 Version 4.1	    02/11/22 13:49:29	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "02/11/22"
+??FILENAME			  Text	 "01	  "
+??TIME				  Text	 "13:49:29"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 01
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+ENTER_SCANCODE			  Number 001C
+READ_KEYPRESS_LOOP		  Near	 DGROUP:010F
+READ_KEYPRESS_LOOP_END		  Near	 DGROUP:0125
+START				  Near	 DGROUP:0100
+VIDEO_SEG			  Number B800
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  012A Word	  Public  CODE
+

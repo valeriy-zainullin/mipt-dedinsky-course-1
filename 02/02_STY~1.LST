@@ -1,0 +1,534 @@
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 1
+02_sty~1.asm
+
+
+
+      1	0000			     .model tiny
+      2
+      3	0000			     .code
+      4				     org 100h
+      5
+      6				     locals
+      7
+      8	      =B800		     VIDEO_SEG = 0b800h
+      9
+     10	      =0007		     CHAR_COLOR	= 07h
+     11
+     12	      =0019		     SCREEN_ROWS = 25d
+     13	      =0050		     SCREEN_COLS = 80d
+     14
+     15	      =0017		     FRAME_ROWS	= SCREEN_ROWS -	2d
+     16	      =004E		     FRAME_COLS	= SCREEN_COLS -	2d
+     17
+     18	      =0002		     STYLE_INDEX = 2d
+     19
+     20	      =0080		     ARG_LENGTH_ADDR = 80h
+     21	      =0082		     ARG_STRING_ADDR = 82h
+     22
+     23	0100			     start:
+     24	0100  E8 001D				     call parse_args
+     25
+     26	0103  B8 B800				     mov ax, VIDEO_SEG
+     27	0106  8E C0				     mov es, ax
+     28
+     29	0108  E8 0084				     call draw_frame
+     30
+     31	010B  BB 001Ar				     mov bx, offset hello_string
+     32	010E  E8 0132				     call send_string
+     33
+     34	0111  BB 0086r				     mov bx, offset second_string
+     35	0114  E8 012C				     call send_string
+     36
+     37	0117  32 E4				     xor ah, ah
+     38	0119  CD 16				     int 16h
+     39
+     40	011B  B8 4C00				     mov ax, 4c00h			      ;	Выйти из программы и передать	    +
+     41				     управление	DOSу
+     42	011E  CD 21				     int 21h
+     43
+     44				     ;---------------------------------------------------------------
+     45				     ; Parses command line arguments
+     46				     ;
+     47				     ; Entry: None
+     48				     ; Note:  None
+     49				     ; Exit:  style - the requested style or 0 if no style was requested
+     50				     ; Destr: AX BX CX SI ES
+     51				     ;---------------------------------------------------------------
+     52	0120			     parse_args	proc
+     53	0120  FC				     cld
+     54
+     55	0121  BE 0082				     mov si, ARG_STRING_ADDR
+     56	0124  8B 0E 0080			     mov cx, ds:[ARG_LENGTH_ADDR]
+     57
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 2
+02_sty~1.asm
+
+
+
+     58	0128  E8 0049				     call skip_spaces
+     59
+     60	012B  AC				     lodsb
+     61
+     62	012C  2C 30				     sub al, '0'
+     63
+     64	012E  3C 00				     cmp al, 0
+     65	0130  7C 15				     jl	@@wrong_style
+     66	0132  74 1A				     je	@@read_user_style
+     67	0134  3C 04				     cmp al, 4
+     68	0136  7D 0F				     jge @@wrong_style
+     69
+     70	0138  33 DB				     xor bx, bx
+     71	013A  B3 06 90 90			     mov bl, STYLE_ENTRY_SIZE
+     72	013E  F6 E3				     mul bl
+     73	0140  05 0000r				     add ax, offset style_table
+     74	0143  A3 0018r				     mov current_frame_style, ax
+     75
+     76	0146  C3				     ret
+     77
+     78	0147			     @@wrong_style:
+     79	0147  C7 06 0018r 0006r			     mov current_frame_style, offset single_line_frame
+     80	014D  C3				     ret
+     81
+     82	014E			     @@read_user_style:
+     83	014E  83 F9 00				     cmp cx, 0
+     84	0151  74 F4				     je	@@wrong_style
+     85
+     86	0153  8C DA				     mov dx, ds
+     87	0155  8E C2				     mov es, dx
+     88	0157  BF 0000r				     mov di, offset user_frame
+     89
+     90	015A  33 D2				     xor dx, dx
+     91						     ; 6 times
+     92	015C			     @@loop:
+     93	015C  83 FA 06				     cmp dx, 6
+     94	015F  74 0C				     je	@@loop_end
+     95
+     96	0161  E8 0010				     call skip_spaces
+     97
+     98	0164  83 F9 00				     cmp cx, 0
+     99	0167  74 DE				     je	@@wrong_style
+    100
+    101	0169  A4				     movsb
+    102
+    103	016A  42				     inc dx
+    104	016B  EB EF				     jmp @@loop
+    105	016D			     @@loop_end:
+    106
+    107	016D  C7 06 0018r 0000r			     mov current_frame_style, offset user_frame
+    108	0173  C3				     ret
+    109	0174			     endp
+    110
+    111				     ;---------------------------------------------------------------
+    112				     ; Skips space characters
+    113				     ;
+    114				     ; Entry: DS:SI - address of the string to skip characters in
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 3
+02_sty~1.asm
+
+
+
+    115				     ;	      CX - length
+    116				     ; Note:  None
+    117				     ; Exit:  CX - length of the remaining string portion
+    118				     ;	      DS:SI - non space	character encountered or the last
+    119				     ;		      character	of the string
+    120				     ; Destr: AX CX SI
+    121				     ;---------------------------------------------------------------
+    122	0174			     skip_spaces proc
+    123	0174  FC				     cld
+    124
+    125	0175  83 F9 00				     cmp cx, 0
+    126	0178  74 14				     je	@@exit
+    127
+    128	017A  80 3C 20				     cmp byte ptr [si],	' '
+    129	017D  75 0F				     jne @@exit
+    130
+    131	017F  8C D8				     mov ax, ds
+    132	0181  06				     push es
+    133	0182  8E C0				     mov es, ax
+    134
+    135	0184  87 F7				     xchg si, di
+    136
+    137	0186  B0 20				     mov al, ' '
+    138
+    139	0188  F3> AE				     repe scasb
+    140
+    141	018A  4F				     dec di
+    142
+    143	018B  87 F7				     xchg si, di
+    144	018D  07				     pop es
+    145	018E			     @@exit:
+    146	018E  C3				     ret
+    147	018F			     endp
+    148
+    149				     ;---------------------------------------------------------------
+    150				     ; Draws frame
+    151				     ;
+    152				     ; Entry: None
+    153				     ; Note:  None
+    154				     ; Exit:  DF = 0
+    155				     ; Destr: AX BX CX DX SI DI	BP ES DF
+    156				     ;---------------------------------------------------------------
+    157	018F			     draw_frame	proc
+    158	018F  B8 B800				     mov ax, VIDEO_SEG
+    159	0192  8E C0				     mov es, ax
+    160	0194  BF 0000				     mov di, 0
+    161
+    162	0197  B4 07				     mov ah, CHAR_COLOR
+    163	0199  B7 07				     mov bh, CHAR_COLOR
+    164	019B  B6 07				     mov dh, CHAR_COLOR
+    165
+    166	019D  8B 2E 0018r			     mov bp, current_frame_style
+    167	01A1  8A 5E 02 90			     mov bl, [bp+BORDER_TL_CORNER_OFFSET]
+    168	01A5  8A 46 01 90			     mov al, [bp+BORDER_HOR_PLAIN_OFFSET]
+    169	01A9  8A 56 03 90			     mov dl, [bp+BORDER_TR_CORNER_OFFSET]
+    170	01AD  B9 0050				     mov cx, SCREEN_COLS
+    171	01B0  E8 002E				     call draw_line
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 4
+02_sty~1.asm
+
+
+
+    172
+    173	01B3  BE 0001				     mov si, 1					; SI = current line index
+    174	01B6  8A 5E 00 90			     mov bl, [bp+BORDER_VERT_PLAIN_OFFSET]
+    175	01BA  B0 00				     mov al, 0
+    176	01BC  8A 56 00 90			     mov dl, [bp+BORDER_VERT_PLAIN_OFFSET]
+    177	01C0			     @@loop:
+    178	01C0  83 FE 18				     cmp si, SCREEN_ROWS - 1
+    179	01C3  74 09				     je	@@loop_end
+    180
+    181	01C5  B9 0050				     mov cx, SCREEN_COLS
+    182	01C8  E8 0016				     call draw_line
+    183
+    184	01CB  46				     inc si
+    185	01CC  EB F2				     jmp @@loop
+    186	01CE			     @@loop_end:
+    187
+    188	01CE  8A 5E 04 90			     mov bl, [bp+BORDER_BL_CORNER_OFFSET]
+    189	01D2  8A 46 01 90			     mov al, [bp+BORDER_HOR_PLAIN_OFFSET]
+    190	01D6  8A 56 05 90			     mov dl, [bp+BORDER_BR_CORNER_OFFSET]
+    191	01DA  B9 0050				     mov cx, SCREEN_COLS
+    192	01DD  E8 0001				     call draw_line
+    193
+    194	01E0  C3				     ret
+    195	01E1			     endp
+    196
+    197				     ;---------------------------------------------------------------
+    198				     ; Draws one line of a frame
+    199				     ;
+    200				     ; Entry: BX - first symbol
+    201				     ;	      AX - middle symbol (that is repeated)
+    202				     ;	      DX - last	symbol
+    203				     ;	      CX - line	length (frame width)
+    204				     ;	      DI - starting addr to draw
+    205				     ; Note:  ES - videoseg addr
+    206				     ; Exit:  DI - starting address of the next	line, CX = 0, DF = 0
+    207				     ; Chngs: CX DI DF
+    208				     ;---------------------------------------------------------------
+    209	01E1			     draw_line proc
+    210	01E1  FC				     cld
+    211
+    212	01E2  93				     xchg bx, ax
+    213	01E3  AB				     stosw
+    214	01E4  93				     xchg bx, ax
+    215	01E5  49				     dec cx
+    216
+    217	01E6  49				     dec cx	       ; need to loop line length - 2 times
+    218	01E7  F3> AB				     rep stosw
+    219
+    220	01E9  92				     xchg dx, ax
+    221	01EA  AB				     stosw
+    222	01EB  92				     xchg dx, ax
+    223
+    224	01EC  C3				     ret
+    225	01ED			     endp
+    226
+    227				     ; TODO: DF	= 0, cld
+    228
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 5
+02_sty~1.asm
+
+
+
+    229				     ;--------------------------------------------------------------------
+    230				     ; Shifts line inside the frame to the left	for one	character.
+    231				     ;
+    232				     ; Entry: CX - length of the line inside the frame (# screen cols -	2)
+    233				     ;	      DI - address of the first	character inside the frame on the line
+    234				     ; Note:  DS, ES - videoseg	addr
+    235				     ; Exit:  DI - address of the last character inside	the frame on the line
+    236				     ;	      SI - address of the last frame border character on the line
+    237				     ;	      CX = 0
+    238				     ; Chngs: CX SI DI DF
+    239				     ;--------------------------------------------------------------------
+    240	01ED			     shift_line	proc
+    241	01ED  FC				     cld
+    242
+    243	01EE  8B F7				     mov si, di
+    244	01F0  83 C6 02				     add si, 2	       ; SI = address of the character after
+    245								       ;      the current
+    246	01F3  49				     dec cx	       ; need to copy #	cols - 1 chars
+    247
+    248	01F4  F3> A5				     rep movsw
+    249
+    250	01F6  C3				     ret
+    251	01F7			     endp
+    252
+    253				     ;---------------------------------------------------------------
+    254				     ; Shift chars inside the frame to make space for a	new one
+    255				     ;
+    256				     ; Entry: None
+    257				     ; Note:  ES, DS - videoseg	addr
+    258				     ; Exit:  CX = 0, DF = 0
+    259				     ; Chngs: AX CX SI DI DF
+    260				     ;---------------------------------------------------------------
+    261	01F7			     shift_chars proc
+    262	01F7  B8 0000				     mov ax, 0			   ; AX	= index	of the current
+    263										   ;	  line inside the frame
+    264	01FA  BF 00A2				     mov di, 2d	* SCREEN_COLS +	2d ; DI	= address of the current
+    265										   ;	  character in video memory
+    266										   ; Initially of the first character
+    267										   ; inside the	frame
+    268	01FD			     @@loop:
+    269	01FD  3D 0016				     cmp ax, FRAME_ROWS	- 1   ;	do unless it is	the last line inside the frame
+    270	0200  74 10				     je	@@loop_end
+    271
+    272						     ; Shifts line inside the frame to the left	for one	character.
+    273						     ;
+    274						     ; Entry: CX - length of the line inside the frame (# screen cols -	2)
+    275						     ;	      DI - address of the first	character inside the frame on the line
+    276						     ; Note:  DS, ES - videoseg	addr
+    277						     ; Exit:  DI - address of the last character inside	the frame on the line
+    278						     ;	      SI - address of the last frame border character on the line
+    279						     ;	      CX = 0
+    280						     ; Chngs: CX SI DI
+    281	0202  B9 004E				     mov cx, FRAME_COLS
+    282	0205  E8 FFE5				     call shift_line
+    283
+    284	0208  83 C6 04				     add si, 4d		      ;	point to the first character inside the	frame
+    285									      ;	on the next line
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 6
+02_sty~1.asm
+
+
+
+    286
+    287	020B  A5				     movsw		      ;	shift the last character of the	line
+    288
+    289	020C  83 C7 04				     add di, 4d		      ;	skip borders of	the frame
+    290
+    291	020F  40				     inc ax
+    292	0210  EB EB				     jmp @@loop
+    293	0212			     @@loop_end:
+    294
+    295	0212  B9 004E				     mov cx, FRAME_COLS
+    296	0215  E8 FFD5				     call shift_line	      ;	shift the last line without filling the	last	    +
+    297				     character
+    298
+    299	0218  C3				     ret
+    300	0219			     endp
+    301
+    302				     ;---------------------------------------------------------------
+    303				     ; TODO: update this doc.
+    304				     ; Sends char to frame
+    305				     ;
+    306				     ; Entry: AL - character to	send
+    307				     ; Note:  ES - videoseg addr
+    308				     ; Exit:  None
+    309				     ; Destr: CX
+    310				     ;---------------------------------------------------------------
+    311	0219			     send_char proc
+    312	0219  83 3E 0241r 4F			     cmp @@current_col,	SCREEN_COLS - 1
+    313	021E  75 0F				     jne @@shift_chars_end
+    314
+    315	0220  FF 0E 0241r			     dec @@current_col
+    316
+    317	0224  50				     push ax
+    318						     ; Shift chars inside the frame to make space for a	new one
+    319						     ;
+    320						     ; Entry:
+    321						     ; Note:  ES, DS - videoseg	addr
+    322						     ; Exit:  CX = 0
+    323						     ; Chngs: AX CX SI DI
+    324	0225  1E				     push ds
+    325	0226  8C C0				     mov ax, es
+    326	0228  8E D8				     mov ds, ax
+    327	022A  E8 FFCA				     call shift_chars
+    328	022D  1F				     pop ds
+    329	022E  58				     pop ax
+    330	022F			     @@shift_chars_end:
+    331
+    332	022F  8B 1E 0241r			     mov bx, @@current_col
+    333	0233  D1 E3				     shl bx, 1
+    334	0235  26: 88 87	0E60			     mov es:[2d	* (SCREEN_ROWS - 2d) * SCREEN_COLS + bx], al
+    335	023A  D1 EB				     shr bx, 1
+    336
+    337	023C  FF 06 0241r			     inc @@current_col
+    338
+    339	0240  C3				     ret
+    340
+    341	0241  0001		     @@current_col dw 1d
+    342	0243			     endp
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 7
+02_sty~1.asm
+
+
+
+    343
+    344	0243			     send_string proc
+    345	0243			     @@loop:
+    346	0243  8A 07				     mov al, [bx]
+    347	0245  3C 00				     cmp al, 0
+    348	0247  74 08				     je	@@loop_end
+    349
+    350	0249  53				     push bx
+    351	024A  E8 FFCC				     call send_char
+    352	024D  5B				     pop bx
+    353
+    354	024E  43				     inc bx
+    355	024F  EB F2				     jmp @@loop
+    356	0251			     @@loop_end:
+    357	0251  C3				     ret
+    358	0252			     endp
+    359
+    360	0252			     .data
+    361
+    362	      =0000		     BORDER_VERT_PLAIN_OFFSET =	0d
+    363	      =0001		     BORDER_HOR_PLAIN_OFFSET  =	1d
+    364	      =0002		     BORDER_TL_CORNER_OFFSET  =	2d
+    365	      =0003		     BORDER_TR_CORNER_OFFSET  =	3d
+    366	      =0004		     BORDER_BL_CORNER_OFFSET  =	4d
+    367	      =0005		     BORDER_BR_CORNER_OFFSET  =	5d
+    368
+    369	0000			     style_table:
+    370	      =0006		     STYLE_ENTRY_SIZE =	1d * 6d
+    371				     ; vertical	plain border, horizonal	plain border, top left corner, top right corner, bottom	left+
+    372				     corner, bottom right
+    373	0000  00 00 00 00 00 00	     user_frame	       db 0,	   0,	 0,    0,    0,	    0
+    374	0006  B3 C4 DA BF C0 D9	     single_line_frame db 0b3h,	0c4h, 0dah, 0bfh, 0c0h,	 0d9h
+    375	000C  BA CD C9 BB C8 BC	     double_line_frame db 0bah,	0cdh, 0c9h, 0bbh, 0c8h,	 0bch
+    376	0012  B3 C4 C5 C5 C5 C5	     plus_frame	       db 0b3h,	0c4h, 0c5h, 0c5h, 0c5h,	 0c5h
+    377
+    378				     ; address of the table entry for the current style
+    379	0018  0000		     current_frame_style dw 0h
+    380
+    381
+    382	001A  46 6F 72 20 74 68	65+  hello_string db "For the End of the World spell, press Control-Alt-Delete.	Хочешь устроить	    +
+    383	      20 45 6E 64 20 6F	66+  конец света? Нажми	кнопку ресет. ", 0
+    384	      20 74 68 65 20 57	6F+
+    385	      72 6C 64 20 73 70	65+
+    386	      6C 6C 2C 20 70 72	65+
+    387	      73 73 20 43 6F 6E	74+
+    388	      72 6F 6C 2D 41 6C	74+
+    389	      2D 44 65 6C 65 74	65+
+    390	      2E 20 95 AE E7 A5	E8+
+    391	      EC 20 E3 E1 E2 E0	AE+
+    392	      A8 E2 EC 20 AA AE	AD+
+    393	      A5 E6 20 E1 A2 A5	E2+
+    394	      A0 3F 20 8D A0 A6	AC+
+    395	      A8 20 AA AD AE AF	AA+
+    396	      E3 20 E0 A5 E1 A5	E2+
+    397	      2E 20 00
+    398	0086  85 E1 AB A8 20 EF	20+  second_string db "Если я ядовитый,	то мне конец. Я	язык прикусил. Нажмите любую клавишу, чтобы +
+    399	      EF A4 AE A2 A8 E2	EB+  продолжить...", 0
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 8
+02_sty~1.asm
+
+
+
+    400	      A9 2C 20 E2 AE 20	AC+
+    401	      AD A5 20 AA AE AD	A5+
+    402	      E6 2E 20 9F 20 EF	A7+
+    403	      EB AA 20 AF E0 A8	AA+
+    404	      E3 E1 A8 AB 2E 20	8D+
+    405	      A0 A6 AC A8 E2 A5	20+
+    406	      AB EE A1 E3 EE 20	AA+
+    407	      AB A0 A2 A8 E8 E3	2C+
+    408	      20 E7 E2 AE A1 EB	20+
+    409	      AF E0 AE A4 AE AB	A6+
+    410	      A8 E2 EC 2E 2E 2E	00
+    411
+    412				     end start
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 9
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "02/21/22"
+??FILENAME			  Text	 "02_sty~1"
+??TIME				  Text	 "13:53:46"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CURRENT_COL			  Word	 DGROUP:0241
+@@EXIT				  Near	 DGROUP:018E
+@@LOOP				  Near	 DGROUP:015C
+@@LOOP				  Near	 DGROUP:01C0
+@@LOOP				  Near	 DGROUP:01FD
+@@LOOP				  Near	 DGROUP:0243
+@@LOOP_END			  Near	 DGROUP:016D
+@@LOOP_END			  Near	 DGROUP:01CE
+@@LOOP_END			  Near	 DGROUP:0212
+@@LOOP_END			  Near	 DGROUP:0251
+@@READ_USER_STYLE		  Near	 DGROUP:014E
+@@SHIFT_CHARS_END		  Near	 DGROUP:022F
+@@WRONG_STYLE			  Near	 DGROUP:0147
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _DATA
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 02_STY~1
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+ARG_LENGTH_ADDR			  Number 0080
+ARG_STRING_ADDR			  Number 0082
+BORDER_BL_CORNER_OFFSET		  Number 0004
+BORDER_BR_CORNER_OFFSET		  Number 0005
+BORDER_HOR_PLAIN_OFFSET		  Number 0001
+BORDER_TL_CORNER_OFFSET		  Number 0002
+BORDER_TR_CORNER_OFFSET		  Number 0003
+BORDER_VERT_PLAIN_OFFSET	  Number 0000
+CHAR_COLOR			  Number 0007
+CURRENT_FRAME_STYLE		  Word	 DGROUP:0018
+DOUBLE_LINE_FRAME		  Byte	 DGROUP:000C
+DRAW_FRAME			  Near	 DGROUP:018F
+DRAW_LINE			  Near	 DGROUP:01E1
+FRAME_COLS			  Number 004E
+FRAME_ROWS			  Number 0017
+HELLO_STRING			  Byte	 DGROUP:001A
+PARSE_ARGS			  Near	 DGROUP:0120
+PLUS_FRAME			  Byte	 DGROUP:0012
+SCREEN_COLS			  Number 0050
+SCREEN_ROWS			  Number 0019
+SECOND_STRING			  Byte	 DGROUP:0086
+SEND_CHAR			  Near	 DGROUP:0219
+SEND_STRING			  Near	 DGROUP:0243
+SHIFT_CHARS			  Near	 DGROUP:01F7
+SHIFT_LINE			  Near	 DGROUP:01ED
+Turbo Assembler	 Version 4.1	    02/21/22 13:53:46	    Page 10
+Symbol Table
+
+
+
+SINGLE_LINE_FRAME		  Byte	 DGROUP:0006
+SKIP_SPACES			  Near	 DGROUP:0174
+START				  Near	 DGROUP:0100
+STYLE_ENTRY_SIZE		  Number 0006
+STYLE_INDEX			  Number 0002
+STYLE_TABLE			  Near	 DGROUP:0000
+USER_FRAME			  Byte	 DGROUP:0000
+VIDEO_SEG			  Number B800
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  00E1 Word	  Public  DATA
+  _TEXT				  16  0252 Word	  Public  CODE
+

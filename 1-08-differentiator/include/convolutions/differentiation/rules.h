@@ -1,0 +1,88 @@
+// #define OPERATION_NODE('+', lhs, rhs)
+// #define FUNCTION_NODE("sin", inner)
+// #define NUMBER_NODE(123) // TODO: big integer later.
+
+// #define LHS
+// #define RHS
+// #define INNER
+// #define DIFFERENTIATE
+
+#define CODE(...) __VA_ARGS__
+
+#define FREE_NODES(NODE, ...)                  \
+	tree_node_deinit_deallocate_subtree(NODE); \
+	FREE_NODES(__VA_ARGS__)
+
+#define DIFFERENTIATE(DST, NODE, ...)        \
+	if (!differentiate_node(NODE, OUTPUT)) { \
+		FREE_NODES(__VA_ARGS__);             \
+	}
+
+OPERATION_RULE(
+	'+',
+	CODE(
+		DIFFERENTIATE(lhs, NODE_LHS)
+		DIFFERENTIATE(rhs, NODE_RHS, lhs)
+	)
+	
+	OPERATION_NODE('+', DIFFERENTIATE(LHS), DIFFERENTIATE(RHS))
+)
+
+OPERATION_RULE(
+	'-',
+	OPERATION_NODE('-', DIFFERENTIATE(LHS), DIFFERENTIATE(RHS))
+)
+
+OPERATION_RULE(
+	'*',
+	OPERATION_NODE('+', OPERATION_NODE('*', DIFFERENTIATE(LHS), RHS), OPERATION_NODE('*', LHS, DIFFERENTIATE(RHS)))
+)
+
+
+OPERATION_RULE(
+	'/',
+	OPERATION_NODE('/',
+		OPERATION_NODE('-', OPERATION_NODE('*', DIFFERENTIATE(LHS), RHS), OPERATION_NODE('*', LHS, DIFFERENTIATE(RHS))),
+		OPERATION_NODE('^', RHS, NUMBER_NODE(2))
+	)
+)
+
+// TODO: operation rule for ^.
+
+END_OPERATION_RULES()
+
+
+BEGIN_FUNCTION_RULES()
+
+FUNCTION_RULE(
+	"sin",
+	OPERATION_NODE('*',
+		FUNCTION_NODE("cos", INNER),
+		DIFFERENTIATE(INNER)
+	)
+)
+
+FUNCTION_RULE(
+	"cos",
+	OPERATION_NODE('*',
+		NUMBER_NODE(-1),
+		OPERATION_NODE('*',
+			FUNCTION_NODE("sin", INNER),
+			DIFFERENTIATE(INNER)
+		)
+	)
+)
+
+FUNCTION_RULE(
+	"tg",
+	OPERATION_NODE('*',
+		OPERATION_NODE('/',
+			OPERATION_NODE('*', NUMBER_NODE(2), FUNCTION_NODE("tg", INNER)),
+			OPERATION_NODE('-', NUMBER_NODE(1), OPERATION_NODE('^', FUNCTION_NODE("tg", INNER), NUMBER_NODE(2)))
+		),
+		DIFFERENTIATE(INNER)
+	)
+)
+
+END_FUNCTION_RULES()
+

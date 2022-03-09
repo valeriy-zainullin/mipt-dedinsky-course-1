@@ -1,0 +1,168 @@
+digraph {
+subgraph cluster_source {
+label="Исходное выражение";
+node_0_0x559e0f26d510 [shape=record,label=" { + | { <left> 0x559e0f26d2d0 | <right> 0x559e0f26d4d0 } } " ];
+node_0_0x559e0f26d510:<left> -> node_0_0x559e0f26d2d0 [label="LHS"]node_0_0x559e0f26d510:<right> -> node_0_0x559e0f26d4d0 [label="RHS"]node_0_0x559e0f26d2d0 [shape=record,label="{ 2 }" ];
+node_0_0x559e0f26d4d0 [shape=record,label=" { * | { <left> 0x559e0f26d450 | <right> 0x559e0f26d490 } } " ];
+node_0_0x559e0f26d4d0:<left> -> node_0_0x559e0f26d450 [label="LHS"]node_0_0x559e0f26d4d0:<right> -> node_0_0x559e0f26d490 [label="RHS"]node_0_0x559e0f26d450 [shape=record,label=" { * | { <left> 0x559e0f26d390 | <right> 0x559e0f26d410 } } " ];
+node_0_0x559e0f26d450:<left> -> node_0_0x559e0f26d390 [label="LHS"]node_0_0x559e0f26d450:<right> -> node_0_0x559e0f26d410 [label="RHS"]node_0_0x559e0f26d390 [shape=record,label=" { * | { <left> 0x559e0f26d310 | <right> 0x559e0f26d350 } } " ];
+node_0_0x559e0f26d390:<left> -> node_0_0x559e0f26d310 [label="LHS"]node_0_0x559e0f26d390:<right> -> node_0_0x559e0f26d350 [label="RHS"]node_0_0x559e0f26d310 [shape=record,label="{ 2 }" ];
+node_0_0x559e0f26d350 [shape=record,label="{ 4 }" ];
+node_0_0x559e0f26d410 [shape=record,label="{ sin | <inner> 0x559e0f26d3d0 }" ];
+node_0_0x559e0f26d410:<inner> -> node_0_0x559e0f26d3d0 [label="INNER"]node_0_0x559e0f26d3d0 [shape=record,label="{ x }" ];
+node_0_0x559e0f26d490 [shape=record,label="{ x }" ];
+}
+subgraph cluster_simplified {
+label="Упрощенное выражение";
+node_0_0x559e0f26d9c0 [shape=record,label=" { + | { <left> 0x559e0f26d780 | <right> 0x559e0f26d980 } } " ];
+node_0_0x559e0f26d9c0:<left> -> node_0_0x559e0f26d780 [label="LHS"]node_0_0x559e0f26d9c0:<right> -> node_0_0x559e0f26d980 [label="RHS"]node_0_0x559e0f26d780 [shape=record,label="{ 2 }" ];
+node_0_0x559e0f26d980 [shape=record,label=" { * | { <left> 0x559e0f26d900 | <right> 0x559e0f26d940 } } " ];
+node_0_0x559e0f26d980:<left> -> node_0_0x559e0f26d900 [label="LHS"]node_0_0x559e0f26d980:<right> -> node_0_0x559e0f26d940 [label="RHS"]node_0_0x559e0f26d900 [shape=record,label=" { * | { <left> 0x559e0f26da00 | <right> 0x559e0f26d8c0 } } " ];
+node_0_0x559e0f26d900:<left> -> node_0_0x559e0f26da00 [label="LHS"]node_0_0x559e0f26d900:<right> -> node_0_0x559e0f26d8c0 [label="RHS"]node_0_0x559e0f26da00 [shape=record,label="{ 8 }" ];
+node_0_0x559e0f26d8c0 [shape=record,label="{ sin | <inner> 0x559e0f26d880 }" ];
+node_0_0x559e0f26d8c0:<inner> -> node_0_0x559e0f26d880 [label="INNER"]node_0_0x559e0f26d880 [shape=record,label="{ x }" ];
+node_0_0x559e0f26d940 [shape=record,label="{ x }" ];
+}
+subgraph cluster_step1 {
+label = "Шаг 1";
+subgraph cluster_step1_2 {
+label = "После дифференцирования";
+node_1_0x559e0f26ea90 [shape=record,label="{ 0 }" ];
+}
+subgraph cluster_step1_1 {
+label = "До дифференцирования";
+node_1_0x559e0f26ea50 [shape=record,label="{ 2 }" ];
+}
+}
+subgraph cluster_step2 {
+label = "Шаг 2";
+subgraph cluster_step2_2 {
+label = "После дифференцирования";
+node_2_0x559e0f26ed90 [shape=record,label="{ 0 }" ];
+}
+subgraph cluster_step2_1 {
+label = "До дифференцирования";
+node_2_0x559e0f26ed50 [shape=record,label="{ 8 }" ];
+}
+}
+subgraph cluster_step3 {
+label = "Шаг 3";
+subgraph cluster_step3_2 {
+label = "После дифференцирования";
+node_3_0x559e0f26efd0 [shape=record,label="{ 1 }" ];
+}
+subgraph cluster_step3_1 {
+label = "До дифференцирования";
+node_3_0x559e0f26ef90 [shape=record,label="{ x }" ];
+}
+}
+subgraph cluster_step4 {
+label = "Шаг 4";
+subgraph cluster_step4_2 {
+label = "После дифференцирования";
+node_4_0x559e0f26ef50 [shape=record,label="{ cos | <inner> 0x559e0f26ef10 }" ];
+node_4_0x559e0f26ef50:<inner> -> node_4_0x559e0f26ef10 [label="INNER"]node_4_0x559e0f26ef10 [shape=record,label="{ x }" ];
+}
+subgraph cluster_step4_1 {
+label = "До дифференцирования";
+node_4_0x559e0f26eed0 [shape=record,label="{ sin | <inner> 0x559e0f26ee10 }" ];
+node_4_0x559e0f26eed0:<inner> -> node_4_0x559e0f26ee10 [label="INNER"]node_4_0x559e0f26ee10 [shape=record,label="{ x }" ];
+}
+}
+subgraph cluster_step5 {
+label = "Шаг 5";
+subgraph cluster_step5_2 {
+label = "После дифференцирования";
+node_5_0x559e0f26eed0 [shape=record,label=" { * | { <left> 0x559e0f26ee50 | <right> 0x559e0f26ef50 } } " ];
+node_5_0x559e0f26eed0:<left> -> node_5_0x559e0f26ee50 [label="LHS"]node_5_0x559e0f26eed0:<right> -> node_5_0x559e0f26ef50 [label="RHS"]node_5_0x559e0f26ee50 [shape=record,label="{ 8 }" ];
+node_5_0x559e0f26ef50 [shape=record,label="{ cos | <inner> 0x559e0f26ef10 }" ];
+node_5_0x559e0f26ef50:<inner> -> node_5_0x559e0f26ef10 [label="INNER"]node_5_0x559e0f26ef10 [shape=record,label="{ x }" ];
+}
+subgraph cluster_step5_1 {
+label = "До дифференцирования";
+node_5_0x559e0f26ed10 [shape=record,label=" { * | { <left> 0x559e0f26ec50 | <right> 0x559e0f26ecd0 } } " ];
+node_5_0x559e0f26ed10:<left> -> node_5_0x559e0f26ec50 [label="LHS"]node_5_0x559e0f26ed10:<right> -> node_5_0x559e0f26ecd0 [label="RHS"]node_5_0x559e0f26ec50 [shape=record,label="{ 8 }" ];
+node_5_0x559e0f26ecd0 [shape=record,label="{ sin | <inner> 0x559e0f26ec90 }" ];
+node_5_0x559e0f26ecd0:<inner> -> node_5_0x559e0f26ec90 [label="INNER"]node_5_0x559e0f26ec90 [shape=record,label="{ x }" ];
+}
+}
+subgraph cluster_step6 {
+label = "Шаг 6";
+subgraph cluster_step6_2 {
+label = "После дифференцирования";
+node_6_0x559e0f26efd0 [shape=record,label="{ 1 }" ];
+}
+subgraph cluster_step6_1 {
+label = "До дифференцирования";
+node_6_0x559e0f26ef90 [shape=record,label="{ x }" ];
+}
+}
+subgraph cluster_step7 {
+label = "Шаг 7";
+subgraph cluster_step7_2 {
+label = "После дифференцирования";
+node_7_0x559e0f26ef90 [shape=record,label=" { + | { <left> 0x559e0f26ecd0 | <right> 0x559e0f26ee90 } } " ];
+node_7_0x559e0f26ef90:<left> -> node_7_0x559e0f26ecd0 [label="LHS"]node_7_0x559e0f26ef90:<right> -> node_7_0x559e0f26ee90 [label="RHS"]node_7_0x559e0f26ecd0 [shape=record,label=" { * | { <left> 0x559e0f26eed0 | <right> 0x559e0f26ed10 } } " ];
+node_7_0x559e0f26ecd0:<left> -> node_7_0x559e0f26eed0 [label="LHS"]node_7_0x559e0f26ecd0:<right> -> node_7_0x559e0f26ed10 [label="RHS"]node_7_0x559e0f26eed0 [shape=record,label=" { * | { <left> 0x559e0f26ee50 | <right> 0x559e0f26ef50 } } " ];
+node_7_0x559e0f26eed0:<left> -> node_7_0x559e0f26ee50 [label="LHS"]node_7_0x559e0f26eed0:<right> -> node_7_0x559e0f26ef50 [label="RHS"]node_7_0x559e0f26ee50 [shape=record,label="{ 8 }" ];
+node_7_0x559e0f26ef50 [shape=record,label="{ cos | <inner> 0x559e0f26ef10 }" ];
+node_7_0x559e0f26ef50:<inner> -> node_7_0x559e0f26ef10 [label="INNER"]node_7_0x559e0f26ef10 [shape=record,label="{ x }" ];
+node_7_0x559e0f26ed10 [shape=record,label="{ x }" ];
+node_7_0x559e0f26ee90 [shape=record,label=" { * | { <left> 0x559e0f26ec90 | <right> 0x559e0f26ee10 } } " ];
+node_7_0x559e0f26ee90:<left> -> node_7_0x559e0f26ec90 [label="LHS"]node_7_0x559e0f26ee90:<right> -> node_7_0x559e0f26ee10 [label="RHS"]node_7_0x559e0f26ec90 [shape=record,label="{ 8 }" ];
+node_7_0x559e0f26ee10 [shape=record,label="{ sin | <inner> 0x559e0f26ec50 }" ];
+node_7_0x559e0f26ee10:<inner> -> node_7_0x559e0f26ec50 [label="INNER"]node_7_0x559e0f26ec50 [shape=record,label="{ x }" ];
+}
+subgraph cluster_step7_1 {
+label = "До дифференцирования";
+node_7_0x559e0f26ec10 [shape=record,label=" { * | { <left> 0x559e0f26eb90 | <right> 0x559e0f26ebd0 } } " ];
+node_7_0x559e0f26ec10:<left> -> node_7_0x559e0f26eb90 [label="LHS"]node_7_0x559e0f26ec10:<right> -> node_7_0x559e0f26ebd0 [label="RHS"]node_7_0x559e0f26eb90 [shape=record,label=" { * | { <left> 0x559e0f26ead0 | <right> 0x559e0f26eb50 } } " ];
+node_7_0x559e0f26eb90:<left> -> node_7_0x559e0f26ead0 [label="LHS"]node_7_0x559e0f26eb90:<right> -> node_7_0x559e0f26eb50 [label="RHS"]node_7_0x559e0f26ead0 [shape=record,label="{ 8 }" ];
+node_7_0x559e0f26eb50 [shape=record,label="{ sin | <inner> 0x559e0f26eb10 }" ];
+node_7_0x559e0f26eb50:<inner> -> node_7_0x559e0f26eb10 [label="INNER"]node_7_0x559e0f26eb10 [shape=record,label="{ x }" ];
+node_7_0x559e0f26ebd0 [shape=record,label="{ x }" ];
+}
+}
+subgraph cluster_step8 {
+label = "Шаг 8";
+subgraph cluster_step8_2 {
+label = "После дифференцирования";
+node_8_0x559e0f26ef90 [shape=record,label=" { + | { <left> 0x559e0f26ecd0 | <right> 0x559e0f26ee90 } } " ];
+node_8_0x559e0f26ef90:<left> -> node_8_0x559e0f26ecd0 [label="LHS"]node_8_0x559e0f26ef90:<right> -> node_8_0x559e0f26ee90 [label="RHS"]node_8_0x559e0f26ecd0 [shape=record,label=" { * | { <left> 0x559e0f26eed0 | <right> 0x559e0f26ed10 } } " ];
+node_8_0x559e0f26ecd0:<left> -> node_8_0x559e0f26eed0 [label="LHS"]node_8_0x559e0f26ecd0:<right> -> node_8_0x559e0f26ed10 [label="RHS"]node_8_0x559e0f26eed0 [shape=record,label=" { * | { <left> 0x559e0f26ee50 | <right> 0x559e0f26ef50 } } " ];
+node_8_0x559e0f26eed0:<left> -> node_8_0x559e0f26ee50 [label="LHS"]node_8_0x559e0f26eed0:<right> -> node_8_0x559e0f26ef50 [label="RHS"]node_8_0x559e0f26ee50 [shape=record,label="{ 8 }" ];
+node_8_0x559e0f26ef50 [shape=record,label="{ cos | <inner> 0x559e0f26ef10 }" ];
+node_8_0x559e0f26ef50:<inner> -> node_8_0x559e0f26ef10 [label="INNER"]node_8_0x559e0f26ef10 [shape=record,label="{ x }" ];
+node_8_0x559e0f26ed10 [shape=record,label="{ x }" ];
+node_8_0x559e0f26ee90 [shape=record,label=" { * | { <left> 0x559e0f26ec90 | <right> 0x559e0f26ee10 } } " ];
+node_8_0x559e0f26ee90:<left> -> node_8_0x559e0f26ec90 [label="LHS"]node_8_0x559e0f26ee90:<right> -> node_8_0x559e0f26ee10 [label="RHS"]node_8_0x559e0f26ec90 [shape=record,label="{ 8 }" ];
+node_8_0x559e0f26ee10 [shape=record,label="{ sin | <inner> 0x559e0f26ec50 }" ];
+node_8_0x559e0f26ee10:<inner> -> node_8_0x559e0f26ec50 [label="INNER"]node_8_0x559e0f26ec50 [shape=record,label="{ x }" ];
+}
+subgraph cluster_step8_1 {
+label = "До дифференцирования";
+node_8_0x559e0f26d9c0 [shape=record,label=" { + | { <left> 0x559e0f26d780 | <right> 0x559e0f26d980 } } " ];
+node_8_0x559e0f26d9c0:<left> -> node_8_0x559e0f26d780 [label="LHS"]node_8_0x559e0f26d9c0:<right> -> node_8_0x559e0f26d980 [label="RHS"]node_8_0x559e0f26d780 [shape=record,label="{ 2 }" ];
+node_8_0x559e0f26d980 [shape=record,label=" { * | { <left> 0x559e0f26d900 | <right> 0x559e0f26d940 } } " ];
+node_8_0x559e0f26d980:<left> -> node_8_0x559e0f26d900 [label="LHS"]node_8_0x559e0f26d980:<right> -> node_8_0x559e0f26d940 [label="RHS"]node_8_0x559e0f26d900 [shape=record,label=" { * | { <left> 0x559e0f26da00 | <right> 0x559e0f26d8c0 } } " ];
+node_8_0x559e0f26d900:<left> -> node_8_0x559e0f26da00 [label="LHS"]node_8_0x559e0f26d900:<right> -> node_8_0x559e0f26d8c0 [label="RHS"]node_8_0x559e0f26da00 [shape=record,label="{ 8 }" ];
+node_8_0x559e0f26d8c0 [shape=record,label="{ sin | <inner> 0x559e0f26d880 }" ];
+node_8_0x559e0f26d8c0:<inner> -> node_8_0x559e0f26d880 [label="INNER"]node_8_0x559e0f26d880 [shape=record,label="{ x }" ];
+node_8_0x559e0f26d940 [shape=record,label="{ x }" ];
+}
+}
+subgraph cluster_derivative {
+label = "Производная";
+node_9_0x559e0f26ef90 [shape=record,label=" { + | { <left> 0x559e0f26ecd0 | <right> 0x559e0f26ee90 } } " ];
+node_9_0x559e0f26ef90:<left> -> node_9_0x559e0f26ecd0 [label="LHS"]node_9_0x559e0f26ef90:<right> -> node_9_0x559e0f26ee90 [label="RHS"]node_9_0x559e0f26ecd0 [shape=record,label=" { * | { <left> 0x559e0f26eed0 | <right> 0x559e0f26ed10 } } " ];
+node_9_0x559e0f26ecd0:<left> -> node_9_0x559e0f26eed0 [label="LHS"]node_9_0x559e0f26ecd0:<right> -> node_9_0x559e0f26ed10 [label="RHS"]node_9_0x559e0f26eed0 [shape=record,label=" { * | { <left> 0x559e0f26ee50 | <right> 0x559e0f26ef50 } } " ];
+node_9_0x559e0f26eed0:<left> -> node_9_0x559e0f26ee50 [label="LHS"]node_9_0x559e0f26eed0:<right> -> node_9_0x559e0f26ef50 [label="RHS"]node_9_0x559e0f26ee50 [shape=record,label="{ 8 }" ];
+node_9_0x559e0f26ef50 [shape=record,label="{ cos | <inner> 0x559e0f26ef10 }" ];
+node_9_0x559e0f26ef50:<inner> -> node_9_0x559e0f26ef10 [label="INNER"]node_9_0x559e0f26ef10 [shape=record,label="{ x }" ];
+node_9_0x559e0f26ed10 [shape=record,label="{ x }" ];
+node_9_0x559e0f26ee90 [shape=record,label=" { * | { <left> 0x559e0f26ec90 | <right> 0x559e0f26ee10 } } " ];
+node_9_0x559e0f26ee90:<left> -> node_9_0x559e0f26ec90 [label="LHS"]node_9_0x559e0f26ee90:<right> -> node_9_0x559e0f26ee10 [label="RHS"]node_9_0x559e0f26ec90 [shape=record,label="{ 8 }" ];
+node_9_0x559e0f26ee10 [shape=record,label="{ sin | <inner> 0x559e0f26ec50 }" ];
+node_9_0x559e0f26ee10:<inner> -> node_9_0x559e0f26ec50 [label="INNER"]node_9_0x559e0f26ec50 [shape=record,label="{ x }" ];
+}
+}

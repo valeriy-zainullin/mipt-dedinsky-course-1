@@ -1,0 +1,266 @@
+Turbo Assembler	 Version 4.1	    03/06/22 24:30:06	    Page 1
+03_tests.asm
+
+
+
+      1	0000			     .model tiny
+      2
+      3	0000			     .code
+      4				     org 100h
+      5
+      6				     locals
+      7
+      8	0100			     start:
+      9	0100  8C D8				     mov ax, ds
+     10	0102  8E C0				     mov es, ax
+     11
+     12	0104  BF 0009r				     mov di, offset string_copy
+     13	0107  BE 0000r				     mov si, offset string
+     14	010A  BB 0007				     mov bx, 7
+     15						     ;--------------------------------------------------------------------
+     16						     ; ???
+     17						     ;
+     18						     ; Entry: ES:DI - destination address
+     19						     ;	      DS:SI - source address
+     20						     ;	      BX    - max number of bytes written for dest. address
+     21						     ; Note:  max string length	is 65535.
+     22						     ; Exit:   = 0,
+     23						     ;	      DI - address of the character found or zero
+     24						     ;	      CX - length - index of character - 1 (0-based)
+     25						     ; Chngs: AH CX SI DI
+     26						     ;--------------------------------------------------------------------
+     27						     ; char * strncpy( char * destptr, const char * srcptr, size_t num );
+     28	010D  E8 002C				     call strncpy
+     29
+     30	0110  B8 4C00				     mov ax, 4c00h			      ;	Выйти из	программы  +
+     31				     и	передать управление DOSу
+     32	0113  CD 21				     int 21h
+     33
+     34				     include 03.asm
+1    35				     ﻿locals
+1    36
+1    37				     ;--------------------------------------------------------------------
+1    38				     ; Returns length of a null	terminated string.
+1    39				     ;
+1    40				     ; Entry: ES:DI - address of the start of the string
+1    41				     ; Note:  max string length	is 65535.
+1    42				     ; Exit:  AL = 0
+1    43				     ;	      CX - length of the string
+1    44				     ;	      DI - next	byte after the zero byte of the	string
+1    45				     ; Chngs: AL CX DI
+1    46				     ;--------------------------------------------------------------------
+1    47				     ; size_t strlen( const char * string );
+1    48	0115			     strlen proc
+1    49	0115  FC				     cld
+1    50
+1    51	0116  32 C0				     xor al, al
+1    52	0118  B9 FFFF				     mov cx, 0ffffh
+1    53	011B  F2> AE				     repne scasb	 ; After the instruction cx is 0xFFFF -	(number	of non zero +
+     54				     symbols + 1).
+1    55									 ; cx is decremeted first, then	comparison for cx = 0 or zf +
+     56				     happens.
+1    57									 ; after the zero byte cx is decremented as well.
+Turbo Assembler	 Version 4.1	    03/06/22 24:30:06	    Page 2
+03_tests.asm
+
+
+
+1    58									 ; scasb after comparing zero byte will	increment di as	well.
+1    59									 ; DI =	next byte after	the terminating	zero byte.
+1    60	011D  83 F1 FF				     xor cx, 0ffffh	 ; CX =	~CX = 0xFFFF - cx = number of non zero symbols + 1
+1    61	0120  49				     dec cx		 ; CX =	number of non zero symbols
+1    62
+1    63	0121  C3				     ret
+1    64	0122			     endp
+1    65
+1    66				     ;--------------------------------------------------------------------
+1    67				     ; ???
+1    68				     ;
+1    69				     ; Entry: ES:DI - address of the start of the string,
+1    70				     ;	      AL    - character	to be found
+1    71				     ; Note:  max string length	is 65535.
+1    72				     ; Exit:  AH = 0,
+1    73				     ;	      DI - address of the character found or zero
+1    74				     ;	      CX - length - index of character - 1 (0-based)
+1    75				     ; Chngs: AX CX DI
+1    76				     ;--------------------------------------------------------------------
+1    77				     ; char * strchr( const char * string, int symbol);
+1    78	0122			     strchr proc
+1    79	0122  FC				     cld
+1    80
+1    81	0123  86 E0				     xchg ah, al
+1    82	0125  E8 FFED				     call strlen
+1    83	0128  86 E0				     xchg ah, al
+1    84
+1    85	012A  85 C9				     test cx, cx
+1    86	012C  74 0B				     jz	@@not_found   ;	taken if length	is zero	to not feed it to rep**. It will    +
+     87				     iterate over 0xFFFF + 1 items otherwise.
+1    88
+1    89						     ; DI = address of the byte	after the terminating zero.
+1    90	012E  4F				     dec di
+1    91	012F  2B F9				     sub di, cx
+1    92						     ; CX = start of the string
+1    93
+1    94	0131  F2> AE				     repne scasb      ;	After comparing	the zero byte, di is still incremented.
+1    95	0133  4F				     dec di	      ;	Decrement it back.
+1    96
+1    97	0134  85 C9				     test cx, cx
+1    98	0136  74 01				     jz	@@not_found
+1    99
+1   100	0138  C3				     ret
+1   101
+1   102	0139			     @@not_found:
+1   103	0139  33 FF				     xor di, di
+1   104	013B  C3				     ret
+1   105	013C			     endp
+1   106
+1   107				     ;--------------------------------------------------------------------
+1   108				     ; ???
+1   109				     ;
+1   110				     ; Entry: ES:DI - destination address
+1   111				     ;	      DS:SI - source address
+1   112				     ;	      BX    - max number of bytes written for dest. address
+1   113				     ; Note:  max string length	is 65535.
+1   114				     ; Exit:   = 0,
+Turbo Assembler	 Version 4.1	    03/06/22 24:30:06	    Page 3
+03_tests.asm
+
+
+
+1   115				     ;	      DI - address of the character found or zero
+1   116				     ;	      CX - length - index of character - 1 (0-based)
+1   117				     ; Chngs: AX BX CX SI DI
+1   118				     ;--------------------------------------------------------------------
+1   119				     ; char * strncpy( char * destptr, const char * srcptr, size_t num );
+1   120	013C			     strncpy proc
+1   121	013C  FC				     cld
+1   122
+1   123	013D  8C D8				     mov ax, ds
+1   124	013F  8C C1				     mov cx, es
+1   125	0141  8E D9				     mov ds, cx
+1   126	0143  8E C0				     mov es, ax
+1   127	0145  87 FE				     xchg di, si
+1   128
+1   129						     ;--------------------------------------------------------------------
+1   130						     ; Returns length of a null	terminated string.
+1   131						     ;
+1   132						     ; Entry: ES:DI - address of the start of the string
+1   133						     ; Note:  max string length	is 65535.
+1   134						     ; Exit:  AL = 0
+1   135						     ;	      CX - length of the string
+1   136						     ;	      DI - next	byte after the zero byte of the	string
+1   137						     ; Chngs: AL CX DI
+1   138						     ;--------------------------------------------------------------------
+1   139						     ; size_t strlen( const char * string );
+1   140	0147  E8 FFCB				     call strlen
+1   141	014A  41				     inc cx						 ; CX =	length + 1
+1   142	014B  2B F9				     sub di, cx
+1   143
+1   144	014D  3B CB				     cmp cx, bx
+1   145	014F  76 02				     jbe @@skip_limiting_output
+1   146
+1   147	0151  8B CB				     mov cx, bx
+1   148	0153			     @@skip_limiting_output:
+1   149
+1   150	0153  8C D8				     mov ax, ds
+1   151	0155  8C C3				     mov bx, es
+1   152	0157  8E DB				     mov ds, bx
+1   153	0159  8E C0				     mov es, ax
+1   154	015B  87 FE				     xchg di, si
+1   155
+1   156	015D  F3> A4				     rep movsb
+1   157
+1   158	015F  C3				     ret
+1   159	0160			     endp
+1   160
+1   161				     ;--------------------------------------------------------------------
+1   162				     ; ???
+1   163				     ;
+1   164				     ; Entry: ES:DI - destination address
+1   165				     ;	      DS:SI - source address
+1   166				     ;	      BX    - max number of bytes written for source address
+1   167				     ; Note:  max string length	is 65535.
+1   168				     ; Exit:   = 0,
+1   169				     ;	      DI - address of the character found or zero
+1   170				     ;	      CX - length - index of character - 1 (0-based)
+1   171				     ; Chngs: AH CX DI
+Turbo Assembler	 Version 4.1	    03/06/22 24:30:06	    Page 4
+03_tests.asm
+
+
+
+1   172				     ;--------------------------------------------------------------------
+1   173				     ; char * strncpy( char * destptr, const char * srcptr, size_t num );
+1   174	0160			     strncmp proc
+1   175	0160  FC				     cld
+1   176
+1   177
+1   178	0161			     endp
+1   179
+1   180	0161			     itoa proc
+1   181	0161			     endp
+1   182
+1   183	0161			     atoi proc
+1   184	0161			     endp
+1   185
+    186	0161			     endp
+    187
+    188	0161			     .data
+    189
+    190	0000  31 32 33 34 35 36	37+  string db "12345678", 0
+    191	      38 00
+    192	0009  30 31 30 31 30 31	30+  string_copy db "01010101010", 0
+    193	      31 30 31 30 00
+    194
+    195				     ; size_t strlen( const char * string );
+    196				     ; char * strchr( const char * string, int symbol);
+    197				     ; char * strncpy( char * destptr, const char * srcptr, size_t num );
+    198				     ; int strncmp( const char * string1, const	char * string2,	size_t num );
+    199				     ; char *itoa( int value, char * string, int radix );
+    200				     ; int atoi( const char * string );
+    201
+    202				     ; strlen, strchr, strncpy,	strncmp, itoa, atoi, printf
+    203
+    204				     end start
+Turbo Assembler	 Version 4.1	    03/06/22 24:30:06	    Page 5
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/06/22"
+??FILENAME			  Text	 "03_tests"
+??TIME				  Text	 "24:30:06"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@NOT_FOUND			  Near	 DGROUP:0139
+@@SKIP_LIMITING_OUTPUT		  Near	 DGROUP:0153
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _DATA
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 03_TESTS
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+ATOI				  Near	 DGROUP:0161
+ITOA				  Near	 DGROUP:0161
+START				  Near	 DGROUP:0100
+STRCHR				  Near	 DGROUP:0122
+STRING				  Byte	 DGROUP:0000
+STRING_COPY			  Byte	 DGROUP:0009
+STRLEN				  Near	 DGROUP:0115
+STRNCMP				  Near	 DGROUP:0160
+STRNCPY				  Near	 DGROUP:013C
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0015 Word	  Public  DATA
+  _TEXT				  16  0161 Word	  Public  CODE
+

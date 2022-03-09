@@ -1,0 +1,295 @@
+Turbo Assembler	 Version 4.1	    03/09/22 19:27:53	    Page 1
+04resi~1.asm
+
+
+
+      1				     ﻿.186
+      2	0000			     .model tiny
+      3	0000			     .code
+      4				     locals
+      5				     org 100h
+      6
+      7	0100			     start:
+      8	0100  BB 0008				     mov bx, 8
+      9	0103  BF 019Dr				     mov di, offset int8_jmp_far_arg
+     10	0106  BE 0180r				     mov si, offset int8_handler
+     11	0109  E8 0010				     call set_int
+     12
+     13						     ; mov bx, 9
+     14						     ; mov di, offset int9_jmp_far_arg
+     15						     ; mov si, offset int9_handler
+     16						     ; call set_int
+     17
+     18	010C  E8 0000				     call go_resident
+     19
+     20				     ;--------------------------------------------------------------------
+     21				     ; Go resident.
+     22				     ;
+     23				     ; Entry: None
+     24				     ; Note:  none
+     25				     ; Exit:  ES = 0
+     26				     ; Chngs: AX DX
+     27				     ;--------------------------------------------------------------------
+     28	010F			     go_resident proc
+     29	010F  B8 3100				     mov ax, 3100h
+     30	0112  BA 01DAr				     mov dx, offset end_of_program
+     31	0115  C1 EA 04				     shr dx, 4				 ; Number of bytes in paragraphs (chunks of +
+     32				     16	bytes)
+     33	0118  42				     inc dx				 ; Might not be	a multiple of 16
+     34
+     35	0119  CD 21				     int 21h				 ; TSR:	terminate and stay resident.
+     36
+     37	011B  C3				     ret				 ; Never executed actually.
+     38	011C			     endp
+     39
+     40				     ;--------------------------------------------------------------------
+     41				     ; Changes entry in	interrupt table, saving	old value.
+     42				     ;
+     43				     ; Entry: BX    - interrupt	number
+     44				     ;	      DI    - address in ds segment to store offset and	register
+     45				     ;	      SI    - address in cs segment of the new handler
+     46				     ; Note:  none
+     47				     ; Exit:  ES = 0
+     48				     ; Chngs: AX BX ES
+     49				     ;--------------------------------------------------------------------
+     50	011C			     set_int proc
+     51	011C  FA				     cli
+     52
+     53	011D  33 C0				     xor ax, ax
+     54	011F  8E C0				     mov es, ax
+     55
+     56	0121  C1 E3 02				     shl bx, 2				 ; multiply bx by 4 so that it is address of+
+     57				     the offset.
+Turbo Assembler	 Version 4.1	    03/09/22 19:27:53	    Page 2
+04resi~1.asm
+
+
+
+     58	0124  26: 8B 07				     mov ax, es:[bx]
+     59	0127  89 05				     mov [di], ax
+     60	0129  26: 8B 47	02			     mov ax, es:[bx+2]
+     61	012D  89 45 02				     mov [di+2], ax
+     62
+     63	0130  26: 89 37				     mov es:[bx], si
+     64	0133  26: 8C 4F	02			     mov es:[bx+2], cs
+     65
+     66	0137  FB				     sti
+     67
+     68	0138  C3				     ret
+     69	0139			     endp
+     70
+     71				     ;
+     72				     ; TODO.
+     73				     ;
+     74	0139			     save_registers proc
+     75	0139  A3 01BAr				     mov register_table[0 * 2],	ax
+     76	013C  89 1E 01BCr			     mov register_table[1 * 2],	bx
+     77	0140  89 0E 01BEr			     mov register_table[2 * 2],	cx
+     78	0144  89 16 01C0r			     mov register_table[3 * 2],	dx
+     79	0148  89 36 01C2r			     mov register_table[4 * 2],	si
+     80	014C  89 3E 01C4r			     mov register_table[5 * 2],	di
+     81
+     82	0150  8C D8				     mov ax, ds
+     83	0152  A3 01C6r				     mov register_table[6 * 2],	ax
+     84
+     85	0155  8C C0				     mov ax, es
+     86	0157  A3 01C8r				     mov register_table[7 * 2],	ax
+     87
+     88	015A  C3				     ret
+     89	015B			     endp
+     90
+     91				     ;---------------------------------------------------------------
+     92				     ; Draws one line of a frame
+     93				     ;
+     94				     ; Entry: BX - first symbol
+     95				     ;	      AX - middle symbol (that is repeated)
+     96				     ;	      DX - last	symbol
+     97				     ;	      DI - starting addr to draw
+     98				     ; Note:  ES - videoseg addr
+     99				     ; Exit:  DI - starting address of the next	line, CX = 0, DF = 0
+    100				     ; Chngs: CX DI DF
+    101				     ;---------------------------------------------------------------
+    102	015B			     draw_frame_line proc
+    103	015B  FC				     cld
+    104
+    105	015C  B9 0009 90			     mov cx, FRAME_LINE_LENGTH
+    106
+    107	0160  93				     xchg bx, ax
+    108	0161  AB				     stosw
+    109	0162  93				     xchg bx, ax
+    110	0163  49				     dec cx
+    111
+    112	0164  49				     dec cx	       ; need to loop line length - 2 times
+    113	0165  F3> AB				     rep stosw
+    114
+Turbo Assembler	 Version 4.1	    03/09/22 19:27:53	    Page 3
+04resi~1.asm
+
+
+
+    115	0167  92				     xchg dx, ax
+    116	0168  AB				     stosw
+    117	0169  92				     xchg dx, ax
+    118
+    119	016A  C3				     ret
+    120	016B			     endp
+    121
+    122
+    123				     ;
+    124				     ; TODO.
+    125				     ;
+    126	016B			     draw_frame	proc
+    127	016B  BB 002B				     mov bx, '+'
+    128	016E  B8 002D				     mov ax, '-'
+    129	0171  BA 002B				     mov dx, '+'
+    130	0174  BF B800 90			     mov di, VIDEO_SEG
+    131	0178  E8 FFE0				     call draw_frame_line
+    132
+    133	017B  C3				     ret
+    134	017C			     endp
+    135
+    136				     ;
+    137				     ; TODO.
+    138				     ;
+    139	017C			     draw_info proc
+    140	017C  E8 FFEC				     call draw_frame
+    141
+    142	017F  C3				     ret
+    143	0180			     endp
+    144
+    145				     ;
+    146				     ; TODO.
+    147				     ;
+    148	0180			     int8_handler proc
+    149	0180  50 53 51 52 57 56	06+		     push ax bx	cx dx di si es ds
+    150	      1E
+    151	0188  9C				     pushf
+    152
+    153	0189  8C C8				     mov ax, cs
+    154	018B  8E D8				     mov ds, ax
+    155
+    156	018D  E8 FFA9				     call save_registers
+    157
+    158	0190  E8 FFE9				     call draw_info
+    159
+    160	0193  9D				     popf
+    161	0194  1F 07 5E 5F 5A 59	5B+		     pop ds es si di dx	cx bx ax
+    162	      58
+    163
+    164						     ; iret
+    165	019C  EA				     db	0EAh					 ; JMP FAR
+    166	019D  02*(0000)		     int8_jmp_far_arg dw 2 dup(0)
+    167	01A1			     endp
+    168
+    169				     ;
+    170				     ; TODO.
+    171				     ;
+Turbo Assembler	 Version 4.1	    03/09/22 19:27:53	    Page 4
+04resi~1.asm
+
+
+
+    172				     ; Этот	код будет гадить в регистры любой прерванной  +
+    173				     программе. В нашем случае ещё ничего, хотя мы al	    +
+    174				     портим.
+    175	01A1			     int9_handler proc
+    176	01A1  50 57 06				     push ax di	es
+    177
+    178	01A4  BF B800 90			     mov di, VIDEO_SEG
+    179	01A8  8E C7				     mov es, di
+    180	01AA  BF 0370				     mov di, (5*80 + 80/2) * 2
+    181	01AD  B4 4E				     mov ah, 4eh
+    182
+    183	01AF			     Next:
+    184	01AF  E4 60				     in	al, 60h
+    185	01B1  AB				     stosw			 ; mov es:[di],	ax
+    186										 ; and di, 0FFFh
+    187
+    188						     ; Такой код неприлично писать без		    +
+    189				     комментариев. Нужны комментарии.
+    190						     ; Если	scan код наш, то нужно будет говорить	с  +
+    191				     клавиатурой и с контроллером прерываний, не прыгать+
+    192				     на предыдущий обработчик.
+    193					     ;	     in	al, 61h			 ; Send	ACK to kbd
+    194					     ;	     mov ah, al
+    195					     ;	     or	al, 80h
+    196					     ;	     out 61h, al
+    197					     ;	     mov al, ah
+    198					     ;	     out 61h, al
+    199
+    200					     ;	     mov al, 20h		 ; Send	EOI to int cntrlr
+    201					     ;	     out 20h, al
+    202
+    203	01B2  07 5F 58				     pop es di ax
+    204
+    205						     ; iret
+    206	01B5  EA				     db	0EAh			 ; JMP FAR
+    207	01B6  02*(0000)		     int9_jmp_far_arg dw 2 dup(0)
+    208	01BA			     endp
+    209
+    210	      =B800		     VIDEO_SEG = 0b800h
+    211
+    212				     ; ax, bx, cx, dx, si, di, es, ds, fs, gs
+    213	      =0008		     NUM_REGISTERS = 8d
+    214	01BA  08*(0000)		     register_table dw NUM_REGISTERS dup(0)
+    215	01CA  61 78 62 78 63 78	64+  registers db "ax",	"bx", "cx", "dx", "si",	"di", "es", "ds"
+    216	      78 73 69 64 69 65	73+
+    217	      64 73
+    218
+    219	      =0002		     REGISTER_LENGTH = 2
+    220	      =0002		     VALUE_LENGTH = 2
+    221	      =0009		     FRAME_LINE_LENGTH = 1 + 1 + REGISTER_LENGTH + 1 + VALUE_LENGTH + 1	+ 1
+    222
+    223	01DA			     end_of_program:
+    224				     end start
+Turbo Assembler	 Version 4.1	    03/09/22 19:27:53	    Page 5
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/09/22"
+??FILENAME			  Text	 "04resi~1"
+??TIME				  Text	 "19:27:52"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0103H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 04RESI~1
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+DRAW_FRAME			  Near	 DGROUP:016B
+DRAW_FRAME_LINE			  Near	 DGROUP:015B
+DRAW_INFO			  Near	 DGROUP:017C
+END_OF_PROGRAM			  Near	 DGROUP:01DA
+FRAME_LINE_LENGTH		  Number 0009
+GO_RESIDENT			  Near	 DGROUP:010F
+INT8_HANDLER			  Near	 DGROUP:0180
+INT8_JMP_FAR_ARG		  Word	 DGROUP:019D
+INT9_HANDLER			  Near	 DGROUP:01A1
+INT9_JMP_FAR_ARG		  Word	 DGROUP:01B6
+NEXT				  Near	 DGROUP:01AF
+NUM_REGISTERS			  Number 0008
+REGISTERS			  Byte	 DGROUP:01CA
+REGISTER_LENGTH			  Number 0002
+REGISTER_TABLE			  Word	 DGROUP:01BA
+SAVE_REGISTERS			  Near	 DGROUP:0139
+SET_INT				  Near	 DGROUP:011C
+START				  Near	 DGROUP:0100
+VALUE_LENGTH			  Number 0002
+VIDEO_SEG			  Number B800
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  01DA Word	  Public  CODE
+
