@@ -1,0 +1,74 @@
+Turbo Assembler	 Version 4.1	    03/25/22 20:34:55	    Page 1
+04resi~1.asm
+
+
+
+      1				     ﻿.186
+      2	0000			     .model tiny
+      3	0000			     .code
+      4				     locals
+      5				     org 100h
+      6
+      7	0100			     start:
+      8	0100  B8 DED9				     mov ax, 0DED9h
+      9	0103  8E D8				     mov ds, ax
+     10
+     11	0105  B8 ABCD				     mov ax, 0ABCDh
+     12	0108  8E C0				     mov es, ax
+     13
+     14	010A  B8 12AB				     mov ax, 12ABh
+     15	010D  BB 34CD				     mov bx, 34CDh
+     16	0110  B9 56EF				     mov cx, 56EFh
+     17	0113  BA 7890				     mov dx, 7890h
+     18	0116  BE FEFA				     mov si, 0FEFAh
+     19	0119  BF BEEF				     mov di, 0BEEFh
+     20
+     21	011C			     @@char_loop:
+     22	011C  50				     push ax
+     23	011D  E4 60				     in	al, 60h
+     24
+     25	011F  3C 01				     cmp al, 01h
+     26	0121  74 03				     je	@@char_loop_end
+     27
+     28	0123  58				     pop ax
+     29	0124  EB F6				     jmp @@char_loop
+     30
+     31	0126			     @@char_loop_end:
+     32	0126  B8 4C00				     mov ax, 4c00h
+     33	0129  CD 21				     int 21h
+     34
+     35				     end start
+Turbo Assembler	 Version 4.1	    03/25/22 20:34:55	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/25/22"
+??FILENAME			  Text	 "04resi~1"
+??TIME				  Text	 "20:34:55"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CHAR_LOOP			  Near	 DGROUP:011C
+@@CHAR_LOOP_END			  Near	 DGROUP:0126
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0103H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 04RESI~1
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+START				  Near	 DGROUP:0100
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  012B Word	  Public  CODE
+
