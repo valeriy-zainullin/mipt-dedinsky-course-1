@@ -1,5 +1,8 @@
 #pragma once
 
+#include <inttypes.h>
+#include <stdint.h>
+
 #include "variable_location.h"
 
 #include <stdbool.h>
@@ -12,8 +15,8 @@
 #define VECTOR_STRUCT_HASH_PROTECTION_ENABLED 0
 #define VECTOR_ANY_HASH_PROTECTION_ENABLED VECTOR_STRUCT_HASH_PROTECTION_ENABLED
 
-#define VECTOR_ITEM_TYPE const char*
-#define VECTOR_TYPE_NAME VectorString
+#define VECTOR_ITEM_TYPE uint32_t
+#define VECTOR_TYPE_NAME Vector4B
 #define VECTOR_ACCEPTS_ITEMS_BY_POINTERS 0
 #define VECTOR_COMPARES_ITEMS_WITH_MEMCMP 0
 
@@ -35,17 +38,17 @@ typedef STACK_TYPE_NAME##_STRUCT* STACK_TYPE_NAME;
 #endif
 
 // Implementation function names.
-#define VECTOR_INIT_FUNCTION_NAME vector_string_init
-#define VECTOR_DEINIT_FUNCTION_NAME vector_string_deinit
-#define VECTOR_PUSH_FUNCTION_NAME vector_string_push
-#define VECTOR_POP_FUNCTION_NAME vector_string_pop
-#define VECTOR_DUMP_FUNCTION_NAME vector_string_dump
-#define VECTOR_GET_ITEM_FUNCTION_NAME vector_string_get_item
-#define VECTOR_GET_LENGTH_FUNCTION_NAME vector_string_get_length
-#define VECTOR_GET_DATA_START_FUNCTION_NAME vector_string_get_data_start
+#define VECTOR_INIT_FUNCTION_NAME vector_4b_init
+#define VECTOR_DEINIT_FUNCTION_NAME vector_4b_deinit
+#define VECTOR_PUSH_FUNCTION_NAME vector_4b_push
+#define VECTOR_POP_FUNCTION_NAME vector_4b_pop
+#define VECTOR_DUMP_FUNCTION_NAME vector_4b_dump
+#define VECTOR_GET_ITEM_FUNCTION_NAME vector_4b_get_item
+#define VECTOR_GET_LENGTH_FUNCTION_NAME vector_4b_get_length
+#define VECTOR_GET_DATA_START_FUNCTION_NAME vector_4b_get_data_start
 // ------
 
-#define VECTOR_PRINT_ITEM(STREAM, ITEM) fprintf(STREAM, "%p", (void*) ITEM)
+#define VECTOR_PRINT_ITEM(STREAM, ITEM) fprintf(STREAM, "%" PRIu32, ITEM)
 
 // Function definitions.
 bool VECTOR_INIT_FUNCTION_NAME(Variable variable, VECTOR_TYPE_NAME* vector_ptr);
@@ -61,14 +64,14 @@ void* VECTOR_GET_DATA_START_FUNCTION_NAME(Variable variable, VECTOR_TYPE_NAME* v
 #if !defined(INCLUDED_FROM_VECTOR_IMPLEMENTATION)
 // Interfacing macros.
 // Don't define them for stack implementation as stack implementation function names from definitions (for example, "bool STACK_INIT_FUNCTION_NAME(VariableLocation variable_location, STACK_TYPE_NAME* stack_ptr);") will be macro-expanded to real function names (in example, "bool stack_int_init(VariableLocation variable_location, void** stack_ptr);") and then they will be expanded to these function-like macros ("stack_int_init" in example), but then number of arguments will mismatch. And still it would be a wrong behaviour.
-#define vector_string_init(...) vector_string_init(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
-#define vector_string_deinit(...) vector_string_deinit(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
-#define vector_string_push(...) vector_string_push(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
-#define vector_string_pop(...) vector_string_pop(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
-#define vector_string_dump(...) vector_string_dump(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
-#define vector_string_get_item(...) vector_string_get_item(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
-#define vector_string_get_length(...) vector_string_get_length(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
-#define vector_string_get_data_start(...) vector_string_get_data_start(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
+#define vector_4b_init(...) vector_4b_init(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
+#define vector_4b_deinit(...) vector_4b_deinit(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
+#define vector_4b_push(...) vector_4b_push(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
+#define vector_4b_pop(...) vector_4b_pop(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
+#define vector_4b_dump(...) vector_4b_dump(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
+#define vector_4b_get_item(...) vector_4b_get_item(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
+#define vector_4b_get_length(...) vector_4b_get_length(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
+#define vector_4b_get_data_start(...) vector_4b_get_data_start(MAKE_VARIABLE_LOCATION(VECTOR_PTR), __VA_ARGS__)
 #endif
 
 #if !defined(INCLUDED_FROM_VECTOR_IMPLEMENTATION)
