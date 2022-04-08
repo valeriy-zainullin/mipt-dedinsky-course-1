@@ -4,6 +4,7 @@ extern GetStdHandle
 extern WriteFile
 
 global myprintf
+global mystrlen ; Использую в следующем задании.
 
 section .text
 ;
@@ -43,10 +44,6 @@ write_char:
 
 section .bss
 .char:  resb 1
-
-section .text
-mystrncpy:
-		ret
 
 section .text
 ;---------------------------------------------------------------------------------
@@ -279,14 +276,18 @@ mystrlen:
 section .text
 ;--------------------------------------------------------------------
 ; Writes null-terminated string to the console.
+; Additionally support zero-padding. There is no such argument
+; in standard puts.
 ;
 ; Entry: RCX - address of the start of the string
+;        RDX - expected length of the string, front is padded with
+;              zeros the front to achive it (if possible)
 ; Note:  none
 ; Exit:  none
 ; Chngs: RCX RDX
 ;--------------------------------------------------------------------
 ; ... puts( ... );
-myputs:
+myprintf_puts:
 		push rax
 		push rcx
 		push rdx
@@ -298,6 +299,28 @@ myputs:
 		push rcx
 		call mystrlen
 		pop rcx
+		
+		cmp rax, rdx
+		jae .skip_zero_padding
+		
+		sub rdx, rax
+.loop:
+		test rdx, rdx
+		jz .loop_end
+		
+		push rax
+		mov al, '0'
+		push r11
+		call write_char
+		pop r11
+		pop rax
+		
+		dec rdx
+		
+		jmp .loop
+.loop_end:
+
+.skip_zero_padding:
 		
 		mov rdx, rcx
 		mov rcx, [rel stdout_handle]
@@ -318,7 +341,7 @@ myputs:
 		pop rax
 		
 		ret
-
+		
 section .text
 extract_signed_int_arg:
 		; neg rax
@@ -337,11 +360,17 @@ extract_signed_int_arg:
 		je .extract_longlong
 .extract_int:
 .extract_long:
-		movsx rax, dword [rsp+8*rax+24]
+		movsx rax, dword [rbp+8*rax+24]
 		ret
 
 .extract_longlong:
-		mov rax, [rsp+8*rax+24]
+		mov rax, [rbp+8*rax+24]
+		ret
+
+section .text
+read_fmt_str_char:
+		movzx rax, byte [rcx]
+		inc rcx
 		ret
 
 section .text
@@ -362,11 +391,11 @@ extract_unsigned_int_arg:
 		je .extract_longlong
 .extract_int:
 .extract_long:
-		mov eax, [rsp+8*rax+24]
+		mov eax, [rbp+8*rax+24]
 		ret
 		
 .extract_longlong:
-		mov rax, [rsp+8*rax+24]
+		mov rax, [rbp+8*rax+24]
 		ret
 
 section .text
@@ -377,8 +406,41 @@ extract_addr_arg:
 		; scale is 2, 4, 8, index is any gen. purp registers except esp, rsp,
 		; displacement is 8-, 16- or 32-bit value.
 		; Any of the summands may be ommited.
-		mov rax, [rsp+8*rax+24]
+		mov rax, [rbp+8*rax+24]
 		ret
+
+section .text
+process_flags:
+		cmp rax, '0'
+		je .read_zero_padding
+		ret
+.read_zero_padding:
+		call read_fmt_str_char
+.loop:
+		cmp rax, '0'
+		jb .loop_end
+		
+		cmp rax, '9'
+		ja .loop_end
+		
+		; Multiplication by 10. In my opinion, it is easier than
+		; saving rdx:rax, then moving values, then using mul.
+		; Utilizing binary representation of 10.
+		push r13
+		mov r13, r12
+		shl r12, 3
+		shl r13, 1
+		add r12, r13
+		pop r13
+		
+		sub rax, '0'
+		add r12, rax
+		
+		call read_fmt_str_char
+		jmp .loop
+.loop_end:
+		ret
+		
 		
 section .text
 process_size_specs:
@@ -391,22 +453,19 @@ process_size_specs:
 		ret
 .set_size_size_t:
 		mov r10, SIZE_SIZE_T
-		movzx rax, byte [rcx]
-		inc rcx
+		call read_fmt_str_char
 		ret
 .process_longs:
 		mov r10, SIZE_LONG
 				
-		movzx rax, byte [rcx]
-		inc rcx
+		call read_fmt_str_char
 		cmp rax, 'l'
 		je .set_size_longlong
 		
 		ret
 .set_size_longlong:
 		mov r10, SIZE_LONGLONG
-		movzx rax, byte [rcx]
-		inc rcx
+		call read_fmt_str_char
 		ret
 
 section .text
@@ -414,6 +473,9 @@ myprintf:
 		mov [rsp+16], rdx
 		mov [rsp+24], r8
 		mov [rsp+32], r9
+		push rbp
+		mov rbp, rsp
+		push r12
 		; RCX - pointer to the format string
 		; Arguments are on the stack in shadow space from calling convention. It is faster
 		; than jump table for argument index and acquision from register and frees some
@@ -422,7 +484,11 @@ myprintf:
 		; RDX - number of characters written so far
 		; R8 - current specifier index
 		; R10 - size of the specifier
+		; R12 - zero padding to the specified length or zero if not present
 		; RAX, R9 - tmp registers. RAX is often the current character.
+		; If zero padding is less than length of non-zero digits, it has no offect, so technically to the least geq length.
+		; Zero padding is ignored for chars (simplification, if it is supported by standard printf).
+		; Zero padding works correctly only for non-negative values.
 		; Encoding is ASCII. If other encoding is in use, the bytes with ASCII numbers
 		; for '%', 'c', 'd', ..., '\n', '\r' will be treated as ASCII instead of encoding
 		; in use. Other chars (should? be) printed as bytes.
@@ -432,11 +498,9 @@ myprintf:
 		test rax, rax
 		jz .failure
 .loop:
-		movzx rax, byte [rcx]
+		call read_fmt_str_char
 		test rax, rax
 		jz .loop_end
-		
-		inc rcx
 		
 		cmp rax, '%'
 		je .process_spec
@@ -446,8 +510,10 @@ myprintf:
 
 .process_spec:
 		; Get next char.
-		movzx rax, byte [rcx]
-		inc rcx
+		call read_fmt_str_char
+		
+		xor r12, r12
+		call process_flags
 
 		mov r10, SIZE_DEFAULT
 		call process_size_specs
@@ -494,8 +560,11 @@ myprintf:
 		pop rcx
 		
 		push rcx
+		push rdx
 		mov rcx, .number
-		call myputs
+		mov rdx, r12
+		call myprintf_puts
+		pop rdx
 		pop rcx
 		
 		jmp .loop_next_iteration
@@ -533,8 +602,11 @@ myprintf:
 		pop rcx
 		
 		push rcx
+		push rdx
 		mov rcx, .number
-		call myputs
+		mov rdx, r12
+		call myprintf_puts
+		pop rdx
 		pop rcx
 
 		jmp .loop_next_iteration
@@ -563,8 +635,11 @@ myprintf:
 		pop rcx
 		
 		push rcx
+		push rdx
 		mov rcx, .number
-		call myputs
+		mov rdx, r12
+		call myprintf_puts
+		pop rdx
 		pop rcx
 
 		jmp .loop_next_iteration
@@ -575,8 +650,11 @@ myprintf:
 		call extract_addr_arg
 		
 		push rcx
+		push rdx
 		mov rcx, rax
-		call myputs
+		mov rdx, r12
+		call myprintf_puts
+		pop rdx
 		pop rcx
 		
 		jmp .loop_next_iteration
@@ -610,8 +688,11 @@ myprintf:
 		pop rcx
 		
 		push rcx
+		push rdx
 		mov rcx, .number
-		call myputs
+		mov rdx, r12
+		call myprintf_puts
+		pop rdx
 		pop rcx
 
 		jmp .loop_next_iteration
@@ -640,8 +721,11 @@ myprintf:
 		pop rcx
 		
 		push rcx
+		push rdx
 		mov rcx, .number
-		call myputs
+		mov rdx, r12
+		call myprintf_puts
+		pop rdx
 		pop rcx
 
 		jmp .loop_next_iteration
@@ -655,6 +739,8 @@ myprintf:
 .loop_end:
 
 .failure:
+		pop r12
+		pop rbp
 		ret
 
 section .rdata
@@ -679,6 +765,9 @@ LAST_SPEC equ 'x'
 	dq .process_octal                                      ; 'o'
 	times ('s' - 'o' - 1) dq .process_inv_spec             ; ('o', 's') = ('s', 0] / ('o', 0) / {'o'}
 	dq .process_string                                     ; 's'
+; TODO: добавить unsigned (в задачу не входило, она упрощённая).
+;	times ('u' - 's' - 1) dq .process_inv_spec             ; ('o', 's') = ('s', 0] / ('o', 0) / {'o'}
+;	dq .process_unsigned                                   ; 'u'
 	times ('x' - 's' - 1) dq .process_inv_spec             ; ('s', 'x') = ('x', 0] / ('s', 0) / {'s'}
 	dq .process_lowercase_hex                              ; 'x'
 
