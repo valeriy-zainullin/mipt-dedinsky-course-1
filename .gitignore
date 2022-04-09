@@ -1,6 +1,9 @@
 *.exe
 *.o
+*.obj
 bin/
 build/
 *.swp
 *.bak
+*.lst
+*.dll
