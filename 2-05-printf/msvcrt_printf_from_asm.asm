@@ -7,6 +7,9 @@
 ; I directly link with a dll in this case. It is still dynamically linked (easy to check with pe-bear). I think
 ; it just checks the functions are there, multiple definitions from dlls maybe, undefined references and writes
 ; the name of the dll into the import table.
+; Maybe the missing functions in one of crt*.o files. I saw mingw-ld linking these when $(which kernel32.dll)
+; is specified in objects to link. Just why -lkernel32 works for C programs? Nevermind. This may mean that
+; these libraries just not intented to be used with assembly objects (or without C objects).
 
 ; msvcrt.dll
 extern printf
