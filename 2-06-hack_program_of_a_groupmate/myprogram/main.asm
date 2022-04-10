@@ -36,8 +36,11 @@ extern HeapFree
 extern ExitProcess
 
 extern IsDebuggerPresent
+extern GetCurrentProcess
 extern CheckRemoteDebuggerPresent
-
+extern SetUnhandledExceptionFilter
+;extern AddVectoredExceptionHandler
+;extern RemoveVectoredExceptionHandler
 
 extern myprintf
 extern mystrlen
@@ -264,7 +267,7 @@ create_sha512_hash:
 		ret
 		
 .hashing_failed:
-		mov rax, 1
+		mov rcx, 1
 		sub rsp, 32
 		call ExitProcess
 		
@@ -340,6 +343,13 @@ cmp_counted_strs:
 ENABLE_LINE_INPUT equ 0x2
 section .text
 main:
+		sub rsp, 32
+		call IsDebuggerPresent
+		add rsp, 32
+		
+		test rax, rax
+		jnz .debugger_found
+
 		lea rcx, [rel greeting_fmt]
 		mov rdx, [rsp]
 		sub rsp, 32
@@ -353,10 +363,36 @@ main:
 		mov [rel stdin_handle], rax
 		call validate_handle
 		
+		sub rsp, 32
+		call GetCurrentProcess
+		mov rcx, rax
+		lea rdx, [rel debugger_present_flag]
+		call CheckRemoteDebuggerPresent
+		add rsp, 32
+		
+		test rax, rax
+		jz .crdp_func_failed
+		
+		mov eax, dword [rel debugger_present_flag]
+		test rax, rax
+		jnz .debugger_found
+
+.crdp_func_failed:
 		mov rbp, rsp
 		and rsp, ~0xF               ; Align to 16 bytes as dlls and the kernel may use SSE.
 		sub rsp, BUFFER_SIZE
 		mov [rel buffer_ptr], rsp
+		
+		; TEB struct at https://docs.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-teb
+		; More about TEB at https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/api/pebteb/teb/index.htm
+		; PEB struct at https://docs.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-peb
+		; More about PEB at https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/api/pebteb/peb/index.htm
+		rdgsbase rax
+		mov rax, [rax + 12 * 8]     ; Get PEB location from TEB. TEB address is in fs for
+		                            ; 32-bit code and in gs for 64-bit code.
+		movzx rax, byte [rax+2]
+		test rax, rax
+		jnz .debugger_found
 		
 		mov rcx, [rel buffer_ptr]
 		xor dl, dl
@@ -367,13 +403,22 @@ main:
 		
 		mov rcx, [rel stdin_handle]
 		mov rdx, [rel buffer_ptr]
-		mov r8, BUFFER_SIZE - 1 ; + BUFFER_OVERRUN
+		mov r8, BUFFER_SIZE + BUFFER_OVERRUN
 		xor r9, r9
 		push 0
 		sub rsp, 32
 		call ReadFile
 		add rsp, 32
 		add rsp, 8
+				
+		sub rsp, 32
+		; I couldn't make it work. Spent a lot of time.
+		;call check_debugger_int3
+		add rsp, 32
+		
+		mov eax, dword [rel debugger_present_flag]
+		test rax, rax
+		jnz .debugger_found
 		
 		;--------------------------------------------------------------------
 		; Returns length of a null terminated string.
@@ -402,6 +447,9 @@ main:
 		call SHA512Hash
 		add rsp, 32
 		
+		; add rsp, BUFFER_SIZE
+		mov rsp, rbp
+
 		push rax
 		
 		mov rcx, rax
@@ -420,38 +468,104 @@ main:
 		call myprintf
 		add rsp, 32
 		
-		; add rsp, BUFFER_SIZE
-		mov rsp, rbp
-
 		xor rax, rax
 		ret
 
 .wrong_hash:
+		pop rcx
+		call delete_sha512_hash
+
 		lea rcx, [rel access_denied]
 		sub rsp, 32
 		call myprintf
 		add rsp, 32
 		
-		mov rcx, 2
+		; mov rcx, 2
+		; sub rsp, 32
+		; call ExitProcess
+		
+		; We should have some overflow possibilities.
+		ret
+
+.debugger_found:
+		mov rcx, debugger_found_str
 		sub rsp, 32
+		call myprintf
+		add rsp, 32
+		
+		sub rsp, 32
+		xor rcx, rcx
 		call ExitProcess
+
+; More on https://anti-debug.checkpoint.com/techniques/exceptions.html#unhandledexceptionfilter
+; SetUnhandledExceptionFilter seems to not be called.
+; More on https://stackoverflow.com/questions/19656946
+; Substituting it with AddVectoredExceptionHandler and RemoveVectoredExceptionHandler.
+; AddVectoredExceptionHandler on https://docs.microsoft.com/ru-ru/windows/win32/api/errhandlingapi/nf-errhandlingapi-addvectoredexceptionhandler?redirectedfrom=MSDN
+; RemoveVectoredExceptionHandler on https://docs.microsoft.com/ru-ru/windows/win32/api/errhandlingapi/nf-errhandlingapi-removevectoredexceptionhandler
+section .text
+check_debugger_int3:
+		mov dword [rel debugger_present_flag], 1
+		;mov rcx, 1
+		;lea rdx, [rel my_exception_filter]
+		lea rcx, [rel my_exception_filter]
+		call SetUnhandledExceptionFilter
+		sub rsp, 32
+		;call AddVectoredExceptionHandler
+		add rsp, 32
+		
+		test rax, rax
+		; jz .add_veh_failed
+
+		int3
+		
+		sub rsp, 32
+		mov rcx, rax
+		;call RemoveVectoredExceptionHandler
+		add rsp, 32
+		
+		ret
+
+.add_veh_failed:
+		mov dword [rel debugger_present_flag], 0
+		ret
+
+		
+section .text
+; LONG UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
+; EXCEPTION_POINTERS struct on https://docs.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_pointers
+; CONTEXT struct on https://docs.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-context
+my_exception_filter:
+		mov dword [rel debugger_present_flag], 0
+		
+		; Skip faulty instruction (it is compiled into 0xCC, so one byte).
+		mov rax, [rcx+8]                          ; pExceptionInfo->ContextRecord
+		inc qword [rax+6*8+2*4+6*2+1*4+6*8+16*8]  ; &pExceptionInfo->ContextRecord->Rip
+		
+		mov rax, EXCEPTION_CONTINUE_EXECUTION
+		ret
+
+EXCEPTION_CONTINUE_EXECUTION equ -1
 
 section .bss
 stdin_handle: resq 1
 
-BUFFER_SIZE equ 64   ; Make sure it is devisible by 8.
-BUFFER_OVERRUN equ 8 ; Some overflow potential.
+BUFFER_SIZE equ 64    ; Make sure it is devisible by 8.
+BUFFER_OVERRUN equ 16 ; Some overflow potential.
 buffer_ptr: resq 1
 
 EXPECTED_HASH_LEN equ 64
 buffer_hash: resb EXPECTED_HASH_LEN
 
+debugger_present_flag: resd 1
+
 section .rdata
 ; Не %p, т.к. он не поддерживается моим printf.
 greeting_fmt: db "Привет, 0x%016llx. Ты меня вызывал?", 0xA, 0
 password_prompt: db "Да. Мой пароль: ", 0
-access_granted: db "Доступ получен!", 0
-access_denied: db "В доступе отказано!", 0
+access_granted: db "Доступ получен!", 0xA, 0
+access_denied: db "В доступе отказано!", 0xA, 0
+debugger_found_str: db "Нашел твой отладчик! Давай, выключай его, ложись спать. Завтра попробуешь заново.", 0xA, 0
 %macro hexstr_to_bytes 1
 	%assign i 1
 	%strlen len %1
