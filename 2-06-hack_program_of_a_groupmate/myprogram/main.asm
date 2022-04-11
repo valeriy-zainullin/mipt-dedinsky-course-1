@@ -378,7 +378,7 @@ main:
 
 .crdp_func_failed:
 		mov rbp, rsp
-		and rsp, ~0xF               ; Align to 16 bytes as dlls and the kernel may use SSE.
+		and rsp, ~0xF               ; Align to 16 bytes (thought dlls and the kernel may use SSE). To be sure.
 		sub rsp, BUFFER_SIZE
 		mov [rel buffer_ptr], rsp
 		
