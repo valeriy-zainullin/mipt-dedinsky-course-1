@@ -311,7 +311,6 @@ section .rdata
 	align 8, db 0
 %endmacro
 ; wchar_t strings.
-; ntdll's Rtl functions use SSE! We must align all of the variables to 16 bytes boundary. Hell!!
 sha512_alg_prop: wchar_str "SHA512"
 hash_object_size_prop: wchar_str "ObjectLength"
 hash_len_prop: wchar_str "HashDigestLength"
