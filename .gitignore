@@ -12,3 +12,4 @@ build/
 *.id2
 *.nam
 *.til
+.vs

@@ -1,1 +1,0 @@
-"C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\windbg.exe" -k com:pipe,port=\\.\pipe\windows7_dbg,resets=0,reconnect
