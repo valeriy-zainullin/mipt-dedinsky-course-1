@@ -546,9 +546,9 @@ myprintf:
 		push r8
 		push r9
 		push r10
-		;		RCX - number to be converted,
-		;        RDX - base,
-		; R8 - output string (must be sufficient to hold the number converted).
+		; RCX - number to be converted,
+		; RDX - base,
+		; R8  - output string (must be sufficient to hold the number converted).
 		mov rcx, rax
 		mov rdx, 2
 		mov r8, .number
@@ -588,9 +588,9 @@ myprintf:
 		push r8
 		push r9
 		push r10
-		;		RCX - number to be converted,
-		;        RDX - base,
-		; R8 - output string (must be sufficient to hold the number converted).
+		; RCX - number to be converted,
+		; RDX - base,
+		; R8  - output string (must be sufficient to hold the number converted).
 		mov rcx, rax
 		mov rdx, 10
 		mov r8, .number
@@ -621,9 +621,9 @@ myprintf:
 		push r8
 		push r9
 		push r10
-		;		RCX - number to be converted,
-		;        RDX - base,
-		; R8 - output string (must be sufficient to hold the number converted).
+		; RCX - number to be converted,
+		; RDX - base,
+		; R8  - output string (must be sufficient to hold the number converted).
 		mov rcx, rax
 		mov rdx, 8
 		mov r8, .number
@@ -669,9 +669,9 @@ myprintf:
 		push r8
 		push r9
 		push r10
-		;		RCX - number to be converted,
-		;        RDX - base,
-		; R8 - output string (must be sufficient to hold the number converted).
+		; RCX - number to be converted,
+		; RDX - base,
+		; R8  - output string (must be sufficient to hold the number converted).
 		mov rcx, rax
 		mov rdx, 16
 		mov r8, .number
@@ -707,9 +707,9 @@ myprintf:
 		push r8
 		push r9
 		push r10
-		;		RCX - number to be converted,
-		;        RDX - base,
-		; R8 - output string (must be sufficient to hold the number converted).
+		; RCX - number to be converted,
+		; RDX - base,
+		; R8  - output string (must be sufficient to hold the number converted).
 		mov rcx, rax
 		mov rdx, 16
 		mov r8, .number
