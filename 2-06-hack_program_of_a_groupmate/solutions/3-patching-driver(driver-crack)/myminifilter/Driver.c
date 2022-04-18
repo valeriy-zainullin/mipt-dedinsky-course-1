@@ -21,6 +21,7 @@ Environment:
 
 NTSTATUS
 DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath);
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text (INIT, DriverEntry)
 #endif
@@ -55,56 +56,6 @@ const FLT_REGISTRATION FilterRegistration = {
 	NULL
 };
 
-/*
-// Source: https://docs.microsoft.com/en-us/windows/win32/procthread/zwqueryinformationprocess
-// Those recommendations are for user-mode applications, I suppose. Calling win32 libraries
-// from drivers is maybe a bad idea? As drivers can be used recursively due to such calls.
-// But this driver obviously not, but still kernel functions are used, so why not
-// In our case there is no function that suits us from the win32 libraries.
-// ZwQueryInformationProcess is, at least, documented in comparison with EPROCESS
-// structure.
-enum ProcessInformationClass {
-	// Retrieves a pointer to a PEB structure
-	// that can be used to determine whether
-	// the specified process is being debugged,
-	// and a unique value used by the system
-	// to identify the specified process.
-	// It is best to use the
-	// CheckRemoteDebuggerPresent and
-	// GetProcessId functions to obtain this
-	// information.
-	ProcessBasicInformation = 0,
-	
-	// Retrieves a DWORD_PTR value that is the
-	// port number of the debugger for the
-	// process. A nonzero value indicates that
-	// the process is being run under the
-	// control of a ring 3 debugger.
-	// It is best to use the
-	// CheckRemoteDebuggerPresent or
-	// IsDebuggerPresent function.
-	ProcessDebugPort = 7,
-	
-	// Determines whether the process is
-	// running in the WOW64 environment
-	// (WOW64 is the x86 emulator that allows
-	// Win32-based applications to run on
-	// 64-bit Windows).
-	// It is best to use the IsWow64Process
-	// function to obtain this information.
-	ProcessWow64Information = 26,
-	
-	// Retrieves a UNICODE_STRING value containing the name of the image file for the process.
-	ProcessImageFileName = 27,
-	
-	// Retrieves a ULONG value indicating whether the process is considered critical.
-	// [!Note] This value can be used starting in Windows XP with SP3. Starting in
-	// Windows 8.1, IsProcessCritical should be used instead.
-	ProcessBreakOnTermination = 29,
-	
-	ProcessProtectionInformation = 61
-};
-*/
 // WINAPI is not defined here. It's still not useful for x64.
 #if !defined(WINAPI)
 #define WINAPI __stdcall
@@ -201,10 +152,6 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 			// Don't pass the request to the drivers below in the
 			// stack (to other minifilter drivers or to the
 			// filesystem).
-			// Meaning the driver completed the request with status.
-			// Filter manager only calls the post-operation callbacks
-			// of minifilter drivers above this driver in the driver
-			// stack (docs of Microsoft :)).
 			return FLT_PREOP_COMPLETE;
 		}
 		Status = ZwQueryInformationProcess(ProcessHandle, ProcessImageFileName, ProcessImagePath, ProcessImagePathBufferSize, NULL);
@@ -249,10 +196,6 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 		// Don't pass the request to the drivers below in the
 		// stack (to other minifilter drivers or to the
 		// filesystem).
-		// Meaning the driver completed the request with status.
-		// Filter manager only calls the post-operation callbacks
-		// of minifilter drivers above this driver in the driver
-		// stack (docs of Microsoft :)).
 		return FLT_PREOP_COMPLETE;
 	}
 	
