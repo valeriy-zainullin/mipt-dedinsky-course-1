@@ -212,6 +212,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 		Data->IoStatus.Status = Status;
 		Data->IoStatus.Information = 0;
 		ExFreePool(NewFileName);
+		ExFreePool(FileNameNullTerminated);
 		FltReleaseFileNameInformation(FileNameInfo);
 		// Complete the request.
 		return FLT_PREOP_COMPLETE;
