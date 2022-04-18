@@ -378,7 +378,9 @@ main:
 
 .crdp_func_failed:
 		mov rbp, rsp
-		and rsp, ~0xF               ; Align to 16 bytes (thought dlls and the kernel may use SSE). To be sure.
+		; Fixed alignment here. Check if assembly hashing works. If so, can move that hashing into dll.
+		; Or if bcrypt is not in KnownDlls, the replacement may be done for it instead of SHA512.dll.
+		and rsp, ~0xFFFF            ; Align to 16 bytes (thought dlls and the kernel may use SSE). To be sure.
 		sub rsp, BUFFER_SIZE
 		mov [rel buffer_ptr], rsp
 		
