@@ -12,6 +12,7 @@
 Перехватывать чтение не так просто, проще переопределить имя файла, который будет читаться. Это я и сделал, решение нашел в интернете.
 
 Ссылки (в порядке чтения, если начать с конца):
+1. https://stackoverflow.com/questions/3707133/how-to-use-zwqueryinformationprocess-to-get-processimagefilename-in-a-kernel-dri
 1. https://stackoverflow.com/questions/60169916/how-to-get-current-process-image-path-from-mini-filter-kernel-driver
 1. https://community.osr.com/discussion/291361/mini-filter-driver-to-redirect-file-access
 1. https://www.youtube.com/watch?v=9rErMsfmK_U&list=PLZ4EgN7ZCzJyUT-FmgHsW4e9BxfP-VMuo&index=11

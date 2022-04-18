@@ -13,3 +13,4 @@ build/
 *.nam
 *.til
 .vs
+**/x64/Debug
