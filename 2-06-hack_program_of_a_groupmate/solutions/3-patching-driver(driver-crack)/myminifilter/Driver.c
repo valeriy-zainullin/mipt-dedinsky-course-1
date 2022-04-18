@@ -243,7 +243,7 @@ MmfUnload(_In_ FLT_FILTER_UNLOAD_FLAGS Flags) {
 	KdPrint(("myminifiler unload \r\n"));
 
 	FltUnregisterFilter(FilterHandle);
-    return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -258,7 +258,7 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 		return STATUS_UNSUCCESSFUL;
 	}
 
-    FltRegisterFilter(DriverObject, &FilterRegistration, &FilterHandle);
+	FltRegisterFilter(DriverObject, &FilterRegistration, &FilterHandle);
 
-    return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
