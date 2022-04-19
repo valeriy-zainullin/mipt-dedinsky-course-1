@@ -16,6 +16,11 @@
 Установка: нажать правой кнопкой по inf-файлу, затем нажать "установить". (TODO: Сделать автозапуск службы.)
 
 Ссылки (в порядке чтения, если начать с конца):
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/creating-and-opening-a-workspace (как задать windbg рабочее пространство в командной строке)
+1. https://stackoverflow.com/a/42392970 (как сделать целевой ОС windows 7)
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/performing-kernel-mode-debugging-using-windbg (примеры аргументов для windbg)
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/using-an-inf-file-to-uninstall-a-file-system-filter-driver (как удалить драйвер с помощью inf-файла)
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/using-an-inf-file-to-install-a-file-system-filter-driver (как установить драйвер с помощью inf-файла)
 1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/creating-an-inf-file-for-a-minifilter-driver (как написать правильный inf-файл)
 1. https://stackoverflow.com/questions/3707133/how-to-use-zwqueryinformationprocess-to-get-processimagefilename-in-a-kernel-dri
 1. https://stackoverflow.com/questions/60169916/how-to-get-current-process-image-path-from-mini-filter-kernel-driver
