@@ -3,75 +3,64 @@
 ;
 
 [Version]
-Signature="$WINDOWS NT$"
-Class=ActivityMonitor
-ClassGuid={b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
-Provider=%ManufacturerName%
-CatalogFile=myminifilter.cat
-DriverVer= ; TODO: set DriverVer in stampinf property pages
-PnpLockdown=1
+Signature   = "$WINDOWS NT$"
+Class       = "ActivityMonitor"
+ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
+Provider    = "Best company in the world"
+DriverVer   = 
+CatalogFile = myminifilter.cat
 
 [DestinationDirs]
 DefaultDestDir = 12
-myminifilter_Device_CoInstaller_CopyFiles = 11
+myminifilter.DriverFiles = 12
 
-[SourceDisksNames]
-1 = %DiskName%,,,""
+[DefaultInstall]
+OptionDesc = %myminifilterServiceDesc%
+CopyFiles = myminifilter.DriverFiles
 
-[SourceDisksFiles]
-myminifilter.sys  = 1,,
-WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
-
-;*****************************************
-; Install Section
-;*****************************************
-
-[Manufacturer]
-%ManufacturerName%=Standard,NT$ARCH$
-
-[Standard.NT$ARCH$]
-%myminifilter.DeviceDesc%=myminifilter_Device, Root\myminifilter ; TODO: edit hw-id
-
-[myminifilter_Device.NT]
-CopyFiles=Drivers_Dir
-
-[Drivers_Dir]
+[myminifilter.DriverFiles]
 myminifilter.sys
 
-;-------------- Service installation
-[myminifilter_Device.NT.Services]
-AddService = myminifilter,%SPSVCINST_ASSOCSERVICE%, myminifilter_Service_Inst
+[DefaultInstall.Services]
+AddService = %ServiceName%,,myminifilter.Service
 
-; -------------- myminifilter driver install sections
-[myminifilter_Service_Inst]
-DisplayName    = %myminifilter.SVCDESC%
-ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
-StartType      = 3               ; SERVICE_DEMAND_START
-ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
-ServiceBinary  = %12%\myminifilter.sys
+[myminifilter.Service]
+DisplayName    = %ServiceName%
+Description    = %ServiceDesc%
+ServiceBinary  = %12%\%DriverName%.sys
+ServiceType    = 2 ;    SERVICE_FILE_SYSTEM_DRIVER
+StartType      = 3
+ErrorControl   = 1 ;    SERVICE_ERROR_NORMAL
+LoadOrderGroup = "FSFilter Activity Monitor"
+AddReg         = myminifilter.AddRegistry
+Dependencies   = FltMgr
 
-;
-;--- myminifilter_Device Coinstaller installation ------
-;
-
-[myminifilter_Device.NT.CoInstallers]
-AddReg=myminifilter_Device_CoInstaller_AddReg
-CopyFiles=myminifilter_Device_CoInstaller_CopyFiles
-
-[myminifilter_Device_CoInstaller_AddReg]
-HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
-
-[myminifilter_Device_CoInstaller_CopyFiles]
-WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
-
-[myminifilter_Device.NT.Wdf]
-KmdfService =  myminifilter, myminifilter_wdfsect
-[myminifilter_wdfsect]
-KmdfLibraryVersion = $KMDFVERSION$
+[myminifilter.AddRegistry]
+HKR,%RegInstancesSubkeyName%,%RegDefaultInstanceValueName%,0x00000000,%DefaultInstance%
+HKR,%RegInstancesSubkeyName%"\"%Instance1.Name%,%RegAltitudeValueName%,0x00000000,%Instance1.Altitude%
+HKR,%RegInstancesSubkeyName%"\"%Instance1.Name%,%RegFlagsValueName%,0x00010001,%Instance1.Flags%
+HKR,%RegInstancesSubkeyName%"\"%Instance2.Name%,%RegAltitudeValueName%,0x00000000,%Instance2.Altitude%
+HKR,%RegInstancesSubkeyName%"\"%Instance2.Name%,%RegFlagsValueName%,0x00010001,%Instance2.Flags%
+HKR,%RegInstancesSubkeyName%"\"%Instance3.Name%,%RegAltitudeValueName%,0x00000000,%Instance3.Altitude%
+HKR,%RegInstancesSubkeyName%"\"%Instance3.Name%,%RegFlagsValueName%,0x00010001,%Instance3.Flags%
 
 [Strings]
-SPSVCINST_ASSOCSERVICE= 0x00000002
-ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
-DiskName = "myminifilter Installation Disk"
-myminifilter.DeviceDesc = "myminifilter Device"
-myminifilter.SVCDESC = "myminifilter Service"
+ServiceDesc = "My mini-filter driver"
+ServiceName = "myminifilter"
+DriverName = "myminifilter"
+RegInstancesSubkeyName = "Instances"
+RegDefaultInstanceValueName  = "DefaultInstance"
+RegAltitudeValueName    = "Altitude"
+RegFlagsValueName  = "Flags"
+
+DefaultInstance    = "Myminifilter Instance"
+Instance1.Name     = "Myminifilter Instance"
+Instance1.Altitude = "371000"
+Instance1.Flags    = 0x0 ; Allow all attachments
+
+[DefaultUninstall]
+DelFiles   = myminifilter.DriverFiles
+DelReg     = myminifilter.DelRegistry
+
+[DefaultUninstall.Services]
+DelService = myminifilter,0x200
