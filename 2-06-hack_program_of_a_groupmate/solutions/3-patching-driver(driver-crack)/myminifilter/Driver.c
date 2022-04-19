@@ -14,6 +14,9 @@ Environment:
 
 --*/
 
+// Support for ExAllocatePoolZero.
+#define POOL_ZERO_DOWN_LEVEL_SUPPORT
+
 #include <fltkernel.h>
 #include <ntddk.h>
 #include <wdf.h>
@@ -99,7 +102,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 	static const WCHAR PatchSuffix[] = L".bin";
 	static const SIZE_T PatchSuffixLen = sizeof(PatchSuffix) / sizeof(WCHAR) - 1;
 	
-	PWSTR FileNameNullTerminated = ExAllocatePool2(POOL_FLAG_NON_PAGED, (FileNameInfo->Name.Length + 1) * sizeof(WCHAR), '3agT');
+	PWSTR FileNameNullTerminated = ExAllocatePoolZero(NonPagedPool, (FileNameInfo->Name.Length + 1) * sizeof(WCHAR), '3agT');
 	if (FileNameNullTerminated == NULL) {
 		// Out of memory. Fail the operation.
 		// The current policy of the driver is to not
@@ -119,7 +122,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 	}
 	RtlCopyMemory(FileNameNullTerminated, FileNameInfo->Name.Buffer, FileNameInfo->Name.Length * sizeof(WCHAR));
 	
-	KdPrint(("Opening file \"%ws\"", FileNameNullTerminated));
+	DbgPrint("Opening file \"%ws\"", FileNameNullTerminated);
 	
 	if (wcsstr(FileNameNullTerminated, TargetFile) == NULL) {
 		// Not our case. Proceed without filtering.
@@ -140,7 +143,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 	}
 	
 	if (NT_SUCCESS(Status)) {
-		PUNICODE_STRING ProcessImagePath = ExAllocatePool2(POOL_FLAG_NON_PAGED, ProcessImagePathBufferSize, '4agT');
+		PUNICODE_STRING ProcessImagePath = ExAllocatePoolZero(NonPagedPool, ProcessImagePathBufferSize, '4agT');
 		if (ProcessImagePath == NULL) {
 			// Out of memory. Fail the operation.
 			// The current policy of the driver is to not
@@ -156,7 +159,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 		}
 		Status = ZwQueryInformationProcess(ProcessHandle, ProcessImageFileName, ProcessImagePath, ProcessImagePathBufferSize, NULL);
 		if (NT_SUCCESS(Status)) {
-			KdPrint(("The requestor is \"%wZ\".\r\n", ProcessImagePath));
+			DbgPrint("The requestor is \"%wZ\".\r\n", ProcessImagePath);
 				
 			UNICODE_STRING TargetFileUnicodeString = {0};
 			RtlInitUnicodeString(&TargetFileUnicodeString, TargetFile);
@@ -183,7 +186,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 	
 	SIZE_T NewFileNameSize = FileNameInfo->Name.Length + PatchSuffixLen + 1;
 	
-	PWSTR NewFileName = ExAllocatePool2(POOL_FLAG_NON_PAGED, NewFileNameSize * sizeof(WCHAR), '5agT');
+	PWSTR NewFileName = ExAllocatePoolZero(NonPagedPool, NewFileNameSize * sizeof(WCHAR), '5agT');
 	
 	if (NewFileName == NULL) {
 		// Out of memory. Fail the operation.
@@ -240,7 +243,7 @@ MmfUnload(_In_ FLT_FILTER_UNLOAD_FLAGS Flags) {
 
 	UNREFERENCED_PARAMETER(Flags);
 
-	KdPrint(("myminifiler unload \r\n"));
+	DbgPrint("myminifiler unload \r\n");
 
 	FltUnregisterFilter(FilterHandle);
 	return STATUS_SUCCESS;
@@ -250,15 +253,25 @@ NTSTATUS
 DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath) {
 
 	UNREFERENCED_PARAMETER(RegistryPath);
+	
+	// Support for ExAllocatePoolZero.
+	ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+	
+	DbgPrint("Driver entry\r\n");
 
 	UNICODE_STRING QueryInfProcName = {0};
 	RtlInitUnicodeString(&QueryInfProcName, L"ZwQueryInformationProcess");
+	DbgPrint("Driver entry 1\r\n");
 	ZwQueryInformationProcess = (ZwQueryInformationProcessType) MmGetSystemRoutineAddress(&QueryInfProcName);
+	DbgPrint("Driver entry 2\r\n");
 	if (ZwQueryInformationProcess == NULL) {
+		DbgPrint("Driver entry 3\r\n");
 		return STATUS_UNSUCCESSFUL;
 	}
 
+	DbgPrint("Driver entry 4\r\n");
 	FltRegisterFilter(DriverObject, &FilterRegistration, &FilterHandle);
+	DbgPrint("Driver entry 5\r\n");
 
 	return STATUS_SUCCESS;
 }
