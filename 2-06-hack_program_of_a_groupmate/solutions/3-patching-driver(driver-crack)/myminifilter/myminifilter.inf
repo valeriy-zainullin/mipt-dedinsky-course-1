@@ -1,66 +1,89 @@
-;
-; myminifilter.inf
-;
-
 [Version]
-Signature   = "$WINDOWS NT$"
-Class       = "ActivityMonitor"
-ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
-Provider    = "Best company in the world"
+Signature   = "$Windows NT$"
+Class       = "ActivityMonitor"                         ; This is determined by the work this filter driver does
+ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}    ; This value is determined by the Class
+Provider    = %ProviderString%
 DriverVer   = 
 CatalogFile = myminifilter.cat
 
+
 [DestinationDirs]
-DefaultDestDir = 12
-myminifilter.DriverFiles = 12
+DefaultDestDir            = 12
+myminifilter.DriverFiles  = 12            ; %windir%\system32\drivers
 
-[DefaultInstall]
-OptionDesc = %myminifilterServiceDesc%
-CopyFiles = myminifilter.DriverFiles
+;;
+;; Default install sections
+;;
 
-[myminifilter.DriverFiles]
-myminifilter.sys
+[DefaultInstall.NTamd64]
+OptionDesc          = %ServiceDescription%
+CopyFiles           = myminifilter.DriverFiles
 
-[DefaultInstall.Services]
-AddService = %ServiceName%,,myminifilter.Service
+[DefaultInstall.NTamd64.Services]
+AddService          = %ServiceName%,,myminifilter.Service
+
+;;
+;; Default uninstall sections
+;;
+
+[DefaultUninstall.NTamd64]
+LegacyUninstall = 1
+DelFiles   = myminifilter.DriverFiles
+
+[DefaultUninstall.NTamd64.Services]
+DelService = %ServiceName%,0x200      ;Ensure service is stopped before deleting
+
+;
+; Services Section
+;
 
 [myminifilter.Service]
-DisplayName    = %ServiceName%
-Description    = %ServiceDesc%
-ServiceBinary  = %12%\%DriverName%.sys
-ServiceType    = 2 ;    SERVICE_FILE_SYSTEM_DRIVER
-StartType      = 3
-ErrorControl   = 1 ;    SERVICE_ERROR_NORMAL
-LoadOrderGroup = "FSFilter Activity Monitor"
-AddReg         = myminifilter.AddRegistry
-Dependencies   = FltMgr
+DisplayName      = %ServiceName%
+Description      = %ServiceDescription%
+ServiceBinary    = %12%\%DriverName%.sys        ;%windir%\system32\drivers\
+Dependencies     = "FltMgr"
+ServiceType      = 2                            ;SERVICE_FILE_SYSTEM_DRIVER
+StartType        = 3                            ;SERVICE_DEMAND_START
+ErrorControl     = 1                            ;SERVICE_ERROR_NORMAL
+LoadOrderGroup   = "FSFilter Activity Monitor"
+AddReg           = myminifilter.AddRegistry
+
+;
+; Registry Modifications
+;
 
 [myminifilter.AddRegistry]
-HKR,%RegInstancesSubkeyName%,%RegDefaultInstanceValueName%,0x00000000,%DefaultInstance%
-HKR,%RegInstancesSubkeyName%"\"%Instance1.Name%,%RegAltitudeValueName%,0x00000000,%Instance1.Altitude%
-HKR,%RegInstancesSubkeyName%"\"%Instance1.Name%,%RegFlagsValueName%,0x00010001,%Instance1.Flags%
-HKR,%RegInstancesSubkeyName%"\"%Instance2.Name%,%RegAltitudeValueName%,0x00000000,%Instance2.Altitude%
-HKR,%RegInstancesSubkeyName%"\"%Instance2.Name%,%RegFlagsValueName%,0x00010001,%Instance2.Flags%
-HKR,%RegInstancesSubkeyName%"\"%Instance3.Name%,%RegAltitudeValueName%,0x00000000,%Instance3.Altitude%
-HKR,%RegInstancesSubkeyName%"\"%Instance3.Name%,%RegFlagsValueName%,0x00010001,%Instance3.Flags%
+HKR,,"DebugFlags",0x00010001 ,0x0
+HKR,"Instances","DefaultInstance",0x00000000,%DefaultInstance%
+HKR,"Instances\"%Instance1.Name%,"Altitude",0x00000000,%Instance1.Altitude%
+HKR,"Instances\"%Instance1.Name%,"Flags",0x00010001,%Instance1.Flags%
+
+;
+; Copy Files
+;
+
+[myminifilter.DriverFiles]
+%DriverName%.sys
+
+[SourceDisksFiles]
+myminifilter.sys = 1,,
+
+[SourceDisksNames]
+1 = %DiskId1%,,,
+
+;;
+;; String Section
+;;
 
 [Strings]
-ServiceDesc = "My mini-filter driver"
-ServiceName = "myminifilter"
-DriverName = "myminifilter"
-RegInstancesSubkeyName = "Instances"
-RegDefaultInstanceValueName  = "DefaultInstance"
-RegAltitudeValueName    = "Altitude"
-RegFlagsValueName  = "Flags"
+ProviderString          = "Best company ever"
+ServiceDescription      = "A patching (file stream redirecting) Mini-Filter Driver"
+ServiceName             = "myminifilter"
+DriverName              = "myminifilter"
+DiskId1                 = "Patching (file stream redirecting) Device Installation Disk"
 
-DefaultInstance    = "Myminifilter Instance"
-Instance1.Name     = "Myminifilter Instance"
-Instance1.Altitude = "371000"
-Instance1.Flags    = 0x0 ; Allow all attachments
-
-[DefaultUninstall]
-DelFiles   = myminifilter.DriverFiles
-DelReg     = myminifilter.DelRegistry
-
-[DefaultUninstall.Services]
-DelService = myminifilter,0x200
+;Instances specific information.
+DefaultInstance         = "myminifilter Instance"
+Instance1.Name          = "myminifilter Instance"
+Instance1.Altitude      = "371000"
+Instance1.Flags         = 0x0              ; Allow all attachments

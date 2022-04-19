@@ -97,6 +97,11 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 		return FLT_PREOP_SUCCESS_WITH_CALLBACK;
 	}
 	
+	DbgPrint("Opening file \"%wZ\"\r\n", FileNameInfo->Name);
+	FltReleaseFileNameInformation(FileNameInfo);
+	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
+/*	
+	
 	static const WCHAR TargetFile[] = L"nHack.exe";
 	static const WCHAR PatchedFile[] = L"nHack.exe.bin";
 	static const WCHAR PatchSuffix[] = L".bin";
@@ -121,8 +126,6 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 		return FLT_PREOP_COMPLETE;
 	}
 	RtlCopyMemory(FileNameNullTerminated, FileNameInfo->Name.Buffer, FileNameInfo->Name.Length * sizeof(WCHAR));
-	
-	DbgPrint("Opening file \"%ws\"", FileNameNullTerminated);
 	
 	if (wcsstr(FileNameNullTerminated, TargetFile) == NULL) {
 		// Not our case. Proceed without filtering.
@@ -236,6 +239,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 	// FLT_PREOP_SUCCESS_NO_CALLBACK, post-operation callback is
 	// not invoked, if it exists.
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
+*/
 }
 
 NTSTATUS
@@ -266,11 +270,14 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 	DbgPrint("Driver entry 2\r\n");
 	if (ZwQueryInformationProcess == NULL) {
 		DbgPrint("Driver entry 3\r\n");
-		return STATUS_UNSUCCESSFUL;
+		// return STATUS_UNSUCCESSFUL;
 	}
 
 	DbgPrint("Driver entry 4\r\n");
-	FltRegisterFilter(DriverObject, &FilterRegistration, &FilterHandle);
+	(void) FilterRegistration;
+	(void) FilterHandle;
+	(void) DriverObject;
+	// FltRegisterFilter(DriverObject, &FilterRegistration, &FilterHandle);
 	DbgPrint("Driver entry 5\r\n");
 
 	return STATUS_SUCCESS;
