@@ -13,9 +13,10 @@
 Затем наткнулся на видео, где делают то же самое, решил воспользоваться. Там логгировали чтение файла и запрещали доступ к определённому файлу. Мне не подходит, но часть кода взять можно.
 Перехватывать чтение не так просто, проще переопределить имя файла, который будет читаться. Это я и сделал, решение нашел в интернете.
 
-`addfilter` --- утилита от Microsoft для добавления фильтра к разделу. Исходный код по адресу https://github.com/microsoft/Windows-driver-samples/tree/master/storage/filters/addfilter, я скачал и скомпилировал.
+Установка: нажать правой кнопкой по inf-файлу, затем нажать "установить". (TODO: Сделать автозапуск службы.)
 
 Ссылки (в порядке чтения, если начать с конца):
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/creating-an-inf-file-for-a-minifilter-driver (как написать правильный inf-файл)
 1. https://stackoverflow.com/questions/3707133/how-to-use-zwqueryinformationprocess-to-get-processimagefilename-in-a-kernel-dri
 1. https://stackoverflow.com/questions/60169916/how-to-get-current-process-image-path-from-mini-filter-kernel-driver
 1. https://community.osr.com/discussion/291361/mini-filter-driver-to-redirect-file-access
