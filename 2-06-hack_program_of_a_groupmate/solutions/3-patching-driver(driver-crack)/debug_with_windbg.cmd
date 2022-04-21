@@ -1,1 +1,1 @@
-"C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\windbg.exe" -k com:pipe,port=\\.\pipe\win7_dbg,reconnect -WF workspace.WEW
+start "windbg" "C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\windbg.exe" -k com:pipe,port=\\.\pipe\win7_dbg,reconnect -WF workspace2.WEW
