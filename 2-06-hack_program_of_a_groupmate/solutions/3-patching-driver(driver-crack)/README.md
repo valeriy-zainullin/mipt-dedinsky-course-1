@@ -13,11 +13,23 @@
 Затем наткнулся на видео, где делают то же самое, решил воспользоваться. Там логгировали чтение файла и запрещали доступ к определённому файлу. Мне не подходит, но часть кода взять можно.
 Перехватывать чтение не так просто, проще переопределить имя файла, который будет читаться. Это я и сделал, решение нашел в интернете.
 
-Установка: нажать правой кнопкой по inf-файлу, затем нажать "установить". (TODO: Сделать автозапуск службы.)
+Установка: нажать правой кнопкой по inf-файлу, затем нажать "установить".
+
+Когда windbg зависает с "debugee not connected", но вирутальная машина уже зависла, и, видимо, выпала в отладчик: попробовать ещё раз запустить виртуалку, в windbg попробовать открыть File->Symbol File Path, вкладку пути символов, если скажут, что "engine is busy", нажмите ctrl+break, нажать эту комбинацию. Можно просто попробовать нажать эту комбинацию, а затем нажать кнопку "продолжить" на панели инструментов или отдать команду `g` (go). Просто открыть эту вкладку не поможет.
+
+Рекомендую во вкладке File->SymbolFilePath нажать reload и ok, чтобы загрузить отладочные символы для ядра. Тогда и на собственный код будет открываться окно с исходниками (А без этого не будет? Не проверял, лучше проверить или что-то сделать с этим сообщением).
 
 Ссылки (в порядке чтения, если начать с конца):
+1. https://stackoverflow.com/a/39351981 (как получить путь к образу исполняющегося в данный момент процесса; помогло получить подходящий для ZwQueryInformationProcess HANDLE на процесс)
+1. https://docs.microsoft.com/en-us/cpp/c-runtime-library/format-specification-syntax-printf-and-wprintf-functions?view=msvc-170#size-prefixes-for-printf-and-wprintf-format-type-specifiers
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/completing-an-i-o-operation-in-a-preoperation-callback-routine
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/modifying-the-parameters-for-an-i-o-operation
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/writing-preoperation-callback-routines
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/returning-flt-preop-success-no-callback
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/returning-flt-preop-success-with-callback
+1. https://eax.me/windbg/ (основные команды windbg)
 1. https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/creating-and-opening-a-workspace (как задать windbg рабочее пространство в командной строке)
-1. https://stackoverflow.com/a/42392970 (как сделать целевой ОС windows 7)
+1. https://stackoverflow.com/a/42392970 (как сделать целевой ОС windows 7, в вопросе ошибка, которая тоже возникала, только не выпадал bugcheck, а зависала система и выпадала в отладчик, возможно, из-за того, что у меня включен отладочный режим)
 1. https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/performing-kernel-mode-debugging-using-windbg (примеры аргументов для windbg)
 1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/using-an-inf-file-to-uninstall-a-file-system-filter-driver (как удалить драйвер с помощью inf-файла)
 1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/using-an-inf-file-to-install-a-file-system-filter-driver (как установить драйвер с помощью inf-файла)
