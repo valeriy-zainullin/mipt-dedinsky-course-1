@@ -146,7 +146,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 	// If everything previously was successful (if got a handle (otherwise Status is still status from handle acquirement)),
 	// opened a handle and got buffer size. 
 	if (NT_SUCCESS(Status)) {
-		PUNICODE_STRING ProcessImagePath = ExAllocatePoolZero(NonPagedPool, ProcessImagePathBufferSize, '4agT');
+		PUNICODE_STRING ProcessImagePath = ExAllocatePoolZero(NonPagedPool, ProcessImagePathBufferSize, '4gaT');
 		if (ProcessImagePath == NULL) {
 			DbgPrint("myminifiler: out of memory, failed to allocate ProcessImagePath, the request was completed with status STATUS_INSUFFICIENT_RESOURCES.\r\n");
 			// Out of memory. Fail the operation.
@@ -201,6 +201,9 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 	
 	if (NewFileName == NULL) {
 		DbgPrint("myminifilter: allocation of \"NewFileName\" failed, request was %zu bytes.\r\n", NewFileNameSize);
+		#if DBG
+			__debugbreak();
+		#endif
 		// Out of memory. Fail the operation.
 		// The current policy of the driver is to never
 		// allow for the application to run unpatched.
@@ -300,6 +303,9 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 	ZwQueryInformationProcess = (ZwQueryInformationProcessType) MmGetSystemRoutineAddress((PUNICODE_STRING) &QueryInfProcName);
 	if (ZwQueryInformationProcess == NULL) {
 		DbgPrint("myminifilter: ZwQueryInformationProcess wasn't found.\r\n");
+		#if DBG
+			__debugbreak();
+		#endif
 		return STATUS_UNSUCCESSFUL;
 	}
 
@@ -307,6 +313,9 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 	
 	if (!NT_SUCCESS(Status)) {
 		DbgPrint("myminifilter: failed to register.\r\n");
+		#if DBG
+			__debugbreak();
+		#endif
 		return Status;
 	}
 	
@@ -314,6 +323,9 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)
 	
 	if (!NT_SUCCESS(Status)) {
 		DbgPrint("myminifilter: failed to start filtering.\r\n");
+		#if DBG
+			__debugbreak();
+		#endif
 		FltUnregisterFilter(FilterHandle);
 		return Status;
 	}
