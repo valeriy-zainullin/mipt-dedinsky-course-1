@@ -14,3 +14,4 @@ build/
 *.til
 .vs
 **/x64/Debug
+*.res
