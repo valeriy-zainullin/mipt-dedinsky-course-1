@@ -47,13 +47,15 @@ int main() {
 		SDL_Quit();
 		return 5;
 	}
-
-	// TODO: проверить с санитайзерами.
-	bool exiting = false;
-	bool using_sse = false;
+	
+	int mode = 0;
+	static const int NUM_MODES = 2;
 	
 	struct screen_state screen_state = INITIAL_SCREEN_STATE;
 	
+
+	// TODO: проверить с санитайзерами.
+	bool exiting = false;
 	while (!exiting) {
 		SDL_Event event = {0};
 		
@@ -92,6 +94,12 @@ int main() {
 							break;
 						}
 						
+						case SDL_SCANCODE_LSHIFT:
+						case SDL_SCANCODE_RSHIFT: {
+							mode = (mode + 1) % NUM_MODES;
+							break;
+						}
+						
 						default: break;
 					}
 					break;
@@ -103,17 +111,22 @@ int main() {
 				}
 			}
 		}
-		
+				
 		int row_size = 0;                                              // in bytes
 		struct rgba* pixels = NULL;
 		SDL_LockTexture(texture, NULL, (void**) &pixels, &row_size);
-		
-		if (using_sse) {
-			compute_sse(pixels, &screen_state);
-		} else {
-			compute_nosse(pixels, &screen_state);
+		switch (mode) {
+			// TODO: bad. More descriptive.
+			case 0: {
+				compute_nosse(pixels, &screen_state);
+				break;
+			}
+
+			case 1: {
+				compute_sse(pixels, &screen_state);
+				break;
+			}
 		}
-						
 		SDL_UnlockTexture(texture);
 		
 		SDL_RenderClear(renderer);
