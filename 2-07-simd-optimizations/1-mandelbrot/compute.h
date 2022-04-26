@@ -14,6 +14,8 @@ struct rgba {
 };
 
 struct screen_state {
+	// We are scaling not saving the cursor, but saving the
+	// center of the screen. It's means less precision losses.
 	struct {
 		float x;
 		float y;
@@ -23,7 +25,9 @@ struct screen_state {
 	float scale;
 };
 
-static const struct screen_state INITIAL_SCREEN_STATE = {{0, 0}, 0.015625}; // 2^(-6) (TODO: проверить!)
+// Scaling and center were adjusted to hold the whole black region (mandelbrot set).
+// Before here were {{0, 0}, 1.0f / (1 << 6)}.
+static const struct screen_state INITIAL_SCREEN_STATE = {{-5 * 32 * (1.0f / (1 << 8)), 0}, 1.0f / (1 << 8)};
 
 static const size_t MAX_NUM_ITERATIONS = 256;
 static const float MAX_ALLOWED_MODULO_SQ = 100.0f;
@@ -41,8 +45,8 @@ static const int PIXEL_STEP = 32;
 extern "C" {
 #endif
 
-void compute_nosse(struct rgba * buffer, struct screen_state* screen_state);
-void compute_sse(struct rgba * buffer, struct screen_state* screen_state);
+void compute_nosse(struct rgba * buffer, struct screen_state const * screen_state);
+void compute_sse(struct rgba * buffer, struct screen_state const * screen_state);
 
 #if defined(__cplusplus)
 }
