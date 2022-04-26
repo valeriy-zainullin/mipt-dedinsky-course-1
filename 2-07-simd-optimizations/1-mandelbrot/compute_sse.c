@@ -1,6 +1,6 @@
 #include "compute.h"
 
-void compute_sse(struct rgba * buffer, struct screen_state* screen_center) {
+void compute_sse(struct rgba * buffer, struct screen_state const * screen_center) {
 	(void) screen_center;
 	for (size_t row = 0; row < SCREEN_ROWS; ++row) {
 		for (size_t col = 0; col < SCREEN_COLS; ++col) {

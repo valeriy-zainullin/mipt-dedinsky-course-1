@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void compute_nosse(struct rgba * buffer, struct screen_state* screen_state) {
+void compute_nosse(struct rgba * buffer, struct screen_state const * screen_state) {
 	for (size_t row = 0; row < SCREEN_ROWS; ++row) {
 		for (size_t col = 0; col < SCREEN_COLS; ++col) {
 			size_t pos = row * SCREEN_COLS + col;
