@@ -38,6 +38,15 @@ int main() {
 		printf("      SSE: %04ld.%06ld ms.\n", nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS); 
 	}
 
+	{
+		// Test avx version.	
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+		compute_avx(buffer, &state);
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+		long nanoseconds = end.tv_nsec - start.tv_nsec;
+		static long DIVISOR_TO_MS = 1000 * 1000;
+		printf("      AVX: %04ld.%06ld ms.\n", nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS); 
+	}
 	
 	return 0;
 }
