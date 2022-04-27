@@ -12,10 +12,16 @@ debug_bins: view.dbg.exe benchmark.dbg.exe
 %.dbg.obj: %.c compute.h
 	x86_64-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -std=c99 -o $@ $<
 
-view.exe: view_main.obj compute_nosse.obj compute_sse.obj resource.res
+compute_avx.obj: compute_avx.c compute.h
+	x86_64-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -O2 -std=c99 -o $@ $<
+
+compute_avx.dbg.obj: compute_avx.c compute.h
+	x86_64-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -std=c99 -o $@ $<
+	
+view.exe: view_main.obj compute_nosse.obj compute_sse.obj compute_avx.obj resource.res
 	x86_64-w64-mingw32-gcc -o $@ $^ -lSDL2 -lSDL2_ttf -mwindows
 
-view.dbg.exe: view_main.dbg.obj compute_nosse.dbg.obj compute_sse.dbg.obj resource.res
+view.dbg.exe: view_main.dbg.obj compute_nosse.dbg.obj compute_sse.dbg.obj compute_avx.dbg.obj resource.res
 	x86_64-w64-mingw32-gcc -o $@ $^ -lSDL2 -lSDL2_ttf
 
 benchmark.exe: benchmark_main.obj compute_nosse.obj compute_sse.obj

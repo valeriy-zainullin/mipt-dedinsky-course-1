@@ -88,7 +88,7 @@ int main() {
 	}
 	
 	int mode = 0;
-	static const int NUM_MODES = 2;
+	static const int NUM_MODES = 3;
 	
 	// Для самого первого кадра 1, чтобы FPS был равен 1.
 	// Точное значение fps для первого кадра не известно (я отображаю моментальный fps
@@ -159,7 +159,7 @@ int main() {
 			}
 		}
 				
-		int row_size = 0;                                              // in bytes
+		int row_size = 0;                                              // In bytes
 		struct rgba* pixels = NULL;
 		SDL_LockTexture(texture, NULL, (void**) &pixels, &row_size);
 		switch (mode) {
@@ -171,6 +171,11 @@ int main() {
 
 			case 1: {
 				compute_sse(pixels, &screen_state);
+				break;
+			}
+
+			case 2: {
+				compute_avx(pixels, &screen_state);
 				break;
 			}
 		}
