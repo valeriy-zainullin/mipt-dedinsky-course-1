@@ -7,13 +7,13 @@ present: view.exe benchmark.exe
 debug_bins: view.dbg.exe benchmark.dbg.exe
 
 %.obj: %.c compute.h
-	x86_64-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -O2 -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -std=c99 -o $@ $<
 
 %.dbg.obj: %.c compute.h
 	x86_64-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -std=c99 -o $@ $<
 
 compute_avx.obj: compute_avx.c compute.h
-	x86_64-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -O2 -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -std=c99 -o $@ $<
 
 compute_avx.dbg.obj: compute_avx.c compute.h
 	x86_64-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -std=c99 -o $@ $<
