@@ -16,6 +16,7 @@ int main() {
 		return 1;
 	}
 
+	// TODO: сделать define для замера времени.
 	{
 		// Test nosse version.	
 		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
