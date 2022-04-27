@@ -4,7 +4,7 @@ present: view.exe benchmark.exe
 	./benchmark
 	bash -c "export PATH=\"$$PATH:/usr/x86_64-w64-mingw32/sys-root/mingw/bin\"; ./view"
 
-debug_bins: view.dbg.exe # benchmark.dbg.exe
+debug_bins: view.dbg.exe benchmark.dbg.exe
 
 %.obj: %.c compute.h
 	x86_64-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -O2 -std=c99 -o $@ $<
@@ -31,4 +31,4 @@ resource.res: resource.rc
 clean:
 	rm -f *.obj *.exe
 
-.PHONY: present deebug_bins clean
+.PHONY: present debug_bins clean
