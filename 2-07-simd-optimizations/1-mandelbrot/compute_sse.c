@@ -87,7 +87,6 @@ void compute_sse(struct rgba * buffer, struct screen_state const * screen_state)
 			
 			for (size_t i = 0; i < NUM_PTS_IN_PACKED_REG; ++i) {
 				size_t iteration = iter_left_surf[i];
-				// printf("(%zu, %zu), iteration = %zu.\n", row, col + i, iteration);
 				// Не улетела на бесконечность.
 				// Где-то в окружности радиуса 1 с центром в 0 бегало.
 				if (iteration == MAX_NUM_ITERATIONS) {
