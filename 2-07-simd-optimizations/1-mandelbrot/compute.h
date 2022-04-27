@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -46,7 +47,11 @@ extern "C" {
 #endif
 
 void compute_nosse(struct rgba * buffer, struct screen_state const * screen_state);
+
+bool compute_check_sse_supported();
 void compute_sse(struct rgba * buffer, struct screen_state const * screen_state);
+
+bool compute_check_avx_supported();
 void compute_avx(struct rgba * buffer, struct screen_state const * screen_state);
 
 #if defined(__cplusplus)

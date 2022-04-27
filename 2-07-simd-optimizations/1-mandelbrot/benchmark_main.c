@@ -28,7 +28,7 @@ int main() {
 		printf("Plain -O2: %04ld.%06ld ms.\n", nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS); 
 	}
 
-	{
+	if (compute_check_sse_supported()) {
 		// Test sse version.	
 		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
 		compute_sse(buffer, &state);
@@ -36,9 +36,11 @@ int main() {
 		long nanoseconds = end.tv_nsec - start.tv_nsec;
 		static long DIVISOR_TO_MS = 1000 * 1000;
 		printf("      SSE: %04ld.%06ld ms.\n", nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS); 
+	} else {
+		printf("      SSE: not supported.\n"); 
 	}
 
-	{
+	if (compute_check_avx_supported()) {
 		// Test avx version.	
 		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
 		compute_avx(buffer, &state);
@@ -46,6 +48,8 @@ int main() {
 		long nanoseconds = end.tv_nsec - start.tv_nsec;
 		static long DIVISOR_TO_MS = 1000 * 1000;
 		printf("      AVX: %04ld.%06ld ms.\n", nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS); 
+	} else {
+		printf("      AVX: not supported.\n"); 
 	}
 	
 	return 0;

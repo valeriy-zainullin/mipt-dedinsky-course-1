@@ -144,6 +144,17 @@ int main() {
 						
 						case SDL_SCANCODE_TAB: {
 							mode = (mode + 1) % NUM_MODES;
+							
+							if (mode == 1 && !compute_check_sse_supported()) {
+								MessageBoxW(NULL, L"Процессор не поддерживает набор инструкций SSE. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
+								mode = (mode + 1) % NUM_MODES;
+							}
+							
+							if (mode == 2 && !compute_check_avx_supported()) {
+								MessageBoxW(NULL, L"Процессор не поддерживает набор инструкций AVX. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
+								mode = (mode + 1) % NUM_MODES;
+							}
+
 							break;
 						}
 						
