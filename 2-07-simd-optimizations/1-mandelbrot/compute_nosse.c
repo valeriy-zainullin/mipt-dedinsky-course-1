@@ -34,7 +34,9 @@ void compute_nosse(struct rgba * buffer, struct screen_state const * screen_stat
 				
 				// Если точка вышла за максимальный радиус, считаем, что она уже улетит на
 				// бесконечность. И можем посчитать её цвет.
-				if (r_sq >= MAX_ALLOWED_MODULO_SQ) {
+				// TODO: объяснить, почему здесь +-EPS одинаково неправильно, почему это
+				// не делается.
+				if (r_sq > MAX_ALLOWED_MODULO_SQ) {
 					break;
 				}
 			}
