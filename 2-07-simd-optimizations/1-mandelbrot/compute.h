@@ -47,6 +47,7 @@ extern "C" {
 
 void compute_nosse(struct rgba * buffer, struct screen_state const * screen_state);
 void compute_sse(struct rgba * buffer, struct screen_state const * screen_state);
+void compute_avx(struct rgba * buffer, struct screen_state const * screen_state);
 
 #if defined(__cplusplus)
 }
