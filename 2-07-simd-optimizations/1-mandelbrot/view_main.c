@@ -1,3 +1,4 @@
+#include "builds.h"
 #include "compute.h"
 
 #include <SDL2/SDL.h>
@@ -5,6 +6,7 @@
 
 #include <windows.h>
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -72,6 +74,89 @@ void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_ti
 	SDL_FreeSurface(fps_surface);
 }
 
+void prepare_comp_mode_texture(
+	enum computation_mode computation_mode,
+	TTF_Font* mode_font,
+	SDL_Renderer* renderer,
+	SDL_Texture** mode_texture,
+	int* mode_box_width,
+	int* mode_box_height
+) {
+	char* mode_string = NULL;
+	
+	switch (computation_mode) {
+		case COMPUTATION_MODE_PLAIN: {
+			#if BUILD == BUILD_RELEASE
+				mode_string = "Plain (-O2)";
+			#elif BUILD == BUILD_DEBUG
+				mode_string = "Plain (-Og)";
+			#else
+				mode_string = "Plain (-O?)";
+			#endif
+			break;
+		}
+		
+		case COMPUTATION_MODE_SSE: {
+			mode_string = "SSE";
+			break;
+		}
+		
+		case COMPUTATION_MODE_AVX: {
+			mode_string = "AVX";
+			break;
+		}
+		
+		default: assert(false); __builtin_unreachable();
+	}
+
+	static const SDL_Color mode_color = {255, 255, 0, 255};
+	
+	SDL_Surface* mode_surface = TTF_RenderText_Solid(mode_font, mode_string, mode_color);
+	if (mode_surface == NULL) {
+		// TODO: report an error.
+		return;
+	}
+
+	// Surfaces are using RAM. And textures are using VRAM (video card RAM) rather than RAM.
+	// Surfaces are used in software rendering. We are doing hardware rendering, that's why
+	// we are making a texture. But of course, we were rendering the font with processor
+	// and it means we needed to use surface (my thinking).
+	// Source: https://stackoverflow.com/questions/21392755/difference-between-surface-and-texture-sdl-general
+	*mode_texture = SDL_CreateTextureFromSurface(renderer, mode_surface);
+	if (*mode_texture == NULL) {
+		// TODO: report an error.
+		return;
+	}
+	
+	if (TTF_SizeText(mode_font, mode_string, mode_box_width, mode_box_height) != 0) {
+		// TODO: report an error.
+		SDL_DestroyTexture(*mode_texture);
+		SDL_FreeSurface(mode_surface);
+		return;
+	}
+	
+	SDL_FreeSurface(mode_surface);
+}
+
+void free_comp_mode_texture(SDL_Texture** mode_texture) {
+	SDL_DestroyTexture(*mode_texture);
+	
+	*mode_texture = NULL;
+}
+
+void display_comp_mode(SDL_Renderer* renderer, SDL_Texture* mode_texture, int mode_box_width, int mode_box_height) {
+	assert(mode_texture != NULL);
+	
+	// If even number of pixels, put in the right (of a greater index in an array of pixels) median the right
+	// median pixel of box. Allocate smaller part from pixels before SCREEN_COLS / 2.
+	// If odd number of pixels, median of the box is at the right median of the row of the screen.
+	// Pixel perfect :)
+	// One pixel +- doesn't matter, could have just wrote what I wrote.
+	SDL_Rect dst_rect = {SCREEN_COLS / 2 - mode_box_width / 2, 0, mode_box_width, mode_box_height};
+	
+	SDL_RenderCopy(renderer, mode_texture, NULL, &dst_rect);
+}
+
 int main() {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		fprintf(stderr, "SDL_Init failed: %s.\n", SDL_GetError());
@@ -130,8 +215,28 @@ int main() {
 		SDL_Quit();
 		return 6;
 	}
+
+	static const char MODE_FONT_FILE[] = "ubuntu-mono/UbuntuMono-Regular.ttf";
+	static const int MODE_FONT_SIZE = 32; // In points.
+	TTF_Font* mode_font = TTF_OpenFont(MODE_FONT_FILE, MODE_FONT_SIZE);
+	if (mode_font == NULL) {
+		fprintf(stderr, "Failed to open mode font. TTF_OpenFont failed: %s.\n", TTF_GetError());
+		MessageBoxW(NULL, L"Ошибка при загрузке шрифта для отображения режима.  Подробнее в логе (stderr).", L"Ошибка SDL2_TTF", 0);
+		TTF_CloseFont(mode_font);
+		SDL_DestroyTexture(texture);
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+		TTF_Quit();
+		SDL_Quit();
+		return 7;
+	}
+	
+	SDL_Texture* comp_mode_texture = NULL;
+	int mode_box_width = 0;
+	int mode_box_height = 0;
 	
 	enum computation_mode computation_mode = COMPUTATION_MODE_PLAIN;
+	prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height);
 	
 	// Для самого первого кадра 1, чтобы FPS был равен 1.
 	// Точное значение fps для первого кадра не известно (я отображаю моментальный fps
@@ -200,6 +305,9 @@ int main() {
 							}
 							
 							computation_mode = (enum computation_mode) mode;
+							
+							free_comp_mode_texture(&comp_mode_texture);
+							prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height);
 
 							break;
 						}
@@ -241,13 +349,15 @@ int main() {
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		display_fps(renderer, fps_font, prev_frame_time);
+		display_comp_mode(renderer, comp_mode_texture, mode_box_width, mode_box_height);
 		SDL_RenderPresent(renderer);
 
 		uint64_t time_ended = SDL_GetPerformanceCounter();
 		
 		prev_frame_time = (time_ended - time_started) / ((float) SDL_GetPerformanceFrequency());
 	}
-	
+
+	TTF_CloseFont(mode_font);
 	TTF_CloseFont(fps_font);
 	SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(renderer);
