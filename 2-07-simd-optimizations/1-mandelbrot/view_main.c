@@ -14,6 +14,13 @@
 #undef main
 #endif
 
+enum computation_mode {
+	COMPUTATION_MODE_PLAIN = 0,
+	COMPUTATION_MODE_SSE   = 1,
+	COMPUTATION_MODE_AVX   = 2
+};
+static const int NUM_COMPUTATION_MODES = 3;
+
 void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_time) {
 	(void) renderer;
 	(void) fps_font;
@@ -124,8 +131,7 @@ int main() {
 		return 6;
 	}
 	
-	int mode = 0;
-	static const int NUM_MODES = 3;
+	enum computation_mode computation_mode = COMPUTATION_MODE_PLAIN;
 	
 	// Для самого первого кадра 1, чтобы FPS был равен 1.
 	// Точное значение fps для первого кадра не известно (я отображаю моментальный fps
@@ -180,17 +186,20 @@ int main() {
 						}
 						
 						case SDL_SCANCODE_TAB: {
-							mode = (mode + 1) % NUM_MODES;
+							int mode = (int) computation_mode;
+							mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							
-							if (mode == 1 && !compute_check_sse_supported()) {
+							if (mode == (int) COMPUTATION_MODE_SSE && !compute_check_sse_supported()) {
 								MessageBoxW(NULL, L"Процессор не поддерживает набор инструкций SSE. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
-								mode = (mode + 1) % NUM_MODES;
+								mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							}
 							
-							if (mode == 2 && !compute_check_avx_supported()) {
+							if (mode == (int) COMPUTATION_MODE_AVX && !compute_check_avx_supported()) {
 								MessageBoxW(NULL, L"Процессор не поддерживает набор инструкций AVX. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
-								mode = (mode + 1) % NUM_MODES;
+								mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							}
+							
+							computation_mode = (enum computation_mode) mode;
 
 							break;
 						}
@@ -210,19 +219,19 @@ int main() {
 		int row_size = 0;                                              // In bytes
 		struct rgba* pixels = NULL;
 		SDL_LockTexture(texture, NULL, (void**) &pixels, &row_size);
-		switch (mode) {
+		switch (computation_mode) {
 			// TODO: bad. More descriptive.
-			case 0: {
+			case COMPUTATION_MODE_PLAIN: {
 				compute_nosse(pixels, &screen_state);
 				break;
 			}
 
-			case 1: {
+			case COMPUTATION_MODE_SSE: {
 				compute_sse(pixels, &screen_state);
 				break;
 			}
 
-			case 2: {
+			case COMPUTATION_MODE_AVX: {
 				compute_avx(pixels, &screen_state);
 				break;
 			}
