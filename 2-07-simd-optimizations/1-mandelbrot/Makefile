@@ -1,8 +1,13 @@
+# After view program is built, all dlls required are copied to this directory.
+# To make it run without changing of PATH environment variable and changing of working directory.
+# But these dlls may vary. Easies to set all mingw dlls to deps and if there's an update of mingw, rebuild the file.
+ALL_MINGW_DLLS = $(wildcard /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll)
+
 all: present
 
 present: view.exe benchmark.exe
 	./benchmark
-	bash -c "export PATH=\"$$PATH:/usr/x86_64-w64-mingw32/sys-root/mingw/bin\"; ./view"
+	./view
 
 debug_bins: view.dbg.exe benchmark.dbg.exe
 
@@ -21,11 +26,14 @@ compute_avx.dbg.obj: compute_avx.c compute.h
 resource.res: resource.rc
 	x86_64-w64-mingw32-windres -O coff -o $@ $<
 
-view.exe: view_main.obj compute_nosse.obj compute_sse.obj compute_avx.obj resource.res
-	x86_64-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -mwindows
 
-view.dbg.exe: view_main.dbg.obj compute_nosse.dbg.obj compute_sse.dbg.obj compute_avx.dbg.obj resource.res
-	x86_64-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf
+view.exe: view_main.obj compute_nosse.obj compute_sse.obj compute_avx.obj resource.res $(ALL_MINGW_DLLS)
+	x86_64-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -mwindows
+	./copy_dlls.sh $@
+
+view.dbg.exe: view_main.dbg.obj compute_nosse.dbg.obj compute_sse.dbg.obj compute_avx.dbg.obj resource.res $(ALL_MINGW_DLLS)
+	x86_64-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32
+	./copy_dlls.sh $@
 
 benchmark.exe: benchmark_main.obj compute_nosse.obj compute_sse.obj compute_avx.obj
 	x86_64-w64-mingw32-gcc -static -o $@ $^
@@ -34,6 +42,6 @@ benchmark.dbg.exe: benchmark_main.dbg.obj compute_nosse.dbg.obj compute_sse.dbg.
 	x86_64-w64-mingw32-gcc -static -o $@ $^
 
 clean:
-	rm -f *.obj *.exe
+	rm -f *.obj *.exe *.dll
 
 .PHONY: present debug_bins clean
