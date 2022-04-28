@@ -24,8 +24,45 @@ void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_ti
 	char fps_buffer[127 + 1] = {0};
 	snprintf(fps_buffer, sizeof(fps_buffer), "%.0f", fps); 
 	
-	fprintf(stderr, "%s\n", fps_buffer);
-	fflush(stderr);
+	static const SDL_Color fps_color = {255, 255, 0, 255};
+	
+	SDL_Surface* fps_surface = TTF_RenderText_Solid(fps_font, fps_buffer, fps_color);
+	if (fps_surface == NULL) {
+		// TODO: report an error.
+		return;
+	}
+
+	// Surfaces are using RAM. And textures are using VRAM (video card RAM) rather than RAM.
+	// Surfaces are used in software rendering. We are doing hardware rendering, that's why
+	// we are making a texture. But of course, we were rendering the font with processor
+	// and it means we needed to use surface (my thinking).
+	// Source: https://stackoverflow.com/questions/21392755/difference-between-surface-and-texture-sdl-general
+	SDL_Texture* fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
+	if (fps_texture == NULL) {
+		// TODO: report an error.
+		return;
+	}
+	
+	int fps_box_width = 0;
+	int fps_box_height = 0;
+	
+	if (TTF_SizeText(fps_font, fps_buffer, &fps_box_width, &fps_box_height) != 0) {
+		// TODO: report an error.
+		SDL_DestroyTexture(fps_texture);
+		SDL_FreeSurface(fps_surface);
+		return;
+	}
+	
+	// Top left corner of the fps box.
+	// Item's index in a zero-indexed array is number of items before it.
+	// By substracting quantities we reserve required amount of pixels in
+	// width and result is index.
+	SDL_Rect fps_rect = {SCREEN_COLS - fps_box_width, 0, fps_box_width, fps_box_height};
+	
+	SDL_RenderCopy(renderer, fps_texture, NULL, &fps_rect);
+	
+	SDL_DestroyTexture(fps_texture);
+	SDL_FreeSurface(fps_surface);
 }
 
 int main() {
