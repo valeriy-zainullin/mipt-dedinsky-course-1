@@ -28,11 +28,25 @@ void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_ti
 	(void) renderer;
 	(void) fps_font;
 	
-	// Immediate fps. Моментальный fps. Возможно, делать усреднение в будущем.
-	float fps = 1.0f / prev_frame_time;
-
+	static const float EPS = 1e-3;  // Values below this are treated as zero.
+	static const size_t MAX_FPS = 512;
+	static char const * const MORE_THAN_MAX_FPS = ">512";
+	
 	char fps_buffer[127 + 1] = {0};
-	snprintf(fps_buffer, sizeof(fps_buffer), "%.0f", fps); 
+
+	if (prev_frame_time < EPS) {
+		// Слишком маленькое значение. Считаем, что кадров больше, чем максимально отображаемо.
+		strncpy(fps_buffer, MORE_THAN_MAX_FPS, sizeof(fps_buffer));
+	} else {
+		// Immediate fps. Моментальный fps. Возможно, делать усреднение в будущем.
+		float fps = 1.0f / prev_frame_time;
+		
+		if (fps >= MAX_FPS - EPS) {
+			strncpy(fps_buffer, MORE_THAN_MAX_FPS, sizeof(fps_buffer));
+		} else {
+			snprintf(fps_buffer, sizeof(fps_buffer), "%.0f", fps);
+		}
+	}
 	
 	static const SDL_Color FPS_COLOR = {255, 255, 0, 255};
 	
