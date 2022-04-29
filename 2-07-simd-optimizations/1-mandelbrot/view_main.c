@@ -112,6 +112,11 @@ void prepare_comp_mode_texture(
 
 	static const SDL_Color MODE_COLOR = {255, 255, 0, 255};
 	
+	// Text rendering (not texture rendering) happens quite rarely (when a key pressed),
+	// so blended rendering could be done. It does antialiasing and it's slow, but it's
+	// renders are of high quality.
+	// Source of info about blended functions difference:
+	// https://www.freepascal-meets-sdl.net/chapter-7-texts-fonts-surface-conversion/
 	SDL_Surface* mode_surface = TTF_RenderText_Blended(mode_font, mode_string, MODE_COLOR);
 	if (mode_surface == NULL) {
 		// TODO: report an error.
