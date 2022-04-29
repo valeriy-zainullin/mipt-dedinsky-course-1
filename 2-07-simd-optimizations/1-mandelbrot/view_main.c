@@ -369,6 +369,8 @@ int main() {
 	int notes_box_height = 0;
 	prepare_notes_texture(notes_font, renderer, &notes_texture, &notes_box_width, &notes_box_height);
 	
+	bool display_texts = true;
+	
 	enum computation_mode computation_mode = COMPUTATION_MODE_PLAIN;
 	prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height);
 	
@@ -446,6 +448,13 @@ int main() {
 							break;
 						}
 						
+						case SDL_SCANCODE_LALT:
+						case SDL_SCANCODE_RALT: {
+							display_texts = !display_texts;
+						
+							break;
+						}
+						
 						default: break;
 					}
 					break;
@@ -482,9 +491,11 @@ int main() {
 		
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
-		display_fps(renderer, fps_font, prev_frame_time);
-		display_comp_mode(renderer, comp_mode_texture, mode_box_width, mode_box_height);
+		if (display_texts) {
+			display_fps(renderer, fps_font, prev_frame_time);
+			display_comp_mode(renderer, comp_mode_texture, mode_box_width, mode_box_height);
 			display_notes(renderer, notes_texture, notes_box_width, notes_box_height);
+		}
 		SDL_RenderPresent(renderer);
 
 		uint64_t time_ended = SDL_GetPerformanceCounter();
