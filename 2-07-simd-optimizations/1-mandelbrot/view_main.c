@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 // Workaround strange SDL2 behaviour when it redefines main function, but then with -lSDL2Main -lSDL2 it doesn't compile.
@@ -157,6 +158,111 @@ void display_comp_mode(SDL_Renderer* renderer, SDL_Texture* mode_texture, int mo
 	SDL_RenderCopy(renderer, mode_texture, NULL, &dst_rect);
 }
 
+void prepare_notes_texture(
+	TTF_Font* notes_font,
+	SDL_Renderer* renderer,
+	SDL_Texture** notes_texture,
+	int* notes_box_width,
+	int* notes_box_height
+) {
+	static char const * const NOTES[] = {
+		"Есть три режима: обычный, SSE и AVX. Если",
+		"режим не поддерживается, при его",
+		"активации вы получите сообщение.",
+		"Enter    -- приблизить.",
+		"Space    -- отдалить.",
+		"Стрелки  -- навигация.",
+		"Tab      -- переключить режим.,",
+		"Alt      -- вкл/выкл отображение текстов."
+	};
+
+	static const SDL_Color NOTES_COLOR = {255, 255, 255, 255};
+	
+	// Source: https://wiki.libsdl.org/SDL_CreateRGBSurface
+	/* SDL interprets each pixel as a 32-bit number, so our masks must depend
+	   on the endianness (byte order) of the machine */
+	#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		static const uint32_t RED_MASK   = 0xff000000;
+		static const uint32_t GREEN_MASK = 0x00ff0000;
+		static const uint32_t BLUE_MASK  = 0x0000ff00;
+		static const uint32_t ALPHA_MASK = 0x000000ff;
+	#else
+		static const uint32_t RED_MASK   = 0x000000ff;
+		static const uint32_t GREEN_MASK = 0x0000ff00;
+		static const uint32_t BLUE_MASK  = 0x00ff0000;
+		static const uint32_t ALPHA_MASK = 0xff000000;
+	#endif
+	SDL_Surface* notes_surface = SDL_CreateRGBSurface(0, SCREEN_COLS, SCREEN_ROWS, 32, RED_MASK, GREEN_MASK, BLUE_MASK, ALPHA_MASK);
+	if (notes_surface == NULL) {
+		// TODO: report an error.
+		return;
+	}
+
+	// Text rendering (not texture rendering) happens quite rarely (only once for notes),
+	// so blended rendering could be done. It does antialiasing and it's slow, but it's
+	// renders are of high quality.
+	// Source of info about blended functions difference:
+	// https://www.freepascal-meets-sdl.net/chapter-7-texts-fonts-surface-conversion/
+	*notes_box_width = 0;
+	*notes_box_height = 0;
+	for (size_t i = 0; i < sizeof(NOTES) / sizeof(*NOTES); ++i) {
+		SDL_Surface* line_surface = TTF_RenderUTF8_Blended(notes_font, NOTES[i], NOTES_COLOR);
+		if (line_surface == NULL) {
+			// TODO: report an error, cleanup.
+			return;
+		}
+		
+		int line_box_width = 0;
+		int line_box_height = 0;
+		if (TTF_SizeUTF8(notes_font, NOTES[i], &line_box_width, &line_box_height) != 0) {
+			// TODO: report an error, cleanup.
+			return;
+		}
+		
+		SDL_Rect dst_rect = {0, *notes_box_height, line_box_width, line_box_height};
+		if (SDL_BlitSurface(line_surface, NULL, notes_surface, &dst_rect) != 0) {
+			// TODO: report an error, cleanup.
+			return;
+		}
+		
+		*notes_box_height += line_box_height;
+		if (*notes_box_width < line_box_width) {
+			*notes_box_width = line_box_width;
+		}
+		
+		SDL_FreeSurface(line_surface);
+	}
+	
+	// Surfaces are using RAM. And textures are using VRAM (video card RAM) rather than RAM.
+	// Surfaces are used in software rendering. We are doing hardware rendering, that's why
+	// we are making a texture. But of course, we were rendering the font with processor
+	// and it means we needed to use surface (my thinking).
+	// Source: https://stackoverflow.com/questions/21392755/difference-between-surface-and-texture-sdl-general
+	*notes_texture = SDL_CreateTextureFromSurface(renderer, notes_surface);
+	if (*notes_texture == NULL) {
+		// TODO: report an error.
+		return;
+	}
+	
+	SDL_FreeSurface(notes_surface);
+}
+
+void free_notes_texture(SDL_Texture** notes_texture) {
+	SDL_DestroyTexture(*notes_texture);
+	
+	*notes_texture = NULL;
+}
+
+void display_notes(SDL_Renderer* renderer, SDL_Texture* notes_texture, int notes_box_width, int notes_box_height) {
+	assert(notes_texture != NULL);
+	
+	(void) notes_box_width;
+	(void) notes_box_height;
+	
+	SDL_RenderCopy(renderer, notes_texture, NULL, NULL);
+}
+
+
 int main() {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		fprintf(stderr, "SDL_Init failed: %s.\n", SDL_GetError());
@@ -230,10 +336,33 @@ int main() {
 		SDL_Quit();
 		return 7;
 	}
+
+	static const char NOTES_FONT_FILE[] = "ubuntu-mono/UbuntuMono-Regular.ttf";
+	static const int NOTES_FONT_SIZE = 14; // In points.
+	TTF_Font* notes_font = TTF_OpenFont(NOTES_FONT_FILE, NOTES_FONT_SIZE);
+	if (notes_font == NULL) {
+		fprintf(stderr, "Failed to open mode font. TTF_OpenFont failed: %s.\n", TTF_GetError());
+		MessageBoxW(NULL, L"Ошибка при загрузке шрифта для отображения дополнительной информации.  Подробнее в логе (stderr).", L"Ошибка SDL2_TTF", 0);
+		TTF_CloseFont(notes_font);
+		TTF_CloseFont(mode_font);
+		TTF_CloseFont(fps_font);
+		SDL_DestroyTexture(texture);
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+		TTF_Quit();
+		SDL_Quit();
+		return 8;
+	}
+
 	
 	SDL_Texture* comp_mode_texture = NULL;
 	int mode_box_width = 0;
 	int mode_box_height = 0;
+	
+	SDL_Texture* notes_texture = NULL;
+	int notes_box_width = 0;
+	int notes_box_height = 0;
+	prepare_notes_texture(notes_font, renderer, &notes_texture, &notes_box_width, &notes_box_height);
 	
 	enum computation_mode computation_mode = COMPUTATION_MODE_PLAIN;
 	prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height);
@@ -350,13 +479,17 @@ int main() {
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		display_fps(renderer, fps_font, prev_frame_time);
 		display_comp_mode(renderer, comp_mode_texture, mode_box_width, mode_box_height);
+			display_notes(renderer, notes_texture, notes_box_width, notes_box_height);
 		SDL_RenderPresent(renderer);
 
 		uint64_t time_ended = SDL_GetPerformanceCounter();
 		
 		prev_frame_time = (time_ended - time_started) / ((float) SDL_GetPerformanceFrequency());
 	}
+	
+	free_notes_texture(&notes_texture);
 
+	TTF_CloseFont(notes_font);
 	TTF_CloseFont(mode_font);
 	TTF_CloseFont(fps_font);
 	SDL_DestroyTexture(texture);
