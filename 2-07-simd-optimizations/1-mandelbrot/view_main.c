@@ -334,6 +334,7 @@ int main() {
 		fprintf(stderr, "Failed to open mode font. TTF_OpenFont failed: %s.\n", TTF_GetError());
 		MessageBoxW(NULL, L"Ошибка при загрузке шрифта для отображения режима.  Подробнее в логе (stderr).", L"Ошибка SDL2_TTF", 0);
 		TTF_CloseFont(mode_font);
+		TTF_CloseFont(fps_font);
 		SDL_DestroyTexture(texture);
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
