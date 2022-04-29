@@ -34,9 +34,9 @@ void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_ti
 	char fps_buffer[127 + 1] = {0};
 	snprintf(fps_buffer, sizeof(fps_buffer), "%.0f", fps); 
 	
-	static const SDL_Color fps_color = {255, 255, 0, 255};
+	static const SDL_Color FPS_COLOR = {255, 255, 0, 255};
 	
-	SDL_Surface* fps_surface = TTF_RenderText_Solid(fps_font, fps_buffer, fps_color);
+	SDL_Surface* fps_surface = TTF_RenderText_Solid(fps_font, fps_buffer, FPS_COLOR);
 	if (fps_surface == NULL) {
 		// TODO: report an error.
 		return;
@@ -110,9 +110,9 @@ void prepare_comp_mode_texture(
 		default: assert(false); __builtin_unreachable();
 	}
 
-	static const SDL_Color mode_color = {255, 255, 0, 255};
+	static const SDL_Color MODE_COLOR = {255, 255, 0, 255};
 	
-	SDL_Surface* mode_surface = TTF_RenderText_Solid(mode_font, mode_string, mode_color);
+	SDL_Surface* mode_surface = TTF_RenderText_Blended(mode_font, mode_string, MODE_COLOR);
 	if (mode_surface == NULL) {
 		// TODO: report an error.
 		return;
