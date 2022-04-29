@@ -471,7 +471,6 @@ int main() {
 		struct rgba* pixels = NULL;
 		SDL_LockTexture(texture, NULL, (void**) &pixels, &row_size);
 		switch (computation_mode) {
-			// TODO: bad. More descriptive.
 			case COMPUTATION_MODE_PLAIN: {
 				compute_nosse(pixels, &screen_state);
 				break;
