@@ -504,6 +504,7 @@ int main() {
 	}
 	
 	free_notes_texture(&notes_texture);
+	free_comp_mode_texture(&comp_mode_texture);
 
 	TTF_CloseFont(notes_font);
 	TTF_CloseFont(mode_font);
