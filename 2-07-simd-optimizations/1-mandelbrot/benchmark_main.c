@@ -5,6 +5,21 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define TO_STR2(MACRO) #MACRO
+#define TO_STR(MACRO) TO_STR2(MACRO)
+
+#define MEASURE(FEATURE_CHECK_EXPR, NAME, PADDING, EXPR) \
+	if (FEATURE_CHECK_EXPR) {                                                                                                \
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);                                                                     \
+		EXPR;                                                                                                                \
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);                                                                       \
+		long nanoseconds = end.tv_nsec - start.tv_nsec;                                                                      \
+		static long DIVISOR_TO_MS = 1000 * 1000;                                                                             \
+		printf("%" TO_STR(PADDING) "s: %04ld.%06ld ms.\n", NAME, nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS);  \
+	} else {                                                                                                                 \
+		printf("%" TO_STR(PADDING) "s: not supported\n", NAME);                                                              \
+	}
+
 int main() {
 	struct timespec start = {0};
 	struct timespec end = {0};
@@ -16,49 +31,21 @@ int main() {
 		fprintf(stderr, "Failed to allocate memory for pixel buffer.\n");
 		return 1;
 	}
-
-	// TODO: сделать define для замера времени.
-	{
-		// Test nosse version.	
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-		compute_nosse(buffer, &state);
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-		long nanoseconds = end.tv_nsec - start.tv_nsec;
-		static long DIVISOR_TO_MS = 1000 * 1000;
-		// Write -Og for dbg version?
-		#if BUILD == BUILD_RELEASE
-			printf("Plain (-O2)");
-		#elif BUILD == BUILD_DEBUG
-			printf("Plain (-Og)");
-		#else
-			printf("Plain (-O?)");
-		#endif
-		printf(": %04ld.%06ld ms.\n", nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS); 
-	}
-
-	if (compute_check_sse_supported()) {
-		// Test sse version.	
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-		compute_sse(buffer, &state);
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-		long nanoseconds = end.tv_nsec - start.tv_nsec;
-		static long DIVISOR_TO_MS = 1000 * 1000;
-		printf("        SSE: %04ld.%06ld ms.\n", nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS); 
-	} else {
-		printf("        SSE: not supported.\n"); 
-	}
-
-	if (compute_check_avx_supported()) {
-		// Test avx version.	
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-		compute_avx(buffer, &state);
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-		long nanoseconds = end.tv_nsec - start.tv_nsec;
-		static long DIVISOR_TO_MS = 1000 * 1000;
-		printf("        AVX: %04ld.%06ld ms.\n", nanoseconds / DIVISOR_TO_MS, nanoseconds % DIVISOR_TO_MS); 
-	} else {
-		printf("        AVX: not supported.\n"); 
-	}
 	
+	// Test nosse version.
+	#if BUILD == BUILD_RELEASE
+		MEASURE(true, "Plain (-O2)", 11, compute_nosse(buffer, &state));
+	#elif BUILD == BUILD_DEBUG
+		MEASURE(true, "Plain (-Og)", 11, compute_nosse(buffer, &state));
+	#else
+		MEASURE(true, "Plain (-O?)", 11, compute_nosse(buffer, &state));
+	#endif
+	
+	// Test sse version.	
+	MEASURE(compute_check_sse_supported(), "SSE", 11, compute_sse(buffer, &state));
+	
+	// Test avx version.
+	MEASURE(compute_check_avx_supported(), "AVX", 11, compute_avx(buffer, &state));
+
 	return 0;
 }
