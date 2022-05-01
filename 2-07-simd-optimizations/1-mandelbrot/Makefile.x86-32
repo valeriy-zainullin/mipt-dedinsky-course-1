@@ -1,0 +1,56 @@
+# You can have only of 32-bit build or 64-bit build at once.
+
+# After view program is built, all dlls required are copied to this directory.
+# To make it run without changing of PATH environment variable and changing of working directory.
+# But these dlls may vary. Easies to set all mingw dlls to deps and if there's an update of mingw, rebuild the file.
+ALL_MINGW_DLLS = $(wildcard /usr/i686-w64-mingw32/sys-root/mingw/bin/*.dll)
+
+all: present
+
+present: view.32.exe benchmark.32.exe
+	./benchmark.32
+	./view.32
+
+debug_bins: view.dbg.32.exe benchmark.dbg.32.exe
+
+%.32.obj: %.c compute.h
+	i686-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+
+%.dbg.32.obj: %.c compute.h
+	i686-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+
+# SSE is available on all (or almost all x64 processors, therefore -msse was not needed before)
+compute_sse.32.obj: compute_sse.c compute.h
+	i686-w64-mingw32-gcc -c -msse -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+
+compute_sse.dbg.32.obj: compute_sse.c compute.h
+	i686-w64-mingw32-gcc -c -msse -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+
+compute_avx.32.obj: compute_avx.c compute.h
+	i686-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+
+compute_avx.dbg.32.obj: compute_avx.c compute.h
+	i686-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+	
+resource.32.res: resource.rc
+	i686-w64-mingw32-windres -O coff -o $@ $<
+
+
+view.32.exe: view_main.32.obj compute_nosse.32.obj compute_sse.32.obj compute_avx.32.obj resource.32.res $(ALL_MINGW_DLLS)
+	i686-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32 -mwindows
+	./copy_dlls.32.sh $@
+
+view.dbg.32.exe: view_main.dbg.32.obj compute_nosse.dbg.32.obj compute_sse.dbg.32.obj compute_avx.dbg.32.obj resource.32.res $(ALL_MINGW_DLLS)
+	i686-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32
+	./copy_dlls.32.sh $@
+
+benchmark.32.exe: benchmark_main.32.obj compute_nosse.32.obj compute_sse.32.obj compute_avx.32.obj
+	i686-w64-mingw32-gcc -static -o $@ $^
+
+benchmark.dbg.32.exe: benchmark_main.dbg.32.obj compute_nosse.dbg.32.obj compute_sse.dbg.32.obj compute_avx.dbg.32.obj
+	i686-w64-mingw32-gcc -static -o $@ $^
+
+clean:
+	rm -f *.32.obj *.32.exe *.dll
+
+.PHONY: present debug_bins clean
