@@ -44,15 +44,11 @@ void compute_nosse(struct rgba * buffer, struct screen_state const * screen_stat
 			// Не улетела на бесконечность.
 			// Где-то в окружности радиуса 1 с центром в 0 бегало.
 			if (iteration == MAX_NUM_ITERATIONS) {
-				buffer[pos].red = 0;
-				buffer[pos].green = 0;
-				buffer[pos].blue = 0;
-				buffer[pos].alpha = 255;
+				struct rgba color = {0, 0, 0, 255};
+				buffer[pos] = color;
 			} else {
-				buffer[pos].red = iteration % 64;
-				buffer[pos].green = 64 + iteration % 64;
-				buffer[pos].blue = 128 + iteration % 64;
-				buffer[pos].alpha = 255;
+				struct rgba color = {iteration % 64, 64 + iteration % 64, 128 + iteration % 64, 255};
+				buffer[pos] = color;
 			}
 		}
 	}
