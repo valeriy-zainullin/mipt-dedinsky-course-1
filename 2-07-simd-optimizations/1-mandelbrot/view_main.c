@@ -24,7 +24,7 @@ enum computation_mode {
 };
 static const int NUM_COMPUTATION_MODES = 3;
 
-void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_time) {
+bool display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_time) {
 	(void) renderer;
 	(void) fps_font;
 	
@@ -52,8 +52,7 @@ void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_ti
 	
 	SDL_Surface* fps_surface = TTF_RenderText_Solid(fps_font, fps_buffer, FPS_COLOR);
 	if (fps_surface == NULL) {
-		// TODO: report an error.
-		return;
+		return false;
 	}
 
 	// Surfaces are using RAM. And textures are using VRAM (video card RAM) rather than RAM.
@@ -63,18 +62,17 @@ void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_ti
 	// Source: https://stackoverflow.com/questions/21392755/difference-between-surface-and-texture-sdl-general
 	SDL_Texture* fps_texture = SDL_CreateTextureFromSurface(renderer, fps_surface);
 	if (fps_texture == NULL) {
-		// TODO: report an error.
-		return;
+		SDL_FreeSurface(fps_surface);
+		return false;
 	}
 	
 	int fps_box_width = 0;
 	int fps_box_height = 0;
 	
 	if (TTF_SizeText(fps_font, fps_buffer, &fps_box_width, &fps_box_height) != 0) {
-		// TODO: report an error.
 		SDL_DestroyTexture(fps_texture);
 		SDL_FreeSurface(fps_surface);
-		return;
+		return false;
 	}
 	
 	// Top left corner of the fps box.
@@ -83,13 +81,17 @@ void display_fps(SDL_Renderer* renderer, TTF_Font* fps_font, float prev_frame_ti
 	// width and result is index.
 	SDL_Rect fps_rect = {SCREEN_COLS - fps_box_width, 0, fps_box_width, fps_box_height};
 	
+	// Could've checked more for errors here, but the only thing to do is to log them.
+	// It's a good idea though. Because fps is not a critical structure.
 	SDL_RenderCopy(renderer, fps_texture, NULL, &fps_rect);
 	
 	SDL_DestroyTexture(fps_texture);
 	SDL_FreeSurface(fps_surface);
+	
+	return true;
 }
 
-void prepare_comp_mode_texture(
+bool prepare_comp_mode_texture(
 	enum computation_mode computation_mode,
 	TTF_Font* mode_font,
 	SDL_Renderer* renderer,
@@ -133,8 +135,7 @@ void prepare_comp_mode_texture(
 	// https://www.freepascal-meets-sdl.net/chapter-7-texts-fonts-surface-conversion/
 	SDL_Surface* mode_surface = TTF_RenderText_Blended(mode_font, mode_string, MODE_COLOR);
 	if (mode_surface == NULL) {
-		// TODO: report an error.
-		return;
+		return false;
 	}
 
 	// Surfaces are using RAM. And textures are using VRAM (video card RAM) rather than RAM.
@@ -144,18 +145,19 @@ void prepare_comp_mode_texture(
 	// Source: https://stackoverflow.com/questions/21392755/difference-between-surface-and-texture-sdl-general
 	*mode_texture = SDL_CreateTextureFromSurface(renderer, mode_surface);
 	if (*mode_texture == NULL) {
-		// TODO: report an error.
-		return;
+		SDL_FreeSurface(mode_surface);
+		return false;
 	}
 	
 	if (TTF_SizeText(mode_font, mode_string, mode_box_width, mode_box_height) != 0) {
-		// TODO: report an error.
 		SDL_DestroyTexture(*mode_texture);
 		SDL_FreeSurface(mode_surface);
-		return;
+		return false;
 	}
 	
 	SDL_FreeSurface(mode_surface);
+	
+	return true;
 }
 
 void free_comp_mode_texture(SDL_Texture** mode_texture) {
@@ -177,7 +179,7 @@ void display_comp_mode(SDL_Renderer* renderer, SDL_Texture* mode_texture, int mo
 	SDL_RenderCopy(renderer, mode_texture, NULL, &dst_rect);
 }
 
-void prepare_notes_texture(
+bool prepare_notes_texture(
 	TTF_Font* notes_font,
 	SDL_Renderer* renderer,
 	SDL_Texture** notes_texture,
@@ -213,8 +215,7 @@ void prepare_notes_texture(
 	#endif
 	SDL_Surface* notes_surface = SDL_CreateRGBSurface(0, SCREEN_COLS, SCREEN_ROWS, 32, RED_MASK, GREEN_MASK, BLUE_MASK, ALPHA_MASK);
 	if (notes_surface == NULL) {
-		// TODO: report an error.
-		return;
+		return false;
 	}
 
 	// Text rendering (not texture rendering) happens quite rarely (only once for notes),
@@ -227,21 +228,23 @@ void prepare_notes_texture(
 	for (size_t i = 0; i < sizeof(NOTES) / sizeof(*NOTES); ++i) {
 		SDL_Surface* line_surface = TTF_RenderUTF8_Blended(notes_font, NOTES[i], NOTES_COLOR);
 		if (line_surface == NULL) {
-			// TODO: report an error, cleanup.
-			return;
+			SDL_FreeSurface(notes_surface);
+			return false;
 		}
 		
 		int line_box_width = 0;
 		int line_box_height = 0;
 		if (TTF_SizeUTF8(notes_font, NOTES[i], &line_box_width, &line_box_height) != 0) {
-			// TODO: report an error, cleanup.
-			return;
+			SDL_FreeSurface(line_surface);
+			SDL_FreeSurface(notes_surface);
+			return false;
 		}
 		
 		SDL_Rect dst_rect = {0, *notes_box_height, line_box_width, line_box_height};
 		if (SDL_BlitSurface(line_surface, NULL, notes_surface, &dst_rect) != 0) {
-			// TODO: report an error, cleanup.
-			return;
+			SDL_FreeSurface(line_surface);
+			SDL_FreeSurface(notes_surface);
+			return false;
 		}
 		
 		*notes_box_height += line_box_height;
@@ -259,11 +262,12 @@ void prepare_notes_texture(
 	// Source: https://stackoverflow.com/questions/21392755/difference-between-surface-and-texture-sdl-general
 	*notes_texture = SDL_CreateTextureFromSurface(renderer, notes_surface);
 	if (*notes_texture == NULL) {
-		// TODO: report an error.
-		return;
+		SDL_FreeSurface(notes_surface);
+		return false;
 	}
 	
 	SDL_FreeSurface(notes_surface);
+	return true;
 }
 
 void free_notes_texture(SDL_Texture** notes_texture) {
@@ -382,12 +386,20 @@ int main() {
 	SDL_Texture* notes_texture = NULL;
 	int notes_box_width = 0;
 	int notes_box_height = 0;
-	prepare_notes_texture(notes_font, renderer, &notes_texture, &notes_box_width, &notes_box_height);
+	if (!prepare_notes_texture(notes_font, renderer, &notes_texture, &notes_box_width, &notes_box_height)) {
+		#if BUILD == BUILD_DEBUG
+			fprintf(stderr, "Failed to prepare notes texture.\n");
+		#endif
+	}
 	
 	bool display_texts = true;
 	
 	enum computation_mode computation_mode = COMPUTATION_MODE_PLAIN;
-	prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height);
+	if (!prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height)) {
+		#if BUILD == BUILD_DEBUG
+			fprintf(stderr, "Failed to prepare computation mode texture.\n");
+		#endif
+	}
 	
 	// Для самого первого кадра 1, чтобы FPS был равен 1.
 	// Точное значение fps для первого кадра не известно (я отображаю моментальный fps
@@ -458,7 +470,11 @@ int main() {
 							computation_mode = (enum computation_mode) mode;
 							
 							free_comp_mode_texture(&comp_mode_texture);
-							prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height);
+							if (!prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height)) {
+								#if BUILD == BUILD_DEBUG
+									fprintf(stderr, "Failed to prepare computation mode texture.\n");
+								#endif
+							}
 
 							break;
 						}
