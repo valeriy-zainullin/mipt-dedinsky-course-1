@@ -28,7 +28,7 @@ static uint8_t blend_color_component(uint8_t foreground_component, uint8_t foreg
 
 static struct rgba blend_colors(struct rgba foreground, struct rgba background) {
 	// Let b_r, b_g, b_b, b_a and f_r, f_g, f_b, f_a be channels of background and foreground.
-	// Here will be my idea of what we do. It comes down to formulas from the internet:
+	// Here will be my idea of what we do. It comes down to formulas from the internet.
 	// (f_a / MAX_ALPHA) is part of light energy happened to be reflected by the foreground.
 	//
 	// We treat these colored surfaces as ideal non-consuming, they only reflect and refract.
@@ -59,7 +59,7 @@ static struct rgba blend_colors(struct rgba foreground, struct rgba background) 
 void blend_nosse(struct rgba * buffer, struct blend_pictures const * pictures) {
 	// We have straight pixel colors (not premultiplied). If we would want to figure out how to do this, we would
 	// consult physics to get physical model to emulate perception of our eyes. But it's already done, I suppose,
-	// so just consult wikipedia.
+	// so just consult wikipedia. https://en.wikipedia.org/wiki/Alpha_compositing
 	for (size_t row = 0; row < SCREEN_ROWS; ++row) {
 		for (size_t col = 0; col < SCREEN_COLS; ++col) {
 			size_t pos = row * SCREEN_COLS + col;
