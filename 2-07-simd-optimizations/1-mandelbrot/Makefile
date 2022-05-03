@@ -28,11 +28,11 @@ resource.res: resource.rc
 
 
 view.exe: view_main.obj compute_nosse.obj compute_sse.obj compute_avx.obj resource.res $(ALL_MINGW_DLLS)
-	x86_64-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32 -mwindows
+	x86_64-w64-mingw32-gcc -static -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32 -mwindows
 	./copy_dlls.sh $@
 
 view.dbg.exe: view_main.dbg.obj compute_nosse.dbg.obj compute_sse.dbg.obj compute_avx.dbg.obj resource.res $(ALL_MINGW_DLLS)
-	x86_64-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32
+	x86_64-w64-mingw32-gcc -static -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32
 	./copy_dlls.sh $@
 
 benchmark.exe: benchmark_main.obj compute_nosse.obj compute_sse.obj compute_avx.obj
