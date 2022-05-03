@@ -9,9 +9,11 @@
 //
 // But if color pallete would change, more colors would be supported, serious copying might occur (more than 4 or 8
 // bytes, which are common register sizes).
+//
 // Linux ABI for x86-64 (https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf) says that if the struct would be
 // larger than two 8-bytes or would be a non-POD structure or union (POD term is from C++ standard, but it's
 // elaborated in the document) or would contain unaligned fields, it would be passed in memory.
+// Got the information from stackoverflow: https://stackoverflow.com/a/42413484
 
 static const uint8_t MAX_ALPHA = 255;
 
