@@ -37,11 +37,11 @@ resource.32.res: resource.rc
 
 
 view.32.exe: view_main.32.obj compute_nosse.32.obj compute_sse.32.obj compute_avx.32.obj resource.32.res $(ALL_MINGW_DLLS)
-	i686-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32 -mwindows
+	i686-w64-mingw32-gcc -static -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32 -mwindows
 	./copy_dlls.32.sh $@
 
 view.dbg.32.exe: view_main.dbg.32.obj compute_nosse.dbg.32.obj compute_sse.dbg.32.obj compute_avx.dbg.32.obj resource.32.res $(ALL_MINGW_DLLS)
-	i686-w64-mingw32-gcc -static -o $@ $^ -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32
+	i686-w64-mingw32-gcc -static -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32
 	./copy_dlls.32.sh $@
 
 benchmark.32.exe: benchmark_main.32.obj compute_nosse.32.obj compute_sse.32.obj compute_avx.32.obj
