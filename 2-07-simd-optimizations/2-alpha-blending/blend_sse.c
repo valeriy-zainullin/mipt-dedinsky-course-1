@@ -57,6 +57,10 @@ void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
 	static const size_t NUM_PTS_IN_PACKED_REG = SIMD_REGISTER_BIT_SIZE / (CHAR_BIT * sizeof(struct rgba) * 2);
 	assert(SCREEN_COLS % NUM_PTS_IN_PACKED_REG == 0);
 	
+	// Код предполагает, что размер структур равен 32-ум битам.
+	// static_assert нет, проверяется всё равно только в отладочной версии.
+	assert(sizeof(struct rgba) * CHAR_BIT == 32);
+
 	// Код дальше написан для упаковки 2-ух struct rgba (32-ух битных структур цвета пиксела), нет static_assert,
 	// приходится так.
 	// Проверяется всё равно только в отладочной версии.
