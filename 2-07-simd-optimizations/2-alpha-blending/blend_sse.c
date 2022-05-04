@@ -101,12 +101,6 @@ void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
 		for (size_t col = 0; col < SCREEN_COLS; col += NUM_PTS_IN_PACKED_REG) {
 			size_t pos = row * SCREEN_COLS + col;
 			
-			if (pictures->foreground[pos].alpha != 0) {
-				#if BUILD == BUILD_DEBUG
-					__asm__ (" int3; ");
-				#endif
-			}
-			
 			// Формат комментариев, в которых написано содержимое SSE-регистров, был взят у
 			// Ильи Рудольфовича Дединского, нашего преподавателя. Он скидывал нам решения
 			// этих задач, только в них нам самим нужно было найти SSE интринсики SSE по
