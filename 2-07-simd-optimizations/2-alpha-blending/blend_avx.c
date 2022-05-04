@@ -6,6 +6,8 @@
 #include <limits.h>
 #include <stdbool.h>
 
+static const uint8_t MAX_ALPHA = 255;
+
 static bool check_avx_supported() {
 	static const unsigned int BASIC_CPUID_INFO = 0x0;
 	unsigned int cpuid_max_leaf = __get_cpuid_max(BASIC_CPUID_INFO, NULL);
