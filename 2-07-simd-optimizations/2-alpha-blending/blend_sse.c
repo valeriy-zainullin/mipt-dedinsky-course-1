@@ -68,7 +68,7 @@ void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
 	
 	static const uint8_t ZERO_BITS = 0x80;
 	//  15 14 13 12   11 10  9  8    7  6  5  4    3  2  1  0
-	// [-- a1 -- b0 | -- g1 -- r1 | -- a0 -- b0 | -- g0 -- r0]
+	// [-- a1 -- b1 | -- g1 -- r1 | -- a0 -- b0 | -- g0 -- r0]
 	//      |___________________        |___________________
 	//      |     \      \      \       |     \      \      \.
 	// [-- a1 -- a1 | -- a1 -- a1 | -- a0 -- a0 | -- a0 -- a0]
@@ -107,13 +107,12 @@ void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
 			
 			// Формат комментариев, в которых написано содержимое SSE-регистров, был взят у
 			// Ильи Рудольфовича Дединского, нашего преподавателя. Он скидывал нам решения
-			// этих задач, только в них нам самим нужно было найти SSE интринсики SSE по
+			// этих задач, только в них нам самим нужно было найти SSE интринсики по
 			// тому, что они делают. Части названий функции отсутствовали, вместо них
 			// вставлялось слово "meow" :) И нужно было найти их названия, как раз были
 			// такие комментарии. Найти, например, можно с помощью intel intrinsics guide
 			// (оригинал сейчас недоступен в России; зеркало на https://www.laruence.com/sse/,
 			// им я и пользовался).
-			// 
 			
 			//--------------------------------------------------------------------------------
 			//           15  14  13  12    11  10   9   8     7   6   5   4     3   2   1   0
@@ -198,6 +197,10 @@ void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// Записать младшие 64 бита --- 8 байт --- 2 struct rgba в буфер.
 			_mm_storeu_si64(&buffer[pos], result);
 			
+			// This function is not used, but I made a mnemonic rule to understand it, so I decided
+			// to keep it here in case it's userful.
+			// _mm_movelh and _mm_movehl.
+			// 
 			// In _mm_movelh and _mm_movehl always upper bits of result are from a,
 			// lower bits are from b.
 			// In order of arguments.
