@@ -20,10 +20,10 @@ static const uint8_t MAX_ALPHA = 255;
 static uint8_t blend_color_component(uint8_t foreground_component, uint8_t foreground_alpha, uint8_t background_component) {
 	// Later in SSE we will be dividing by 256 here, as it's a bitwise shift which would be much faster.
 	// Value shouldn't change much, it's almost the same.
-	uint16_t fg = foreground_component;
-	uint16_t bg = background_component;
-	uint16_t alpha = foreground_alpha;
-	return (uint8_t) ((fg * alpha + bg * (MAX_ALPHA - alpha)) / MAX_ALPHA);
+	uint16_t fg_16 = foreground_component;
+	uint16_t bg_16 = background_component;
+	uint16_t alpha_16 = foreground_alpha;
+	return (uint8_t) ((fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)) / MAX_ALPHA);
 }
 
 static struct rgba blend_colors(struct rgba foreground, struct rgba background) {
