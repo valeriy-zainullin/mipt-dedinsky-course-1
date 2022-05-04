@@ -424,13 +424,13 @@ int main() {
 							int mode = (int) computation_mode;
 							mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							
-							if (mode == (int) COMPUTATION_MODE_SSE && !blend_check_sse_supported()) {
-								MessageBoxW(NULL, L"Процессор не поддерживает набор инструкций SSE. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
+							if (mode == (int) COMPUTATION_MODE_SSE && !blend_check_sse_impl_supported()) {
+								MessageBoxW(NULL, L"Процессор не поддерживает нужные наборы инструкций SSE. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
 								mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							}
 							
-							if (mode == (int) COMPUTATION_MODE_AVX && !blend_check_avx_supported()) {
-								MessageBoxW(NULL, L"Процессор не поддерживает набор инструкций AVX. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
+							if (mode == (int) COMPUTATION_MODE_AVX && !blend_check_avx_impl_supported()) {
+								MessageBoxW(NULL, L"Процессор не поддерживает нужные наборы инструкций AVX. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
 								mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							}
 							
