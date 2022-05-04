@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <stdbool.h>
 
-bool blend_check_avx_supported() {
+static bool check_avx_supported() {
 	static const unsigned int BASIC_CPUID_INFO = 0x0;
 	unsigned int cpuid_max_leaf = __get_cpuid_max(BASIC_CPUID_INFO, NULL);
 	
@@ -36,6 +36,37 @@ bool blend_check_avx_supported() {
 	}
 	
 	return false;
+}
+
+static bool check_avx2_supported() {
+	static const unsigned int BASIC_CPUID_INFO = 0x0;
+	unsigned int cpuid_max_leaf = __get_cpuid_max(BASIC_CPUID_INFO, NULL);
+	
+	if (cpuid_max_leaf == 0) {
+		// CPUID is not supported, then AVX2 is not supported either.
+		return false;
+	}
+	
+	static const unsigned int EXT_FEATURES_LEAF = 0x1;
+	
+	if (cpuid_max_leaf < EXT_FEATURES_LEAF) {
+		return false;
+	}
+	
+	int cpuid_results[4] = {0};		
+	__cpuidex(cpuid_results, EXT_FEATURES_LEAF, 0);
+	
+	unsigned int ebx = cpuid_results[1];
+	
+	if ((ebx & bit_AVX2) != 0) {
+		return true;
+	}
+	
+	return false;
+}
+
+bool blend_check_avx_impl_supported() {
+	return check_avx_supported() && check_avx2_supported();
 }
 
 void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {

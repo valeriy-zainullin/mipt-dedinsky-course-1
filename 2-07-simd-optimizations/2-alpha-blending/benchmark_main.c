@@ -58,14 +58,14 @@ int main() {
 	#endif
 	
 	// Test sse version.	
-	MEASURE(blend_check_sse_supported(), "SSE", 11,
+	MEASURE(blend_check_sse_impl_supported(), "SSE", 11,
 		for (size_t i = 0; i < 100; ++i) {
 			blend_sse(buffer, blend_pictures);
 		}
 	);
 	
 	// Test avx version.
-	MEASURE(blend_check_avx_supported(), "AVX", 11,
+	MEASURE(blend_check_avx_impl_supported(), "AVX", 11,
 		for (size_t i = 0; i < 100; ++i) {
 			blend_avx(buffer, blend_pictures);
 		}

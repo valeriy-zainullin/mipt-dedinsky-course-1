@@ -28,10 +28,10 @@ extern "C" {
 
 void blend_nosse(struct rgba * buffer, struct blend_pictures const * pictures);
 
-bool blend_check_sse_supported();
+bool blend_check_sse_impl_supported();
 void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures);
 
-bool blend_check_avx_supported();
+bool blend_check_avx_impl_supported();
 void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures);
 
 #if defined(__cplusplus)

@@ -17,7 +17,7 @@ static const uint8_t MAX_ALPHA = 255;
 //   https://stackoverflow.com/questions/14266772/how-do-i-call-cpuid-in-linux
 //   https://github.com/gcc-mirror/gcc/blob/master/gcc/config/i386/cpuid.h
 //   https://en.wikipedia.org/wiki/CPUID
-bool blend_check_sse_supported() {
+bool blend_check_sse_impl_supported() {
 	static const unsigned int BASIC_CPUID_INFO = 0x0;
 	unsigned int cpuid_max_leaf = __get_cpuid_max(BASIC_CPUID_INFO, NULL);
 	
