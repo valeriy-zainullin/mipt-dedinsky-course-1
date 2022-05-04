@@ -47,9 +47,14 @@ void compute_sse(struct rgba * buffer, struct screen_state const * screen_state)
 	static const size_t NUM_PTS_IN_PACKED_REG = SIMD_REGISTER_BIT_SIZE / (CHAR_BIT * sizeof(float));
 	assert(SCREEN_COLS % NUM_PTS_IN_PACKED_REG == 0);
 	
+	// Код предполагает, что размер структур равен 32-ум битам.
+	// static_assert нет, проверяется всё равно только в отладочной версии.
+	assert(sizeof(struct rgba) * CHAR_BIT == 32);
+
 	// Код дальше написан для упаковки 4-ех float-ов (32-ух битных вещественных), нет static_assert, приходится так.
 	// Проверяется всё равно только в отладочной версии.
 	assert(NUM_PTS_IN_PACKED_REG == 4);
+	
 	// Изменение x (возрастание) при движении по строке.
 	// В таком порядке, поскольку в С и в отладчиках big-endian (а в числах для нас это привычно, всё понятно), а в
 	// реальности платформа-то little-endian. Здесь указываем в стиле C.
