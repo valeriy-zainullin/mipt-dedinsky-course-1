@@ -42,11 +42,23 @@ bool blend_check_sse_impl_supported() {
 		return false;
 	}
 	
-	if ((ecx & bit_SSE) != 0) {
-		return true;
+	if ((edx & bit_SSE) == 0) {
+		return false;
 	}
 	
-	return false;
+	if ((edx & bit_SSE2) == 0) {
+		return false;
+	}
+	
+	if ((ecx & bit_SSSE3) == 0) {
+		return false;
+	}
+	
+	if ((ecx & bit_SSE4_1) == 0) {
+		return false;
+	}
+	
+	return true;
 }
 
 void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
