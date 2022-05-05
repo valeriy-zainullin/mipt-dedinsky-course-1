@@ -306,12 +306,10 @@ int main() {
 		return 2;
 	}
 	
-	// TODO: попробовать указать window на linux (исследовательская идея просто), посмотреть, что поменяется.
-	// Потом последний аргумент убрать.
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL) {
 		fprintf(stderr, "SDL_CreateRenderer failed: %s.\n", SDL_GetError());
-		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2", "Ошибка при создании отрисовщика. Подробнее в логе (stderr).", NULL);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2", "Ошибка при создании отрисовщика. Подробнее в логе (stderr).", window);
 		SDL_DestroyWindow(window);
 		TTF_Quit();
 		SDL_Quit();
@@ -322,7 +320,7 @@ int main() {
 	SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_COLS, SCREEN_ROWS);
 	if (texture == NULL) {
 		fprintf(stderr, "Failed to create texture. SDL_CreateTexture failed: %s.\n", SDL_GetError());
-		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2", "Ошибка при создании текстуры. Подробнее в логе (stderr).", NULL);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2", "Ошибка при создании текстуры. Подробнее в логе (stderr).", window);
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
 		TTF_Quit();
@@ -335,7 +333,7 @@ int main() {
 	TTF_Font* fps_font = TTF_OpenFont(FPS_FONT_FILE, FPS_FONT_SIZE);
 	if (fps_font == NULL) {
 		fprintf(stderr, "Failed to open fps font. TTF_OpenFont failed: %s.\n", TTF_GetError());
-		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для счётчика FPS. Подробнее в логе (stderr).", NULL);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для счётчика FPS. Подробнее в логе (stderr).", window);
 		SDL_DestroyTexture(texture);
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
@@ -349,7 +347,7 @@ int main() {
 	TTF_Font* mode_font = TTF_OpenFont(MODE_FONT_FILE, MODE_FONT_SIZE);
 	if (mode_font == NULL) {
 		fprintf(stderr, "Failed to open mode font. TTF_OpenFont failed: %s.\n", TTF_GetError());
-		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для отображения режима. Подробнее в логе (stderr).", NULL);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для отображения режима. Подробнее в логе (stderr).", window);
 		TTF_CloseFont(mode_font);
 		TTF_CloseFont(fps_font);
 		SDL_DestroyTexture(texture);
@@ -365,7 +363,7 @@ int main() {
 	TTF_Font* notes_font = TTF_OpenFont(NOTES_FONT_FILE, NOTES_FONT_SIZE);
 	if (notes_font == NULL) {
 		fprintf(stderr, "Failed to open mode font. TTF_OpenFont failed: %s.\n", TTF_GetError());
-		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для отображения дополнительной информации. Подробнее в логе (stderr).", NULL);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для отображения дополнительной информации. Подробнее в логе (stderr).", window);
 		TTF_CloseFont(notes_font);
 		TTF_CloseFont(mode_font);
 		TTF_CloseFont(fps_font);
@@ -426,12 +424,12 @@ int main() {
 							mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							
 							if (mode == (int) COMPUTATION_MODE_SSE && !blend_check_sse_impl_supported()) {
-								show_message_box(MESSAGEBOX_INFORMATION, "Режим недоступен", "Процессор не поддерживает нужные наборы инструкций SSE. Режим пропущен.", NULL);
+								show_message_box(MESSAGEBOX_INFORMATION, "Режим недоступен", "Процессор не поддерживает нужные наборы инструкций SSE. Режим пропущен.", window);
 								mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							}
 							
 							if (mode == (int) COMPUTATION_MODE_AVX && !blend_check_avx_impl_supported()) {
-								show_message_box(MESSAGEBOX_INFORMATION, "Режим недоступен", "Процессор не поддерживает нужные наборы инструкций AVX. Режим пропущен.", NULL);
+								show_message_box(MESSAGEBOX_INFORMATION, "Режим недоступен", "Процессор не поддерживает нужные наборы инструкций AVX. Режим пропущен.", window);
 								mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							}
 							
