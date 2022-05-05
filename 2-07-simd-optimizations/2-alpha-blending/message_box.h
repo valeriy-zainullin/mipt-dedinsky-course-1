@@ -7,11 +7,32 @@
 
 #include <windows.h>
 
+#include <stdio.h>
+
+#include <SDL2/SDL_syswm.h>
+
 #define MESSAGEBOX_ERROR       MB_ICONERROR
 #define MESSAGEBOX_WARNING     MB_ICONWARNING
 #define MESSAGEBOX_INFORMATION MB_ICONINFORMATION
 
-#define show_message_box(TYPE, TITLE, TEXT, WINDOW) MessageBoxW(NULL, L ## TEXT, L ## TITLE, TYPE)
+static HWND get_sdl_window_native_handle(SDL_Window* window) {
+	if (window == NULL) {
+		return NULL;
+	}
+
+	SDL_SysWMinfo system_info;
+	SDL_VERSION(&system_info.version);
+	if (!SDL_GetWindowWMInfo(window, &system_info)) {
+		fprintf(stderr, "Failed to get SDL_Window native handle. Using NULL instead (no parent for dialogs). SDL_GetWindowWMInfo failed: %s.\n", SDL_GetError());
+		return NULL;
+	}
+
+	HWND handle = system_info.info.win.window;
+
+	return handle;
+}
+
+#define show_message_box(TYPE, TITLE, TEXT, WINDOW) MessageBoxW(get_sdl_window_native_handle(WINDOW), L ## TEXT, L ## TITLE, TYPE)
 
 #else
 
