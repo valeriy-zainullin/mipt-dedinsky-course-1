@@ -35,7 +35,7 @@ bool compute_check_sse_supported() {
 		return false;
 	}
 	
-	if ((ecx & bit_SSE) != 0) {
+	if ((edx & bit_SSE) != 0) {
 		return true;
 	}
 	
