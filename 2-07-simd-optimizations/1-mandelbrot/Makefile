@@ -3,6 +3,8 @@
 # But these dlls may vary. Easies to set all mingw dlls to deps and if there's an update of mingw, rebuild the file.
 ALL_MINGW_DLLS = $(wildcard /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll)
 
+CFLAGS = -Wall -pedantic -Wextra -Wshadow -Werror -std=c99
+
 all: present
 
 present: view.exe benchmark.exe
@@ -12,16 +14,16 @@ present: view.exe benchmark.exe
 debug_bins: view.dbg.exe benchmark.dbg.exe
 
 %.obj: %.c compute.h
-	x86_64-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
 
 %.dbg.obj: %.c compute.h
-	x86_64-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
 
 compute_avx.obj: compute_avx.c compute.h
-	x86_64-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -mavx $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
 
 compute_avx.dbg.obj: compute_avx.c compute.h
-	x86_64-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -mavx $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
 	
 resource.res: resource.rc
 	x86_64-w64-mingw32-windres -O coff -o $@ $<
