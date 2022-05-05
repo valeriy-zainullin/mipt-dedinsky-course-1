@@ -5,6 +5,8 @@
 # But these dlls may vary. Easies to set all mingw dlls to deps and if there's an update of mingw, rebuild the file.
 ALL_MINGW_DLLS = $(wildcard /usr/i686-w64-mingw32/sys-root/mingw/bin/*.dll)
 
+CFLAGS = -Wall -pedantic -Wextra -Wshadow -Werror -std=c99
+
 all: present
 
 present: view.32.exe benchmark.32.exe
@@ -14,23 +16,23 @@ present: view.32.exe benchmark.32.exe
 debug_bins: view.dbg.32.exe benchmark.dbg.32.exe
 
 %.32.obj: %.c compute.h
-	i686-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+	i686-w64-mingw32-gcc -c $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
 
 %.dbg.32.obj: %.c compute.h
-	i686-w64-mingw32-gcc -c -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+	i686-w64-mingw32-gcc -c $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
 
 # SSE is available on all (or almost all x64 processors, therefore -msse was not needed before)
 compute_sse.32.obj: compute_sse.c compute.h
-	i686-w64-mingw32-gcc -c -msse -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+	i686-w64-mingw32-gcc -c -msse $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
 
 compute_sse.dbg.32.obj: compute_sse.c compute.h
-	i686-w64-mingw32-gcc -c -msse -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+	i686-w64-mingw32-gcc -c -msse $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
 
 compute_avx.32.obj: compute_avx.c compute.h
-	i686-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+	i686-w64-mingw32-gcc -c -mavx $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
 
 compute_avx.dbg.32.obj: compute_avx.c compute.h
-	i686-w64-mingw32-gcc -c -mavx -Wall -pedantic -Wextra -Wshadow -Werror -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+	i686-w64-mingw32-gcc -c -mavx $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
 	
 resource.32.res: resource.rc
 	i686-w64-mingw32-windres -O coff -o $@ $<
