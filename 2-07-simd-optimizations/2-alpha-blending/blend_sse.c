@@ -11,6 +11,14 @@
 #include <stdint.h>
 #include <tmmintrin.h>
 
+#if defined(__linux__)
+// Linux uses __int64_t* as second argument for _mm_set_epi64x,
+// and doesn't define __int64. Strange, intel intrinsic
+// guide's prototype says __int64.
+// Not a problem though.
+typedef __int64_t __int64;
+#endif
+
 static const uint8_t MAX_ALPHA = 255;
 
 // Источники:

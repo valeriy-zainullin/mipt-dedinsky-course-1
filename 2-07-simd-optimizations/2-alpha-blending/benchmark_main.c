@@ -1,3 +1,12 @@
+// Request POSIX version 2004
+// needed for clock_gettime
+// and such.
+// Worked without this on
+// windows (cygwin + mingw).
+// Turned out to be needed
+// for linux.
+#define _XOPEN_SOURCE 600
+
 #include "builds.h"
 #include "blend.h"
 
