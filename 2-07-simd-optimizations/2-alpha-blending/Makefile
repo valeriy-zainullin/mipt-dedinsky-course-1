@@ -13,10 +13,10 @@ present: view.exe benchmark.exe
 
 debug_bins: view.dbg.exe benchmark.dbg.exe
 
-%.obj: %.c blend.h
+%.obj: %.c blend.h message_box.h
 	x86_64-w64-mingw32-gcc -c $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
 
-%.dbg.obj: %.c blend.h
+%.dbg.obj: %.c blend.h message_box.h
 	x86_64-w64-mingw32-gcc -c $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
 
 blend_sse.obj: blend_sse.c blend.h
