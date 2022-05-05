@@ -20,17 +20,17 @@ debug_bins: view.dbg.exe benchmark.dbg.exe
 	x86_64-w64-mingw32-gcc -c $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
 
 blend_sse.obj: blend_sse.c blend.h
-	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
 
 blend_sse.dbg.obj: blend_sse.c blend.h
-	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
 
 blend_avx.obj: blend_avx.c blend.h
-	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -std=c99 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
 
 blend_avx.dbg.obj: blend_avx.c blend.h
-	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -std=c99 -o $@ $<
-	
+	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
+
 resource.res: resource.rc
 	x86_64-w64-mingw32-windres -O coff -o $@ $<
 
