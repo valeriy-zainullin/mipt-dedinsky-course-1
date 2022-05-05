@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-#include <windows.h>
+#include "message_box.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -289,13 +289,13 @@ void display_notes(SDL_Renderer* renderer, SDL_Texture* notes_texture, int notes
 int main() {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		fprintf(stderr, "SDL_Init failed: %s.\n", SDL_GetError());
-		MessageBoxW(NULL, L"Ошибка при инициализации. Подробнее в логе (stderr).", L"Ошибка SDL2", 0);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2", "Ошибка при инициализации. Подробнее в логе (stderr).", NULL);
 		return 1;
 	}
 	
 	if (TTF_Init() != 0) {
 		fprintf(stderr, "TTF_Init failed: %s.\n", TTF_GetError());
-		MessageBoxW(NULL, L"Ошибка при инициализации библиотеки для работы со шрифтами. Подробнее в логе (stderr).", L"Ошибка SDL2_TTF", 0);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при инициализации библиотеки для работы со шрифтами. Подробнее в логе (stderr).", NULL);
 		SDL_Quit();
 		return 2;
 	}
@@ -303,7 +303,7 @@ int main() {
 	SDL_Window* window = SDL_CreateWindow("Множество Мандельброта", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_COLS, SCREEN_ROWS, SDL_WINDOW_SHOWN);
 	if (window == NULL) {
 		fprintf(stderr, "SDL_CreateWindow failed: %s.\n", SDL_GetError());
-		MessageBoxW(NULL, L"Ошибка при создании окна. Подробнее в логе (stderr).", L"Ошибка SDL2", 0);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2", "Ошибка при создании окна. Подробнее в логе (stderr).", NULL);
 		TTF_Quit();
 		SDL_Quit();
 		return 2;
@@ -312,7 +312,7 @@ int main() {
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL) {
 		fprintf(stderr, "SDL_CreateRenderer failed: %s.\n", SDL_GetError());
-		MessageBoxW(NULL, L"Ошибка при создании отрисовщика. Подробнее в логе (stderr).", L"Ошибка SDL2", 0);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2", "Ошибка при создании отрисовщика. Подробнее в логе (stderr).", window);
 		SDL_DestroyWindow(window);
 		TTF_Quit();
 		SDL_Quit();
@@ -323,7 +323,7 @@ int main() {
 	SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_COLS, SCREEN_ROWS);
 	if (texture == NULL) {
 		fprintf(stderr, "Failed to create texture. SDL_CreateTexture failed: %s.\n", SDL_GetError());
-		MessageBoxW(NULL, L"Ошибка при создании текстуры.  Подробнее в логе (stderr).", L"Ошибка SDL2", 0);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2", "Ошибка при создании текстуры. Подробнее в логе (stderr).", window);
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
 		TTF_Quit();
@@ -336,7 +336,7 @@ int main() {
 	TTF_Font* fps_font = TTF_OpenFont(FPS_FONT_FILE, FPS_FONT_SIZE);
 	if (fps_font == NULL) {
 		fprintf(stderr, "Failed to open fps font. TTF_OpenFont failed: %s.\n", TTF_GetError());
-		MessageBoxW(NULL, L"Ошибка при загрузке шрифта для счётчика FPS.  Подробнее в логе (stderr).", L"Ошибка SDL2_TTF", 0);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для счётчика FPS. Подробнее в логе (stderr).", window);
 		SDL_DestroyTexture(texture);
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
@@ -350,7 +350,7 @@ int main() {
 	TTF_Font* mode_font = TTF_OpenFont(MODE_FONT_FILE, MODE_FONT_SIZE);
 	if (mode_font == NULL) {
 		fprintf(stderr, "Failed to open mode font. TTF_OpenFont failed: %s.\n", TTF_GetError());
-		MessageBoxW(NULL, L"Ошибка при загрузке шрифта для отображения режима.  Подробнее в логе (stderr).", L"Ошибка SDL2_TTF", 0);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для отображения режима. Подробнее в логе (stderr).", window);
 		TTF_CloseFont(mode_font);
 		TTF_CloseFont(fps_font);
 		SDL_DestroyTexture(texture);
@@ -366,7 +366,7 @@ int main() {
 	TTF_Font* notes_font = TTF_OpenFont(NOTES_FONT_FILE, NOTES_FONT_SIZE);
 	if (notes_font == NULL) {
 		fprintf(stderr, "Failed to open mode font. TTF_OpenFont failed: %s.\n", TTF_GetError());
-		MessageBoxW(NULL, L"Ошибка при загрузке шрифта для отображения дополнительной информации.  Подробнее в логе (stderr).", L"Ошибка SDL2_TTF", 0);
+		show_message_box(MESSAGEBOX_ERROR, "Ошибка SDL2_TTF", "Ошибка при загрузке шрифта для отображения дополнительной информации. Подробнее в логе (stderr).", window);
 		TTF_CloseFont(notes_font);
 		TTF_CloseFont(mode_font);
 		TTF_CloseFont(fps_font);
@@ -458,12 +458,12 @@ int main() {
 							mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							
 							if (mode == (int) COMPUTATION_MODE_SSE && !compute_check_sse_supported()) {
-								MessageBoxW(NULL, L"Процессор не поддерживает набор инструкций SSE. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
+								show_message_box(MESSAGEBOX_INFORMATION, "Режим недоступен", "Процессор не поддерживает набор инструкций SSE. Режим пропущен.", window);
 								mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							}
 							
 							if (mode == (int) COMPUTATION_MODE_AVX && !compute_check_avx_supported()) {
-								MessageBoxW(NULL, L"Процессор не поддерживает набор инструкций AVX. Режим пропущен.", L"Режим недоступен", MB_ICONINFORMATION);
+								show_message_box(MESSAGEBOX_INFORMATION, "Режим недоступен", "Процессор не поддерживает набор инструкций AVX. Режим пропущен.", window);
 								mode = (mode + 1) % NUM_COMPUTATION_MODES;
 							}
 							

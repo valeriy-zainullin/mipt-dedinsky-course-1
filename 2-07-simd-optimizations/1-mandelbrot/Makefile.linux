@@ -1,0 +1,44 @@
+CFLAGS = -Wall -pedantic -Wextra -Wshadow -Werror -std=c99
+
+all: present
+
+present: view benchmark
+	./benchmark
+	./view
+
+debug_bins: view.dbg benchmark.dbg
+
+%.obj: %.c compute.h message_box.h
+	gcc -c $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
+
+%.dbg.obj: %.c compute.h message_box.h
+	gcc -c $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
+
+compute_sse.obj: compute_sse.c compute.h
+	gcc -c $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
+
+compute_sse.dbg.obj: compute_sse.c compute.h
+	gcc -c $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
+
+compute_avx.obj: compute_avx.c compute.h
+	gcc -c -mavx $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
+
+compute_avx.dbg.obj: compute_avx.c compute.h
+	gcc -c -mavx $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
+
+view: view_main.obj compute_nosse.obj compute_sse.obj compute_avx.obj
+	gcc -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf
+
+view.dbg: view_main.dbg.obj compute_nosse.dbg.obj compute_sse.dbg.obj compute_avx.dbg.obj
+	gcc -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf
+
+benchmark: benchmark_main.obj compute_nosse.obj compute_sse.obj compute_avx.obj
+	gcc -o $@ $^ -lSDL2
+
+benchmark.dbg: benchmark_main.dbg.obj compute_nosse.dbg.obj compute_sse.dbg.obj compute_avx.dbg.obj
+	gcc -o $@ $^ -lSDL2
+
+clean:
+	rm -f *.obj view view.dbg benchmark benchmark.dbg
+
+.PHONY: present debug_bins clean
