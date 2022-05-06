@@ -61,7 +61,7 @@ static bool check_avx2_supported() {
 		return false;
 	}
 	
-	static const unsigned int EXT_FEATURES_LEAF = 0x1;
+	static const unsigned int EXT_FEATURES_LEAF = 0x7;
 	
 	if (cpuid_max_leaf < EXT_FEATURES_LEAF) {
 		return false;
