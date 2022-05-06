@@ -48,6 +48,10 @@ static bool check_avx_supported() {
 	return false;
 }
 
+static void mycpuidex(int cpu_info[4], int leaf, int subleaf) {
+	__cpuid_count(leaf, subleaf, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
+}
+
 static bool check_avx2_supported() {
 	static const unsigned int BASIC_CPUID_INFO = 0x0;
 	unsigned int cpuid_max_leaf = __get_cpuid_max(BASIC_CPUID_INFO, NULL);
@@ -64,7 +68,10 @@ static bool check_avx2_supported() {
 	}
 	
 	int cpuid_results[4] = {0};		
-	__cpuidex(cpuid_results, EXT_FEATURES_LEAF, 0);
+	// __cpuidex(cpuid_results, EXT_FEATURES_LEAF, 0);
+	// Some gcc versions don't have __cpuidex. Maybe, some old ones.
+	// Replace it with __cpuidex implementation -- another function from gcc.
+	mycpuidex(cpuid_results, EXT_FEATURES_LEAF, 0);
 	
 	unsigned int ebx = cpuid_results[1];
 	
