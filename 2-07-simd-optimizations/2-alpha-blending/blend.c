@@ -63,8 +63,8 @@ struct blend_pictures* blend_pictures_new(char const* background_path, char cons
 	// extract_pixels(pictures->background, background_path);
 	// extract_pixels(pictures->foreground, foreground_path);
 		
-	extract_pixels(pictures->background, "Table.bmp", false);
-	extract_pixels(pictures->foreground, "Racket.bmp", true);
+	extract_pixels(pictures->background, "Table1x4.bmp", false);
+	extract_pixels(pictures->foreground, "Racket1x4.bmp", true);
 
 	(void) background_path;
 	(void) foreground_path;

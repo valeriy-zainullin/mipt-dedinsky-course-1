@@ -42,11 +42,11 @@ resource.res: resource.rc
 	x86_64-w64-mingw32-windres -O coff -o $@ $<
 
 
-view.exe: view_main.obj blend.obj blend_nosse.obj blend_sse.obj blend_avx.obj resource.res $(ALL_MINGW_DLLS)
+view.exe: view_main.obj blend.obj blend_nosse.obj blend_sse.obj blend_avx.obj # resource.res $(ALL_MINGW_DLLS)
 	x86_64-w64-mingw32-gcc -static -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32 -mwindows
 	./copy_dlls.sh $@
 
-view.dbg.exe: view_main.dbg.obj blend.dbg.obj blend_nosse.dbg.obj blend_sse.dbg.obj blend_avx.dbg.obj resource.res $(ALL_MINGW_DLLS)
+view.dbg.exe: view_main.dbg.obj blend.dbg.obj blend_nosse.dbg.obj blend_sse.dbg.obj blend_avx.dbg.obj # resource.res $(ALL_MINGW_DLLS)
 	x86_64-w64-mingw32-gcc -static -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf -lfreetype.dll -lwinmm -liconv -limm32 -lole32 -lversion -loleaut32 -lgdi32
 	./copy_dlls.sh $@
 

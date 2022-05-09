@@ -4,8 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define SCREEN_COLS 800
-#define SCREEN_ROWS 600
+#define SCREEN_COLS 4
+//800
+#define SCREEN_ROWS 1
+//600
 
 struct rgba {
 	uint8_t red;
