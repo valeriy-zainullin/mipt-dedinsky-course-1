@@ -101,7 +101,7 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 	// Код дальше написан для упаковки 4-ух struct rgba (32-ух битных структур цвета пиксела), нет static_assert,
 	// приходится так.
 	// Проверяется всё равно только в отладочной версии.
-	assert(NUM_PTS_IN_PACKED_REG == 2);
+	assert(NUM_PTS_IN_PACKED_REG == 4);
 	
 	static const uint8_t ZERO_BITS = 0x80;
 	//  31 30 29 28   27 26 25 24   23 22 21 20   19 18 17 16   15 14 13 12   11 10  9  8    7  6  5  4    3  2  1  0
@@ -257,7 +257,7 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			
 			struct rgba colors[256 / (CHAR_BIT * sizeof(struct rgba))] = {0};
 
-			// Записать младшие 64 бита --- 8 байт --- 2 struct rgba в буфер.
+			// Записать 256 бит --- 8 struct rgba --- в буфер.
 			_mm256_storeu_si256((__m256i*) colors, result);
 
 			// This function is not used, but I made a mnemonic rule to understand it, so I decided
