@@ -13,23 +13,30 @@ present: view.exe benchmark.exe
 
 debug_bins: view.dbg.exe benchmark.dbg.exe
 
+# If one debugs simd optimizations in gdb, he would see "Optimized out" a
+# couple of times. I would like to see those variables although I saw the
+# problem is later in the code. -Og makes simd variables be optimized.
+# For debugging, here -O0 is better. I'll just use it everywhere, as I
+# expect it to happen with normal variables as well. And debug binaries
+# are still not for speed tests and are not a release build.
+
 %.obj: %.c blend.h message_box.h
-	x86_64-w64-mingw32-gcc -c $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
+	x86_64-w64-mingw32-gcc -c $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
 
 %.dbg.obj: %.c blend.h message_box.h
-	x86_64-w64-mingw32-gcc -c $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
+	x86_64-w64-mingw32-gcc -c $(CFLAGS) -O0 -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
 
 blend_sse.obj: blend_sse.c blend.h
-	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
+	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
 
 blend_sse.dbg.obj: blend_sse.c blend.h
-	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
+	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -O0 -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
 
 blend_avx.obj: blend_avx.c blend.h
-	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -O2 -DNDEBUG -DBUILD=BUILD_RELEASE -o $@ $<
+	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
 
 blend_avx.dbg.obj: blend_avx.c blend.h
-	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -Og -g -DBUILD=BUILD_DEBUG -o $@ $<
+	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -O0 -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
 
 resource.res: resource.rc
 	x86_64-w64-mingw32-windres -O coff -o $@ $<
