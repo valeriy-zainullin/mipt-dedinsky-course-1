@@ -135,20 +135,22 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 	// _mm_cvtepi can only promote to larger types (in bits).
 	// We will need to convert pi16 back to pu8. Do that
 	// with a mask.
-	__m256i cast_pi16_to_pu8 = _mm256_set_epi8(
+	__m256i cast_pi16_to_pu8_mask = _mm256_set_epi8(
 		ZERO_BITS, ZERO_BITS, ZERO_BITS, ZERO_BITS,
 		ZERO_BITS, ZERO_BITS, ZERO_BITS, ZERO_BITS,
 		ZERO_BITS, ZERO_BITS, ZERO_BITS, ZERO_BITS,
 		ZERO_BITS, ZERO_BITS, ZERO_BITS, ZERO_BITS,
-		30,28,26,24, 22,20,18,16,
-		14,12,10, 8,  6, 4, 2, 0
+		       30,        28,        26,        24,
+		       22,        20,        18,        16,
+		       14,        12,        10,         8,
+		        6,         4,         2,         0
 	);
 	
-	__m256i m256i_epi16_255s = _mm256_set_epi16(255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255);
+	__m256i m256i_pi16_255s = _mm256_set_epi16(255,255,255,255, 255,255,255,255, 255,255,255,255, 255,255,255,255);
 
 	// Composition of permutations will be both operations combined.
 	// Apply both of them at the same time. It will reduce run time.
-	__m256i div_256_cast_to_pu8 = _mm256_shuffle_epi8(div_pi16_by_256_mask, cast_pi16_to_pu8);
+	__m256i div_256_cast_to_pu8 = _mm256_shuffle_epi8(div_pi16_by_256_mask, cast_pi16_to_pu8_mask);
 	
 	for (size_t row = 0; row < SCREEN_ROWS; ++row) {
 		for (size_t col = 0; col < SCREEN_COLS; col += NUM_PTS_IN_PACKED_REG) {
@@ -243,7 +245,7 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			__m256i fg_16_multiplied = _mm256_mullo_epi16(fg_16, alpha_16);
 			
 			// bg_16 * (MAX_ALPHA - alpha_16)
-			__m256i bg_16_multiplied = _mm256_mullo_epi16(bg_16, _mm256_sub_epi16(m256i_epi16_255s, alpha_16));
+			__m256i bg_16_multiplied = _mm256_mullo_epi16(bg_16, _mm256_sub_epi16(m256i_pi16_255s, alpha_16));
 			
 			// (fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)
 			__m256i sum = _mm256_add_epi16(fg_16_multiplied, bg_16_multiplied);
