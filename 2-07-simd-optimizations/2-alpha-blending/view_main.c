@@ -1,4 +1,3 @@
-#include "builds.h"
 #include "blend.h"
 #include "message_box.h"
 
@@ -102,10 +101,10 @@ bool prepare_comp_mode_texture(
 	
 	switch (computation_mode) {
 		case COMPUTATION_MODE_PLAIN: {
-			#if BUILD == BUILD_RELEASE
+			#if RELEASE_BUILD
 				mode_string = "Plain (-O2)";
-			#elif BUILD == BUILD_DEBUG
-				mode_string = "Plain (-Og)";
+			#elif DEBUG_BUILD
+				mode_string = "Plain (-O0)";
 			#else
 				mode_string = "Plain (-O?)";
 			#endif
@@ -384,7 +383,7 @@ int main() {
 	int notes_box_width = 0;
 	int notes_box_height = 0;
 	if (!prepare_notes_texture(notes_font, renderer, &notes_texture, &notes_box_width, &notes_box_height)) {
-		#if BUILD == BUILD_DEBUG
+		#if DEBUG_BUILD
 			fprintf(stderr, "Failed to prepare notes texture.\n");
 		#endif
 	}
@@ -393,7 +392,7 @@ int main() {
 	
 	enum computation_mode computation_mode = COMPUTATION_MODE_PLAIN;
 	if (!prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height)) {
-		#if BUILD == BUILD_DEBUG
+		#if DEBUG_BUILD
 			fprintf(stderr, "Failed to prepare computation mode texture.\n");
 		#endif
 	}
@@ -437,7 +436,7 @@ int main() {
 							
 							free_comp_mode_texture(&comp_mode_texture);
 							if (!prepare_comp_mode_texture(computation_mode, mode_font, renderer, &comp_mode_texture, &mode_box_width, &mode_box_height)) {
-								#if BUILD == BUILD_DEBUG
+								#if DEBUG_BUILD
 									fprintf(stderr, "Failed to prepare computation mode texture.\n");
 								#endif
 							}

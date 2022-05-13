@@ -7,7 +7,6 @@
 // for linux.
 #define _XOPEN_SOURCE 600
 
-#include "builds.h"
 #include "blend.h"
 
 #include <stdio.h>
@@ -46,14 +45,14 @@ int main() {
 	printf("Evaluated 100 times per benchmark, otherwise time stays at 0ms. :)\n");
 	
 	// Test nosse version.
-	#if BUILD == BUILD_RELEASE
+	#if RELEASE_BUILD
 		MEASURE(true, "Plain (-O2)", 11,
 			for (size_t i = 0; i < 100; ++i) {
 				blend_nosse(buffer, blend_pictures);
 			}
 		);
-	#elif BUILD == BUILD_DEBUG
-		MEASURE(true, "Plain (-Og)", 11,
+	#elif DEBUG_BUILD
+		MEASURE(true, "Plain (-O0)", 11,
 			for (size_t i = 0; i < 100; ++i) {
 				blend_nosse(buffer, blend_pictures);
 			}
