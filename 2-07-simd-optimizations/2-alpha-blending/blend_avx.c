@@ -86,6 +86,8 @@ bool blend_check_avx_impl_supported() {
 	return check_avx_supported() && check_avx2_supported();
 }
 
+#include "print_simd_reg.h"
+
 void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 	static const size_t SIMD_REGISTER_BIT_SIZE = 256;
 
@@ -174,8 +176,19 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// back  = [a3b b3b g3b r3b | a2b b2b g2b r2b | a1b b1b g1b r1b | a0b b0b g0b r0b]
 			//--------------------------------------------------------------------------------
 			__m128i front = _mm_set_epi64x(*(__int64*) &pictures->foreground[pos + 2], *(__int64*) &pictures->foreground[pos]);
+			
+			printf("pos = %zu.\n", pos);
+			
+			printf("front = ");
+			print_m128i_pu8(front);
+			printf(".\n");
+			
 			__m128i back  = _mm_set_epi64x(*(__int64*) &pictures->background[pos + 2], *(__int64*) &pictures->background[pos]);
 			
+			printf("back = ");
+			print_m128i_pu8(back);
+			printf(".\n");
+
 			// uint16_t fg_16 = foreground_component;
 			// uint16_t bg_16 = background_component;
 			// uint16_t alpha_16 = foreground_alpha;
@@ -216,6 +229,22 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			__m256i fg_16 = _mm256_cvtepu8_epi16(front);
 			__m256i bg_16 = _mm256_cvtepu8_epi16(back);
 			
+			// result =
+			//   ((fg_16 - bg_16) * alpha_16) / 256 + bg_16                      ~=
+			//   (fg_16 * alpha_16 - bg_16 * alpha_16) / 256 + bg_16             ~=
+			//   (fg_16 * alpha_16 + bg_16 * (256 - alpha_16)) / 256             ~=
+			//   (fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)) / 256       ~=
+			//   (fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)) / MAX_ALPHA
+			// result = (uint8_t) result
+
+			printf("fg_16 = ");
+			print_m256i_pi16(fg_16);
+			printf(".\n");
+			
+			printf("bg_16 = ");
+			print_m256i_pi16(bg_16);
+			printf(".\n");
+
 			// Достаём альфа-каналы, не убираем из front_16 и back_16, потому что это ничего
 			// не даст, только потратим время на удаление, проще их оставить, мы их
 			// забесплатно перемножаем.
@@ -233,6 +262,12 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// комментируем две строки. Пробел не помогает.
 			__m256i alpha_16 = _mm256_shuffle_epi8(fg_16, extract_alpha16_mask);
 			
+			__m256i diff = _mm256_subs_epu16(fg_16, bg_16);
+			
+			printf("alpha_16 = ");
+			print_m256i_pi16(alpha_16);
+			printf(".\n");
+
 			// (uint8_t) ((fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)) / MAX_ALPHA)
 
 			// Judging by _mm_mullo_epi16 docs (generalizing), _mm_mullo multiplies, producing
@@ -240,6 +275,8 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// Judging by docs, mullo only exists for signed types. mulhi for unsigned.
 			// It's possible, these operation exist only for 16-bit and 8-bit types.
 			// _mm_mullo_epi16...
+			
+			__m256i diff = _mm256_
 
 			// fg_16 * alpha_16
 			__m256i fg_16_multiplied = _mm256_mullo_epi16(fg_16, alpha_16);
@@ -250,13 +287,32 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// (fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)
 			__m256i sum = _mm256_add_epi16(fg_16_multiplied, bg_16_multiplied);
 
+			printf("fg_16_multiplied = ");
+			print_m256i_pi16(fg_16_multiplied);
+			printf(".\n");
+
+			printf("bg_16_multiplied = ");
+			print_m256i_pi16(bg_16_multiplied);
+			printf(".\n");
+
+			printf("sum = ");
+			print_m256i_pi16(sum);
+			printf(".\n");
+
 			// result =
-			//   ((fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)) / 256       ~=
-			//   ((fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)) / MAX_ALPHA
+			//   ((fg_16 - bg_16) * alpha_16) / 256 + bg_16                      ~=
+			//   (fg_16 * alpha_16 - bg_16 * alpha_16) / 256 + bg_16             ~=
+			//   (fg_16 * alpha_16 + bg_16 * (256 - alpha_16)) / 256             ~=
+			//   (fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)) / 256       ~=
+			//   (fg_16 * alpha_16 + bg_16 * (MAX_ALPHA - alpha_16)) / MAX_ALPHA
 			// result = (uint8_t) result
 			// Композиция перестановок.
 			__m256i result = _mm256_shuffle_epi8(sum, div_256_cast_to_pu8);
 			
+			printf("result = ");
+			print_m256i_pu8(result);
+			printf(".\n");
+
 			struct rgba colors[256 / (CHAR_BIT * sizeof(struct rgba))] = {0};
 
 			// Записать 256 бит --- 8 struct rgba --- в буфер.
