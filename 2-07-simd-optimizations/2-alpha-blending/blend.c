@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 
+#include <malloc.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,8 +55,16 @@ static bool extract_pixels(struct rgba * output_pixels, char const* image_path, 
 	return true;
 }
 
+#if defined(_WIN32)
+// https://github.com/ebassi/graphene/issues/83#issuecomment-264557239
+#define aligned_alloc(ALIGNMENT, SIZE) _aligned_malloc(SIZE, ALIGNMENT)
+#define aligned_free(PTR)              _aligned_free(PTR)
+#else
+#define aligned_free(PTR)              free(PTR)
+#endif
+
 struct blend_pictures* blend_pictures_new(char const* background_path, char const* foreground_path) {
-	struct blend_pictures* pictures = calloc(1, sizeof(struct blend_pictures));
+	struct blend_pictures* pictures = aligned_alloc(BLEND_BIGGEST_ALIGNMENT, sizeof(struct blend_pictures));
 	if (pictures == NULL) {
 		return NULL;
 	}
@@ -81,6 +90,6 @@ struct blend_pictures* blend_pictures_delete(struct blend_pictures* blend_pictur
 		return NULL;
 	}
 	
-	free(blend_pictures);
+	aligned_free(blend_pictures);
 	return NULL;
 }

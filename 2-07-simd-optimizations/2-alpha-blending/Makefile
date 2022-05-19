@@ -3,7 +3,7 @@
 # But these dlls may vary. Easies to set all mingw dlls to deps and if there's an update of mingw, rebuild the file.
 ALL_MINGW_DLLS = $(wildcard /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll)
 
-CFLAGS = -Wall -pedantic -Wextra -Wshadow -Werror -std=c99
+CFLAGS = -Wall -pedantic -Wextra -Wshadow -Werror -std=c11
 
 all: present
 

@@ -173,8 +173,9 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// front = [a3f b3f g3f r3f | a2f b2f g2f r2f | a1f b1f g1f r1f | a0f b0f g0f r0f]
 			// back  = [a3b b3b g3b r3b | a2b b2b g2b r2b | a1b b1b g1b r1b | a0b b0b g0b r0b]
 			//--------------------------------------------------------------------------------
-			__m128i front = _mm_set_epi64x(*(__int64*) &pictures->foreground[pos + 2], *(__int64*) &pictures->foreground[pos]);
-			__m128i back  = _mm_set_epi64x(*(__int64*) &pictures->background[pos + 2], *(__int64*) &pictures->background[pos]);
+			// TODO: check for sse2.
+			__m128i front = _mm_load_si128((__m128i*) &pictures->foreground[pos]);
+			__m128i back  = _mm_load_si128((__m128i*) &pictures->background[pos]);
 			
 			// uint16_t fg_16 = foreground_component;
 			// uint16_t bg_16 = background_component;
@@ -259,8 +260,8 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			
 			struct rgba colors[256 / (CHAR_BIT * sizeof(struct rgba))] = {0};
 
-			// Записать 256 бит --- 8 struct rgba --- в буфер.
-			_mm256_storeu_si256((__m256i*) colors, result);
+			// Записать 128 бит --- 4 struct rgba --- в буфер.
+			_mm_store_si128((__m128i*) colors, _mm256_castsi256_si128(result));
 
 			// This function is not used, but I made a mnemonic rule to understand it, so I decided
 			// to keep it here in case it's userful.

@@ -28,11 +28,15 @@ extern "C" {
 
 void blend_nosse(struct rgba * buffer, struct blend_pictures const * pictures);
 
+static const size_t BLEND_SSE_ALIGNMENT = 16;
 bool blend_check_sse_impl_supported();
 void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures);
 
+static const size_t BLEND_AVX_ALIGNMENT = 32;
 bool blend_check_avx_impl_supported();
 void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures);
+
+static const size_t BLEND_BIGGEST_ALIGNMENT = BLEND_AVX_ALIGNMENT;
 
 #if defined(__cplusplus)
 }

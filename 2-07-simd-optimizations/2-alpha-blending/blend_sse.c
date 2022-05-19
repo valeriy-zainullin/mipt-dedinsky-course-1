@@ -110,7 +110,8 @@ void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
 	__m128i cast_pi16_to_pu8 = _mm_set_epi8(
 		ZERO_BITS, ZERO_BITS, ZERO_BITS, ZERO_BITS,
 		ZERO_BITS, ZERO_BITS, ZERO_BITS, ZERO_BITS,
-		14,12,10,8, 6,4,2,0
+		       14,         12,       10,         8,
+		       6,           4,        2,         0
 	);
 	
 	__m128i m128i_epi16_255s = _mm_set_epi16(255,255,255,255, 255,255,255,255);
@@ -137,8 +138,8 @@ void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// front = [--- --- --- --- | --- --- --- --- | a1f b1f g1f r1f | a0f b0f g0f r0f]
 			// back  = [--- --- --- --- | --- --- --- --- | a1b b1b g1b r1b | a0b b0b g0b r0b]
 			//--------------------------------------------------------------------------------
-			__m128i front = _mm_set_epi64x(0, *(__int64*) &pictures->foreground[pos]);
-			__m128i back  = _mm_set_epi64x(0, *(__int64*) &pictures->background[pos]);
+			__m128i front = _mm_loadl_epi64((__m128i*) &pictures->foreground[pos]);
+			__m128i back  = _mm_loadl_epi64((__m128i*) &pictures->background[pos]);
 			
 			// uint16_t fg_16 = foreground_component;
 			// uint16_t bg_16 = background_component;
@@ -213,7 +214,7 @@ void blend_sse(struct rgba * buffer, struct blend_pictures const * pictures) {
 			__m128i result = _mm_shuffle_epi8(sum, div_256_cast_to_pu8);
 
 			// Записать младшие 64 бита --- 8 байт --- 2 struct rgba в буфер.
-			_mm_storeu_si64(&buffer[pos], result);
+			_mm_storel_epi64((__m128i*) &buffer[pos], result);
 			
 			// This function is not used, but I made a mnemonic rule to understand it, so I decided
 			// to keep it here in case it's userful.
