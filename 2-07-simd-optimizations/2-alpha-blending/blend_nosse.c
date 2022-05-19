@@ -18,7 +18,14 @@
 static const uint8_t MAX_ALPHA = 255;
 
 static uint8_t blend_color_component(uint8_t foreground_component, uint8_t foreground_alpha, uint8_t background_component) {
-	// Later in SSE we will be dividing by 256 here, as it's a bitwise shift which would be much faster.
+	// Later in SSE we will transform the formula effectively to
+	// (uint8_t) (bg_16 + ((fg_16 - bg_16) * alpha_16) / MAX_ALPHA)
+	// as it's less operations to do (one addition, one
+	// substraction, one multiplication and one bitwise shift
+	// against one addition, one substraction, two multiplications
+	// and one bitwise shift).
+	// And we will be dividing by 256 instead of MAX_ALPHA, as it's
+	// a bitwise shift which would be much faster.
 	// Value shouldn't change much, it's almost the same.
 	uint16_t fg_16 = foreground_component;
 	uint16_t bg_16 = background_component;
@@ -27,8 +34,9 @@ static uint8_t blend_color_component(uint8_t foreground_component, uint8_t foreg
 }
 
 static struct rgba blend_colors(struct rgba foreground, struct rgba background) {
+	// Here will be my idea of what we do. I use formulas from the internet.
+	//
 	// Let b_r, b_g, b_b, b_a and f_r, f_g, f_b, f_a be channels of background and foreground.
-	// Here will be my idea of what we do. It comes down to formulas from the internet.
 	// (f_a / MAX_ALPHA) is part of light energy happened to be reflected by the foreground.
 	//
 	// We treat these colored surfaces as ideal non-consuming, they only reflect and refract.
@@ -46,6 +54,9 @@ static struct rgba blend_colors(struct rgba foreground, struct rgba background) 
 	//
 	// By blending our surface, we get fully opaque layer, which doesn't pass any light. So alpha
 	// channel is MAX_ALPHA (alpha channel is level of opaqueness).
+	//
+	// As a generalization, we could try to substitute foreground and background layer with a single
+	// one, then we should consider background being not fully opaque.
 	struct rgba result = {
 		blend_color_component(foreground.red, foreground.alpha, background.red),
 		blend_color_component(foreground.green, foreground.alpha, background.green),
