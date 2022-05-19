@@ -258,10 +258,8 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// Композиция перестановок.
 			__m256i result = _mm256_shuffle_epi8(sum, div_256_cast_to_pu8);
 			
-			struct rgba colors[256 / (CHAR_BIT * sizeof(struct rgba))] = {0};
-
 			// Записать 128 бит --- 4 struct rgba --- в буфер.
-			_mm_store_si128((__m128i*) colors, _mm256_castsi256_si128(result));
+			_mm_store_si128((__m128i*) &buffer[pos], _mm256_castsi256_si128(result));
 
 			// This function is not used, but I made a mnemonic rule to understand it, so I decided
 			// to keep it here in case it's userful.
@@ -279,7 +277,6 @@ void blend_avx(struct rgba * buffer, struct blend_pictures const * pictures) {
 			// this approach, but think of it in previous way.
 
 			for (size_t i = 0; i < NUM_PTS_IN_PACKED_REG; ++i) {
-				buffer[pos + i] = colors[i];
 				// Fixing alpha channel.
 				buffer[pos + i].alpha = MAX_ALPHA;
 			}
