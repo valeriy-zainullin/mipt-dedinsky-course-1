@@ -1,4 +1,6 @@
 CFLAGS = -Wall -pedantic -Wextra -Wshadow -Werror -std=c11
+CFLAGS_REL = -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0
+CFLAGS_DBG = -g -O0 -DRELEASE_BUILD=0 -DDEBUG_BUILD=1
 
 all: present
 
@@ -9,22 +11,22 @@ present: view benchmark
 debug_bins: view.dbg benchmark.dbg
 
 %.obj: %.c blend.h message_box.h
-	gcc -c $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
+	gcc -c $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
 %.dbg.obj: %.c blend.h message_box.h
-	gcc -c $(CFLAGS) -Og -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
+	gcc -c $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
 
 blend_sse.obj: blend_sse.c blend.h
-	gcc -c -msse4.1 $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
+	gcc -c -msse4.1 $(CFLAGS) -o $@ $<
 
 blend_sse.dbg.obj: blend_sse.c blend.h
-	gcc -c -msse4.1 $(CFLAGS) -Og -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
+	gcc -c -msse4.1 $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
 
 blend_avx.obj: blend_avx.c blend.h
-	gcc -c -mavx2 $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
+	gcc -c -mavx2 $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
 blend_avx.dbg.obj: blend_avx.c blend.h
-	gcc -c -mavx2 $(CFLAGS) -Og -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
+	gcc -c -mavx2 $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
 
 view: view_main.obj blend.obj blend_nosse.obj blend_sse.obj blend_avx.obj
 	gcc -o $@ $(filter %.obj %.res,$^) -lSDL2 -lSDL2_ttf

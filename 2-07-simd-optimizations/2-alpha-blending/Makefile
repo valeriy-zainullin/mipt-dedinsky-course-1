@@ -4,6 +4,8 @@
 ALL_MINGW_DLLS = $(wildcard /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll)
 
 CFLAGS = -Wall -pedantic -Wextra -Wshadow -Werror -std=c11
+CFLAGS_REL = -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0
+CFLAGS_DBG = -g -O0 -DRELEASE_BUILD=0 -DDEBUG_BUILD=1
 
 all: present
 
@@ -21,22 +23,22 @@ debug_bins: view.dbg.exe benchmark.dbg.exe
 # are still not for speed tests and are not a release build.
 
 %.obj: %.c blend.h message_box.h
-	x86_64-w64-mingw32-gcc -c $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
+	x86_64-w64-mingw32-gcc -c $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
 %.dbg.obj: %.c blend.h message_box.h
-	x86_64-w64-mingw32-gcc -c $(CFLAGS) -O0 -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
+	x86_64-w64-mingw32-gcc -c $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
 
 blend_sse.obj: blend_sse.c blend.h
-	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
 blend_sse.dbg.obj: blend_sse.c blend.h
-	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) -O0 -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -msse4.1 $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
 
 blend_avx.obj: blend_avx.c blend.h
-	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
 blend_avx.dbg.obj: blend_avx.c blend.h
-	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) -O0 -g -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -o $@ $<
+	x86_64-w64-mingw32-gcc -c -mavx2 $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
 
 resource.res: resource.rc
 	x86_64-w64-mingw32-windres -O coff -o $@ $<
