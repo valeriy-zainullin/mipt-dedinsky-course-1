@@ -20,7 +20,7 @@ static HWND get_sdl_window_native_handle(SDL_Window* window) {
 		return NULL;
 	}
 
-	SDL_SysWMInfo system_info;
+	SDL_SysWMinfo system_info;
 	SDL_VERSION(&system_info.version);
 	if (!SDL_GetWindowWMInfo(window, &system_info)) {
 		fprintf(stderr, "Failed to get SDL_Window native handle. Using NULL instead (no parent for dialogs). SDL_GetWindowWMInfo failed: %s.\n", SDL_GetError());
