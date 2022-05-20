@@ -63,24 +63,18 @@ static bool extract_pixels(struct rgba * output_pixels, char const* image_path, 
 #define aligned_free(PTR)              free(PTR)
 #endif
 
-struct blend_pictures* blend_pictures_new(char const* background_path, char const* foreground_path) {
+static char const * const BACKGROUND_FILE = "Table.bmp";
+static char const * const FOREGROUND_FILE = "Racket.bmp";
+
+struct blend_pictures* blend_pictures_new() {
 	struct blend_pictures* pictures = aligned_alloc(BLEND_BIGGEST_ALIGNMENT, sizeof(struct blend_pictures));
 	if (pictures == NULL) {
 		return NULL;
 	}
 	
-	// extract_pixels(pictures->background, background_path);
-	// extract_pixels(pictures->foreground, foreground_path);
-		
-	extract_pixels(pictures->background, "Table.bmp", false);
-	extract_pixels(pictures->foreground, "Racket.bmp", true);
+	extract_pixels(pictures->background, BACKGROUND_FILE, false);
+	extract_pixels(pictures->foreground, FOREGROUND_FILE, true);
 
-	(void) background_path;
-	(void) foreground_path;
-		
-	// memcpy(pictures->background, background, SCREEN_ROWS * SCREEN_COLS * sizeof(struct blend_pictures));
-	// memcpy(pictures->foreground, foreground, SCREEN_ROWS * SCREEN_COLS * sizeof(struct blend_pictures));
-	
 	return pictures;
 }
 

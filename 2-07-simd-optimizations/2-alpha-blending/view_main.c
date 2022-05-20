@@ -405,7 +405,7 @@ int main() {
 	// подготовки кадра не попадает.
 	float prev_frame_time = 1.0f;
 	
-	struct blend_pictures* blend_pictures = blend_pictures_new(NULL, NULL);	
+	struct blend_pictures* blend_pictures = blend_pictures_new();	
 
 	// TODO: проверить с санитайзерами.
 	bool exiting = false;

@@ -32,7 +32,7 @@ int main() {
 	struct timespec start = {0};
 	struct timespec end = {0};
 	
-	struct blend_pictures * blend_pictures = blend_pictures_new(NULL, NULL);
+	struct blend_pictures * blend_pictures = blend_pictures_new();
 	
 	struct rgba * buffer = calloc(SCREEN_ROWS * SCREEN_COLS, sizeof(struct rgba));
 	if (buffer == NULL) {

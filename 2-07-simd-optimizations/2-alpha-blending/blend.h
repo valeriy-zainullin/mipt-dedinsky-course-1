@@ -19,7 +19,7 @@ struct blend_pictures {
 	struct rgba foreground[SCREEN_ROWS * SCREEN_COLS];
 };
 
-struct blend_pictures* blend_pictures_new(char const* background_path, char const* foreground_path);
+struct blend_pictures* blend_pictures_new();
 struct blend_pictures* blend_pictures_delete();
 
 #if defined(__cplusplus)
