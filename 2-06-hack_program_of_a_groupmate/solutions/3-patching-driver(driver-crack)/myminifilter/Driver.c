@@ -138,6 +138,9 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 				__debugbreak();
 			}
 		#endif
+		
+		ZwClose(ProcessHandle);
+		ProcessHandle = NULL;
 	}
 	
 	// Don't log failure of ZwQueryInformationProcess. Don't know, maybe some processes don't allow getting their image paths.
