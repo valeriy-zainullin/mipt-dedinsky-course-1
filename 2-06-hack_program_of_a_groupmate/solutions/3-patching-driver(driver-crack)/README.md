@@ -20,6 +20,8 @@
 Рекомендую во вкладке File->SymbolFilePath нажать reload и ok, чтобы загрузить отладочные символы для ядра. Тогда и на собственный код будет открываться окно с исходниками (А без этого не будет? Не проверял, лучше проверить или что-то сделать с этим сообщением).
 
 Ссылки (в порядке чтения, если начать с конца):
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwclose (документация `ZwClose`)
+1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-obopenobjectbypointer (подтвердил себе, что HANDLE после получения с помощью `ObOpenObjectByPointer` нужно закрывать, как обычно, и узнал, что делается с помощью `ZwClose`)
 1. https://stackoverflow.com/a/39351981 (как получить путь к образу исполняющегося в данный момент процесса; помогло получить подходящий для ZwQueryInformationProcess HANDLE на процесс)
 1. https://docs.microsoft.com/en-us/cpp/c-runtime-library/format-specification-syntax-printf-and-wprintf-functions?view=msvc-170#size-prefixes-for-printf-and-wprintf-format-type-specifiers
 1. https://docs.microsoft.com/en-us/windows-hardware/drivers/ifs/completing-an-i-o-operation-in-a-preoperation-callback-routine
