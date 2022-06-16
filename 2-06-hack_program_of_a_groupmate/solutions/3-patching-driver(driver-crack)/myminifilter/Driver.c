@@ -128,7 +128,7 @@ MmfPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* C
 	if (NT_SUCCESS(Status)) {
 		CHAR EMPTY_BUFFER[1] = {0};
 		Status = ZwQueryInformationProcess(ProcessHandle, ProcessImageFileName, EMPTY_BUFFER, 0, &ProcessImagePathBufferSize);
-		DbgPrint("myminifilter: ZwQueryInformation process status is 0x%x.\r\n", Status);
+		DbgPrint("myminifilter: ZwQueryInformationProcess status is 0x%x.\r\n", Status);
 		if (Status == STATUS_INFO_LENGTH_MISMATCH) {
 			// As expected. We want to get length of the path to the image.
 			Status = STATUS_SUCCESS;
