@@ -6,13 +6,35 @@ CFLAGS_DBG = -g -O0 -DRELEASE_BUILD=0 -DDEBUG_BUILD=1
 
 all: present
 
-present: build/tokenizer
+present: build/parser
+	
+test_tokenizer: build/tokenizer
 	build/tokenizer < simple_file.c
 
-build/genrtd_src/tokenizer.c: src/tokenizer.l | build/genrtd_src
+parser_counterexamples: src/parser.y
+	bison -Wall -fsyntax-only -Wcounterexamples $<
+
+parser_graph: parser_graph.png
+
+parser_graph.png: src/parser.y
+	# Doesn't generate picture with -fsyntax-only.
+	bison -Wall --graph=$@.dot -o $@.c $< || rm $@.c
+	dot -o $@ $@.dot || rm $@.dot
+	rm $@.dot
+
+clean:
+	rm -r build parser_graph*
+
+.PHONY: all clean present parser_counterexamples parser_graph tokenizer_tests
+
+build/genrtd_src/%.c: src/%.l | build/genrtd_src
 	flex -o $@ $<
 
-build/objects/tokenizer.obj: build/genrtd_src/tokenizer.c | build/objects
+build/genrtd_src/%.c: src/%.y | build/genrtd_src
+	# bison -Wall -Werror -o $@ $<
+	bison -Wall -o $@ $<
+
+build/objects/%.obj: build/genrtd_src/%.c | build/objects
 	gcc -c $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
 build/objects/%.obj: src/%.c | build/objects
@@ -25,6 +47,9 @@ build/tokenizer: build/objects/tokenizer.obj build/objects/tokenizer_main.obj # 
 	gcc -o $@ $^
 
 build/tokenizer.dbg: build/objects/tokenizer.obj build/objects/tokenizer_main.dbg.obj # build/tokenizer$(EXECUTABLE_OS_EXTENSION}
+	gcc -o $@ $^
+	
+build/parser: build/objects/tokenizer.obj build/objects/parser.obj
 	gcc -o $@ $^
 
 build:
