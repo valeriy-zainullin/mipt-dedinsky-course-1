@@ -1,4 +1,4 @@
-CFLAGS = -Wall -pedantic -Wextra -Wshadow -Wconversion -Warray-bounds -Werror -std=c11
+CFLAGS = -Wall -pedantic -Wextra -Wshadow -Wconversion -Warray-bounds -Wimplicit-fallthrough=5 -Werror -std=c11 -Iinclude
 CFLAGS_REL = -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0
 CFLAGS_DBG = -g -O0 -DRELEASE_BUILD=0 -DDEBUG_BUILD=1
 

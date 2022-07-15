@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 // Source of the syntax: https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf, C99.
@@ -12,6 +13,8 @@
 // There is a second syntax used in tokenizer itself. It's EBNF based on these descriptions.
 // See it in token_stream.c
 // TODO: do such syntax. Start parsing the program. Dump tokens for now to stdout. In text form. Also there will be functionality to dump tokens to stdout or a text file.. Добавить это в план. Чтобы потом было понятно, какие фичи есть.
+
+typedef size_t token_pos;
 
 /*
 token:
@@ -35,10 +38,10 @@ extern const struct token TOKEN_END_OF_PROGRAM;
 // Limit file size. Not more than 1GB.
 typedef uint32_t token_offset;
 
-
+#define MAX_INTEGER_CONSTANT_LEN 80
 struct token {
-	enum token_type type;
-	token_pos token_start;
+	enum token_type token_type;
+	token_pos start_pos;
 	char text[MAX_INTEGER_CONSTANT_LEN + 1]; // All text between token start and end position (including both positions).
 };
 
@@ -52,7 +55,7 @@ keyword: one of
 struct token_keyword {
 	enum token_type token_type;
 	token_offset token_start;
-	enum token_keyword_type {
+	enum token_keyword_name {
 		TOKEN_KEYWORD_AUTO,
 		TOKEN_KEYWORD_BREAK,
 		TOKEN_KEYWORD_CASE,
@@ -90,11 +93,11 @@ struct token_keyword {
 		TOKEN_KEYWORD_UNDERSCORE_BOOL,
 		TOKEN_KEYWORD_UNDERSCORE_COMPLEX,
 		TOKEN_KEYWORD_UNDERSCORE_IMAGINARY
-	} keyword_type;
+	} name;
 };
 
-struct token_keyword* token_keyword_new(enum token_keyword_type keyword_type, char* text);
-struct token_keyword* token_keyword_delete(struct token_keyword* keyword);
+int token_process_keyword(char const* text);
+void token_keyword_init(struct token_keyword* keyword_token, enum token_keyword_name keyword_name, char* text);
 
 /*
 identifier:
@@ -117,11 +120,11 @@ digit: one of
 */
 #define TOKEN_IDENTIFIER_MAX_LEN 1023
 struct token_identifier {
-	enum token_type token_type;
-	token_pos token_start;
-	token_pos token_end;
-	char identifier[TOKEN_IDENTIFIER_MAX_LEN + 1];
+	struct token token;
 };
+
+int token_process_identifier(char const* text);
+void token_identifier_init(struct token_identifier* identifier_token, char const* identifier);
 
 /*
 Paragraph 6.4.2.1, semantics:
@@ -141,15 +144,13 @@ constant:
 // otherwise we won't be able to distinguish them from identifiers at tokenizing stage.
 // Enum members will come as identifiers to the parser.
 struct token_constant {
-	enum token_type token_type;
-	token_pos token_start;
-	token_pos token_end;
+	struct token token;
 	enum {
 		TOKEN_CONSTANT_INTEGER,
 		TOKEN_CONSTANT_FLOATING,
 		TOKEN_CONSTANT_ENUMERATION,
 		TOKEN_CONSTANT_CHARACTER
-	} type;
+	} constant_type;
 };
 
 // For integer and floating constants suffixes are included into the text.
@@ -194,15 +195,14 @@ long-suffix: one of
 long-long-suffix: one of
 	ll LL
 */
-#define MAX_INTEGER_CONSTANT_LEN 127
 struct token_integer_constant {
-	struct token_constant constant_general;
-	enum {
-		TOKEN_DECIMAL_CONSTANT,
-		TOKEN_OCTAL_CONSTANT,
-		TOKEN_HEXADECIMAL_CONSTANT
-	} type;
-	enum {
+	struct token_constant constant;
+	enum token_integer_constant_base {
+		TOKEN_INTEGER_CONSTANT_DECIMAL_BASE,
+		TOKEN_INTEGER_CONSTANT_OCTAL_BASE,
+		TOKEN_INTEGER_CONSTANT_HEXADECIMAL_BASE
+	} base;
+	enum token_integer_constant_suffix {
 		TOKEN_INTEGER_CONSTANT_UNS_SUFFIX,
 		TOKEN_INTEGER_CONSTANT_UNSLONG_SUFFIX,
 		TOKEN_INTEGER_CONSTANT_UNSLONGLONG_SUFFIX,
@@ -212,8 +212,11 @@ struct token_integer_constant {
 
 		TOKEN_INTEGER_CONSTANT_LONGLONG_SUFFIX,
 		TOKEN_INTEGER_CONSTANT_LONGLONGUNS_SUFFIX,
-	} suffix_type;
+	} suffix;
 };
+
+int token_process_integer_constant(enum token_integer_constant_base base, char const* text);
+void token_integer_constant_init(struct token_integer_constant* integer_constant_token, enum token_integer_constant_base base, enum token_integer_constant_suffix suffix, char const* text);
 
 /*
 floating-constant:
@@ -257,13 +260,21 @@ floating-suffix: one of
 	f l F L
 */
 struct token_floating_constant {
-	struct token_constant constant_general;
-	enum {
-		TOKEN_DECIMAL_FLOATING_CONSTANT,
-		TOKEN_HEXADECIMAL_FLOATING_CONSTANT
-	} type;
+	struct token_constant constant;
+	enum token_floating_constant_base {
+		TOKEN_FLOATING_CONSTANT_DECIMAL_BASE,
+		TOKEN_FLOATING_CONSTANT_HEXADECIMAL_BASE
+	} base;
+	enum token_floating_constant_suffix {
+		TOKEN_FLOATING_CONSTANT_FLOAT_SUFFIX,
+		TOKEN_FLOATING_CONSTANT_LONG_SUFFIX
+	} suffix;
 	// TODO: more fields if and when needed.
 };
+
+int token_process_floating_constant(enum token_floating_constant_base base, char const* text);
+void token_floating_constant_init(struct token_floating_constant* floating_constant_token, enum token_floating_constant_base base, enum token_floating_constant_suffix suffix, char* text);
+
 
 /*
 character-constant:
@@ -301,12 +312,16 @@ hexadecimal-escape-sequence:
 // initialize int. So that's the way to limit their length. Say, their length is 15 chars max, so
 // they fit into the text member of token, fine.
 struct token_character_constant {
-	struct token_constant constant_general;
-	enum {
-		TOKEN_NORMAL_CHAR_CONSTANT,
-		TOKEN_WIDE_CHAR_CONSTANT
-	};
+	struct token_constant constant;
+	enum token_character_constant_prefix {
+		TOKEN_CHARACTER_CONSTANT_NO_PREFIX,          // Normal character constant
+		TOKEN_CHARACTER_CONSTANT_WIDE_CHAR_PREFIX    // Wide-character constant
+	} prefix;
 };
+
+int token_process_character_constant(char const* text);
+void token_character_constant_init(struct token_character_constant* character_constant_token, enum token_character_constant_prefix prefix, char* text);
+
 
 /*
 string-literal:
@@ -327,12 +342,15 @@ s-char:
 // source files with UTF-16 char constants and string literals are not supported (maybe, for
 // now).
 struct token_string_literal {
-	struct token_constant constant_general;
-	enum {
-		TOKEN_NORMAL_STRING_LITERAL,
-		TOKEN_WIDE_STRING_LITERAL
-	};
+	struct token_constant constant;
+	enum token_string_literal_prefix {
+		TOKEN_STRING_LITERAL_NO_PREFIX,           // Normal string literal
+		TOKEN_STRING_LITERAL_WIDE_CHAR_PREFIX     // Wide-char string literal
+	} type;
 };
+
+int token_process_string_literal(char const* text);
+void token_string_literal_init(struct token_string_literal* string_literal_token, enum token_string_literal_prefix prefix, char* text);
 
 /*
 punctuator: one of
@@ -345,5 +363,10 @@ punctuator: one of
 	<: :> <% %> %: %:%:
 */
 struct token_punctuator {
-	struct token_constant constant_general;
+	struct token_constant constant;
 };
+
+int token_process_punctuator(char const* text);
+void token_punctuator_init(struct token_punctuator* punctuator_token, char* text);
+
+int token_process_invalid_token(char const* text);

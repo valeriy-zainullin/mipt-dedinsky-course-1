@@ -1,4 +1,6 @@
-/* Source of the syntax: https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf, C99. */
+/* Source of the syntax: https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf, page 61, part 6.4, C99. */
+
+/* TODO: if comments are stripped by preprocessor, move comments to preprocessor. */
 
 /*
 Token syntax in the standard is not a recursive descend grammar. That syntax could be converted to an NFA.
@@ -50,6 +52,10 @@ information about it, of course. Bison is quickier to do and easier to modify th
 /* Track line numbers as well.*/
 %option yylineno 
 
+%{
+	#include "token.h"
+%}
+
 /*
 token:
 	keyword
@@ -93,7 +99,7 @@ digit: one of
 */
 nondigit   [_a-zA-Z]
 digit      [0-9]
-identifier {nondigit}({nondigit}|{digit})* 
+identifier {nondigit}({nondigit}|{digit})*
 
 /*
 constant:
@@ -342,23 +348,23 @@ Paragraph 6.4.2.1, semantics:
 "//".*                           { /* ignored */ }
 "/*"([^*]|[*][^/])*"*/"          { /* ignored */ }
 
-{keyword}                        { printf("keyword: %s\n", yytext); }
+{keyword}                        { return token_process_keyword(yytext); }
 
-{identifier}                     { printf("identifier: %s\n", yytext); }
+{identifier}                     { return token_process_identifier(yytext); }
 
-{decimal_constant}               { printf("integer_constant: decimal_constant, %s\n", yytext); }
-{octal_constant}                 { printf("integer_constant: octal_constant, %s\n", yytext); }
-{hexadecimal_constant}           { printf("integer_constant: hexadecimal_constant, %s\n", yytext); }
+{decimal_constant}               { return token_process_integer_constant(TOKEN_INTEGER_CONSTANT_DECIMAL_BASE, yytext); }
+{octal_constant}                 { return token_process_integer_constant(TOKEN_INTEGER_CONSTANT_OCTAL_BASE, yytext); }
+{hexadecimal_constant}           { return token_process_integer_constant(TOKEN_INTEGER_CONSTANT_HEXADECIMAL_BASE, yytext); }
 
-{decimal_floating_constant}      { printf("floating_constant: decimal_floating_constant, %s\n", yytext); }
-{hexadecimal_floating_constant}  { printf("floating_constant: hexadecimal_floating_constant, %s\n", yytext); }
+{decimal_floating_constant}      { return token_process_floating_constant(TOKEN_FLOATING_CONSTANT_DECIMAL_BASE, yytext); }
+{hexadecimal_floating_constant}  { return token_process_floating_constant(TOKEN_FLOATING_CONSTANT_HEXADECIMAL_BASE, yytext); }
 
-{character_constant}             { printf("character_constant: %s\n", yytext); }
-{string_literal}                 { printf("string_literal: %s\n", yytext); }
+{character_constant}             { return token_process_character_constant(yytext); }
+{string_literal}                 { return token_process_string_literal(yytext); }
 
-{punctuator}                     { printf("punctuator: %s\n", yytext); }
+{punctuator}                     { return token_process_punctuator(yytext); }
 
-.                                { /* process_unknown_token(yytext); */ printf("*yytext = %c\n", *yytext); /* Trigger an error. Unknown token. But not with an exit, it's just a temporary solution. */ printf("Unknown token.\n"); exit(1); }
+.                                { return token_process_invalid_token(yytext); }
 %%
 
 // #define MAX_INTEGER_CONSTANT_LEN 127
