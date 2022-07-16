@@ -24,26 +24,34 @@ void yyerror (char const * string) {
 
 %token identifier constant string_literal
 
+/*
+TODO: standard reference here.
+	[ ] ( ) { } . ->
+	++ -- & * + - ~ !
+	/ % << >> < > <= >= == != ^ | && ||
+	? : ; ...
+	= *= /= %= += -= <<= >>= &= ^= |=
+	, # ##
+	<: :> <% %> %: %:%:
+*/
 %token punctuator_left_square_bracket punctuator_right_square_bracket
 %token punctuator_left_parenthesis punctuator_right_parenthesis
 %token punctuator_left_brace punctuator_right_brace
 %token punctuator_dot punctuator_arrow punctuator_increment punctuator_decrement punctuator_and
-%token punctuator_plus punctuator_minus punctuator_tilde punctuator_exclamation_mark punctuator_slash
-%token punctuator_percent punctuator_shift_left punctuator_shift_right
-%token punctuator_less_sign punctuator_greater_sign punctuator_less_equal_sign punctuator_greater_equal_sign
-%token punctuator_double_equal_sign punctuator_not_equal_sign
-%token punctuator_circumflex punctuator_or punctuator_double_and punctuator_double_or
+%token punctuator_star punctuator_plus punctuator_minus punctuator_tilde punctuator_exclamation_mark
+%token punctuator_slash punctuator_percent punctuator_shift_left punctuator_shift_right
+%token punctuator_less punctuator_greater punctuator_less_equal punctuator_greater_equal
+%token punctuator_equal_equal punctuator_not_equal
+%token punctuator_circumflex punctuator_or punctuator_and_and punctuator_or_or
 %token punctuator_question_mark punctuator_colon punctuator_semicolon punctuator_ellipsis
-%token punctuator_equal_sign punctuator_star_equal punctuator_slash_equal punctuator_percent_equal
+%token punctuator_equal punctuator_star_equal punctuator_slash_equal punctuator_percent_equal
 %token punctuator_plus_equal punctuator_minus_equal punctuator_shift_left_equal punctuator_shift_right_equal
 %token punctuator_and_equal punctuator_circumflex_equal punctuator_or_equal
-%token punctuator_comma punctuator_sharp punctuator_hash_sign punctuator_double_hash_sign
+%token punctuator_comma punctuator_hash punctuator_hash_hash
 %token punctuator_less_colon punctuator_colon_greater punctuator_less_percent punctuator_percent_greater
 %token punctuator_percent_colon punctuator_percent_colon_percent_colon
 
-// %start translation_unit
-// %start function_definition
-%start type_specifier
+%start translation_unit
 
 %type translation_unit
 %%
@@ -52,15 +60,6 @@ identifier_opt:
   %empty
 | identifier
 ;
-
-	[ ] ( ) { } . ->
-	++ -- & * + - ~ !
-	/ % << >> < > <= >= == != ^ | && ||
-	? : ; ...
-	= *= /= %= += -= <<= >>= &= ^= |=
-	, # ##
-	<: :> <% %> %: %:%:
-
 
 /*
 (6.5.1) primary-expression:
@@ -94,10 +93,10 @@ postfix_expression:
 | postfix_expression punctuator_left_parenthesis argument_expression_list_opt punctuator_right_parenthesis
 | postfix_expression punctuator_dot identifier
 | postfix_expression punctuator_arrow identifier
-| postfix_expression increment
-| postfix_expression decrement
-| punctuator_left_parenthesis type_name punctuator_right_parenthesis left_brace initializer_list punctuator_right_brace
-| punctuator_left_parenthesis type_name punctuator_right_parenthesis left_brace initializer_list punctuator_comma punctuator_right_brace
+| postfix_expression punctuator_increment
+| postfix_expression punctuator_decrement
+| punctuator_left_parenthesis type_name punctuator_right_parenthesis punctuator_left_brace initializer_list punctuator_right_brace
+| punctuator_left_parenthesis type_name punctuator_right_parenthesis punctuator_left_brace initializer_list punctuator_comma punctuator_right_brace
 ;
 
 /*
@@ -184,8 +183,8 @@ additive_expression:
 */
 shift_expression:
   additive_expression
-| shift_expression "<<" additive_expression
-| shift_expression ">>" additive_expression
+| shift_expression punctuator_shift_left additive_expression
+| shift_expression punctuator_shift_right additive_expression
 ;
 
 /*
@@ -198,10 +197,10 @@ shift_expression:
 */
 relational_expression:
   shift_expression
-| relational_expression '<' shift_expression
-| relational_expression '>' shift_expression
-| relational_expression "<=" shift_expression
-| relational_expression ">=" shift_expression
+| relational_expression punctuator_less shift_expression
+| relational_expression punctuator_greater shift_expression
+| relational_expression punctuator_less_equal shift_expression
+| relational_expression punctuator_greater_equal shift_expression
 ;
 
 /*
@@ -212,8 +211,8 @@ relational_expression:
 */
 equality_expression:
   relational_expression
-| equality_expression "==" relational_expression
-| equality_expression "!=" relational_expression
+| equality_expression punctuator_equal_equal relational_expression
+| equality_expression punctuator_not_equal relational_expression
 ;
 
 /*
@@ -253,7 +252,7 @@ inclusive_OR_expression:
 */
 logical_AND_expression:
   inclusive_OR_expression
-| logical_AND_expression "&&" inclusive_OR_expression
+| logical_AND_expression punctuator_and_and inclusive_OR_expression
 ;
 
 /*
@@ -263,7 +262,7 @@ logical_AND_expression:
 */
 logical_OR_expression:
   logical_AND_expression
-| logical_OR_expression "||" logical_AND_expression
+| logical_OR_expression punctuator_or_or logical_AND_expression
 ;
 
 /*
@@ -273,7 +272,7 @@ logical_OR_expression:
 */
 conditional_expression:
   logical_OR_expression
-| logical_OR_expression '?' expression ':' conditional_expression
+| logical_OR_expression punctuator_question_mark expression punctuator_colon conditional_expression
 ;
 
 /*
@@ -296,10 +295,10 @@ assignment_expression_opt:
 	= *= /= %= += -= <<= >>= &= ^= |=
 */
 assignment_operator:
-  '='
-| "*="
-| "/="
-| "%="
+  punctuator_equal
+| punctuator_star_equal
+| punctuator_slash_equal
+| punctuator_percent_equal
 | "+="
 | "-="
 | "<<="
@@ -607,8 +606,8 @@ direct_declarator:
 	* type-qualifier-list_opt pointer
 */
 pointer:
-  '*' type_qualifier_list_opt
-| '*' type_qualifier_list_opt pointer;
+  punctuator_star type_qualifier_list_opt
+| punctuator_star type_qualifier_list_opt pointer;
 pointer_opt:
   %empty
 | pointer
@@ -636,7 +635,7 @@ type_qualifier_list_opt:
 */
 parameter_type_list:
   parameter_list
-| parameter_list punctuator_comma "..."
+| parameter_list punctuator_comma punctuator_ellipsis
 ;
 
 parameter_type_list_opt:
@@ -1013,54 +1012,54 @@ int token_process_string_literal(char const* text) {
 	return string_literal;
 }
 
-int token_process_punctuator_left_square_bracket()         { return punctuator_left_square_bracket; }
-int token_process_punctuator_right_square_bracket()        { return punctuator_right_square_bracket; }
-int token_process_punctuator_left_parenthesis()            { return punctuator_left_parenthesis; }
-int token_process_punctuator_right_parenthesis()           { return punctuator_right_parenthesis; }
-int token_process_punctuator_left_brace()                  { return punctuator_left_brace; }
-int token_process_punctuator_right_brace()                 { return punctuator_right_brace; }
-int token_process_punctuator_dot()                         { return punctuator_dot; }
-int token_process_punctuator_arrow()                       { return punctuator_arrow; }
-int token_process_punctuator_increment()                   { return punctuator_increment; }
-int token_process_punctuator_decrement()                   { return punctuator_decrement; }
-int token_process_punctuator_and()                         { return punctuator_and; }
-int token_process_punctuator_plus()                        { return punctuator_plus; }
-int token_process_punctuator_minus()                       { return punctuator_minus; }
-int token_process_punctuator_tilde()                       { return punctuator_tilde; }
-int token_process_punctuator_exclamation_mark()            { return punctuator_exclamation_mark; }
-int token_process_punctuator_slash()                       { return punctuator_slash;   }
-int token_process_punctuator_percent()                     { return punctuator_percent; }
-int token_process_punctuator_shift_left()                  { return punctuator_shift_left; }
-int token_process_punctuator_shift_right()                 { return punctuator_shift_right; }
-int token_process_punctuator_less_sign()                   { return punctuator_less_sign; }
-int token_process_punctuator_greater_sign()                { return punctuator_greater_sign; }
-int token_process_punctuator_less_equal_sign()             { return punctuator_less_equal_sign; }
-int token_process_punctuator_greater_equal_sign()          { return punctuator_greater_equal_sign; }
-int token_process_punctuator_double_equal_sign()           { return punctuator_double_equal_sign; }
-int token_process_punctuator_not_equal_sign()              { return punctuator_not_equal_sign; }
-int token_process_punctuator_circumflex()                  { return punctuator_circumflex; }
-int token_process_punctuator_or()                          { return punctuator_or; }
-int token_process_punctuator_double_and()                  { return punctuator_double_and; }
-int token_process_punctuator_double_or()                   { return punctuator_double_or; }
-int token_process_punctuator_question_mark()               { return punctuator_question_mark; }
-int token_process_punctuator_colon()                       { return punctuator_colon; }
-int token_process_punctuator_semicolon()                   { return punctuator_semicolon; }
-int token_process_punctuator_ellipsis()                    { return punctuator_ellipsis; }
-int token_process_punctuator_equal_sign()                  { return punctuator_equal_sign; }
-int token_process_punctuator_star_equal()                  { return punctuator_star_equal; }
-int token_process_punctuator_slash_equal()                 { return punctuator_slash_equal; }
-int token_process_punctuator_percent_equal()               { return punctuator_percent_equal; }
-int token_process_punctuator_plus_equal()                  { return punctuator_plus_equal; }
-int token_process_punctuator_minus_equal()                 { return punctuator_minus_equal; }
-int token_process_punctuator_shift_left_equal()            { return punctuator_shift_left_equal; }
-int token_process_punctuator_shift_right_equal()           { return punctuator_shift_right_equal; }
+int token_process_punctuator_left_square_bracket()         { return punctuator_left_square_bracket;         }
+int token_process_punctuator_right_square_bracket()        { return punctuator_right_square_bracket;        }
+int token_process_punctuator_left_parenthesis()            { return punctuator_left_parenthesis;            }
+int token_process_punctuator_right_parenthesis()           { return punctuator_right_parenthesis;           }
+int token_process_punctuator_left_brace()                  { return punctuator_left_brace;                  }
+int token_process_punctuator_right_brace()                 { return punctuator_right_brace;                 }
+int token_process_punctuator_dot()                         { return punctuator_dot;                         }
+int token_process_punctuator_arrow()                       { return punctuator_arrow;                       }
+int token_process_punctuator_increment()                   { return punctuator_increment;                   }
+int token_process_punctuator_decrement()                   { return punctuator_decrement;                   }
+int token_process_punctuator_and()                         { return punctuator_and;                         }
+int token_process_punctuator_star()                        { return punctuator_star;                        }
+int token_process_punctuator_plus()                        { return punctuator_plus;                        }
+int token_process_punctuator_minus()                       { return punctuator_minus;                       }
+int token_process_punctuator_tilde()                       { return punctuator_tilde;                       }
+int token_process_punctuator_exclamation_mark()            { return punctuator_exclamation_mark;            }
+int token_process_punctuator_slash()                       { return punctuator_slash;                       }
+int token_process_punctuator_percent()                     { return punctuator_percent;                     }
+int token_process_punctuator_shift_left()                  { return punctuator_shift_left;                  }
+int token_process_punctuator_shift_right()                 { return punctuator_shift_right;                 }
+int token_process_punctuator_less()                        { return punctuator_less;                        }
+int token_process_punctuator_greater()                     { return punctuator_greater;                     }
+int token_process_punctuator_less_equal()                  { return punctuator_less_equal;                  }
+int token_process_punctuator_greater_equal()               { return punctuator_greater_equal;               }
+int token_process_punctuator_equal_equal()                 { return punctuator_equal_equal;                 }
+int token_process_punctuator_not_equal()                   { return punctuator_not_equal;                   }
+int token_process_punctuator_circumflex()                  { return punctuator_circumflex;                  }
+int token_process_punctuator_or()                          { return punctuator_or;                          }
+int token_process_punctuator_and_and()                     { return punctuator_and_and;                     }
+int token_process_punctuator_or_or()                       { return punctuator_or_or;                       }
+int token_process_punctuator_question_mark()               { return punctuator_question_mark;               }
+int token_process_punctuator_colon()                       { return punctuator_colon;                       }
+int token_process_punctuator_semicolon()                   { return punctuator_semicolon;                   }
+int token_process_punctuator_ellipsis()                    { return punctuator_ellipsis;                    }
+int token_process_punctuator_equal()                       { return punctuator_equal;                       }
+int token_process_punctuator_star_equal()                  { return punctuator_star_equal;                  }
+int token_process_punctuator_slash_equal()                 { return punctuator_slash_equal;                 }
+int token_process_punctuator_percent_equal()               { return punctuator_percent_equal;               }
+int token_process_punctuator_plus_equal()                  { return punctuator_plus_equal;                  }
+int token_process_punctuator_minus_equal()                 { return punctuator_minus_equal;                 }
+int token_process_punctuator_shift_left_equal()            { return punctuator_shift_left_equal;            }
+int token_process_punctuator_shift_right_equal()           { return punctuator_shift_right_equal;           }
 int token_process_punctuator_and_equal()                   { return punctuator_and_equal;                   }
 int token_process_punctuator_circumflex_equal()            { return punctuator_circumflex_equal;            }
 int token_process_punctuator_or_equal()                    { return punctuator_or_equal;                    }
 int token_process_punctuator_comma()                       { return punctuator_comma;                       }
-int token_process_punctuator_sharp()                       { return punctuator_sharp;                       }
-int token_process_punctuator_hash_sign()                   { return punctuator_hash_sign;                   }
-int token_process_punctuator_double_hash_sign()            { return punctuator_double_hash_sign;            }
+int token_process_punctuator_hash()                        { return punctuator_hash;                        }
+int token_process_punctuator_hash_hash()                   { return punctuator_hash_hash;                   }
 int token_process_punctuator_less_colon()                  { return punctuator_less_colon;                  }
 int token_process_punctuator_colon_greater()               { return punctuator_colon_greater;               }
 int token_process_punctuator_less_percent()                { return punctuator_less_percent;                }
