@@ -75,7 +75,44 @@ keyword: one of
 	signed sizeof static struct switch typedef union unsigned
 	void volatile while _Bool _Complex _Imaginary
 */
-keyword (auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|_Bool|_Complex|_Imaginary)
+/* OLD. keyword (auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|_Bool|_Complex|_Imaginary) */
+keyword_auto       auto
+keyword_break      break
+keyword_case       case
+keyword_char       char
+keyword_const      const
+keyword_continue   continue
+keyword_default    default
+keyword_do         do
+keyword_double     double
+keyword_else       else
+keyword_enum       enum
+keyword_extern     extern
+keyword_float      float
+keyword_for        for
+keyword_goto       goto
+keyword_if         if
+keyword_inline     inline
+keyword_int        int
+keyword_long       long
+keyword_register   register
+keyword_restrict   restrict
+keyword_return     return
+keyword_short      short
+keyword_signed     signed
+keyword_sizeof     sizeof
+keyword_static     static
+keyword_struct     struct
+keyword_switch     switch
+keyword_typedef    typedef
+keyword_union      union
+keyword_unsigned   unsigned
+keyword_void       void
+keyword_volatile   volatile
+keyword_while      while
+keyword__Bool      _Bool
+keyword__Complex   _Complex
+keyword__Imaginary _Imaginary
 
 /*
 
@@ -341,6 +378,8 @@ Paragraph 6.4.2.1, semantics:
      is converted to a keyword.
 */
 
+/* {keyword}                        { return token_process_keyword(yytext); } */
+
 %%
 {blank}
 \n
@@ -348,7 +387,43 @@ Paragraph 6.4.2.1, semantics:
 "//".*                           { /* ignored */ }
 "/*"([^*]|[*][^/])*"*/"          { /* ignored */ }
 
-{keyword}                        { return token_process_keyword(yytext); }
+{keyword_auto}                   { return token_process_keyword_auto();       }
+{keyword_break}                  { return token_process_keyword_break();      }
+{keyword_case}                   { return token_process_keyword_case();       }
+{keyword_char}                   { return token_process_keyword_char();       }
+{keyword_const}                  { return token_process_keyword_const();      }
+{keyword_continue}               { return token_process_keyword_continue();   }
+{keyword_default}                { return token_process_keyword_default();    }
+{keyword_do}                     { return token_process_keyword_do();         }
+{keyword_double}                 { return token_process_keyword_double();     }
+{keyword_else}                   { return token_process_keyword_else();       }
+{keyword_enum}                   { return token_process_keyword_enum();       }
+{keyword_extern}                 { return token_process_keyword_extern();     }
+{keyword_float}                  { return token_process_keyword_float();      }
+{keyword_for}                    { return token_process_keyword_for();        }
+{keyword_goto}                   { return token_process_keyword_goto();       }
+{keyword_if}                     { return token_process_keyword_if();         }
+{keyword_inline}                 { return token_process_keyword_inline();     }
+{keyword_int}                    { return token_process_keyword_int();        }
+{keyword_long}                   { return token_process_keyword_long();       }
+{keyword_register}               { return token_process_keyword_register();   }
+{keyword_restrict}               { return token_process_keyword_restrict();   }
+{keyword_return}                 { return token_process_keyword_return();     }
+{keyword_short}                  { return token_process_keyword_short();      }
+{keyword_signed}                 { return token_process_keyword_signed();     }
+{keyword_sizeof}                 { return token_process_keyword_sizeof();     }
+{keyword_static}                 { return token_process_keyword_static();     }
+{keyword_struct}                 { return token_process_keyword_struct();     }
+{keyword_switch}                 { return token_process_keyword_switch();     }
+{keyword_typedef}                { return token_process_keyword_typedef();    }
+{keyword_union}                  { return token_process_keyword_union();      }
+{keyword_unsigned}               { return token_process_keyword_unsigned();   }
+{keyword_void}                   { return token_process_keyword_void();       }
+{keyword_volatile}               { return token_process_keyword_volatile();   }
+{keyword_while}                  { return token_process_keyword_while();      }
+{keyword__Bool}                  { return token_process_keyword__Bool();      }
+{keyword__Complex}               { return token_process_keyword__Complex();   }
+{keyword__Imaginary}             { return token_process_keyword__Imaginary(); }
 
 {identifier}                     { return token_process_identifier(yytext); }
 

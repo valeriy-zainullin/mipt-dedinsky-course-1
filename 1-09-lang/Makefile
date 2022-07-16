@@ -1,12 +1,13 @@
 CFLAGS = -Wall -pedantic -Wextra -Wshadow -Wconversion -Warray-bounds -Wimplicit-fallthrough=5 -Werror -std=c11 -Iinclude
 CFLAGS_REL = -O2 -DNDEBUG -DRELEASE_BUILD=1 -DDEBUG_BUILD=0
-CFLAGS_DBG = -g -O0 -DRELEASE_BUILD=0 -DDEBUG_BUILD=1
+CFLAGS_DBG = -g -O0 -DRELEASE_BUILD=0 -DDEBUG_BUILD=1 -DYYDEBUG=1
 
 # TODO: make target specific directories inside build. Build for target upon a request, by default use host target.
 
 all: present
 
-present: build/parser
+present: build/parser.dbg
+	build/parser.dbg < samples/1-simple_main.c
 	
 test_tokenizer: build/tokenizer
 	build/tokenizer < simple_file.c
@@ -37,6 +38,9 @@ build/genrtd_src/%.c: src/%.y | build/genrtd_src
 build/objects/%.obj: build/genrtd_src/%.c | build/objects
 	gcc -c $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
+build/objects/%.dbg.obj: build/genrtd_src/%.c | build/objects
+	gcc -c $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
+	
 build/objects/%.obj: src/%.c | build/objects
 	gcc -c $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
@@ -49,7 +53,10 @@ build/tokenizer: build/objects/tokenizer.obj build/objects/tokenizer_main.obj # 
 build/tokenizer.dbg: build/objects/tokenizer.obj build/objects/tokenizer_main.dbg.obj # build/tokenizer$(EXECUTABLE_OS_EXTENSION}
 	gcc -o $@ $^
 	
-build/parser: build/objects/tokenizer.obj build/objects/parser.obj
+build/parser: build/objects/tokenizer.obj build/objects/parser.obj build/objects/parser_main.obj
+	gcc -o $@ $^
+
+build/parser.dbg: build/objects/tokenizer.dbg.obj build/objects/parser.dbg.obj build/objects/parser_main.dbg.obj
 	gcc -o $@ $^
 
 build:

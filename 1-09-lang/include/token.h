@@ -96,7 +96,44 @@ struct token_keyword {
 	} name;
 };
 
-int token_process_keyword(char const* text);
+//int token_process_keyword(char const* text);
+int token_process_keyword_auto();
+int token_process_keyword_break();
+int token_process_keyword_case();
+int token_process_keyword_char();
+int token_process_keyword_const();
+int token_process_keyword_continue();
+int token_process_keyword_default();
+int token_process_keyword_do();
+int token_process_keyword_double();
+int token_process_keyword_else();
+int token_process_keyword_enum();
+int token_process_keyword_extern();
+int token_process_keyword_float();
+int token_process_keyword_for();
+int token_process_keyword_goto();
+int token_process_keyword_if();
+int token_process_keyword_inline();
+int token_process_keyword_int();
+int token_process_keyword_long();
+int token_process_keyword_register();
+int token_process_keyword_restrict();
+int token_process_keyword_return();
+int token_process_keyword_short();
+int token_process_keyword_signed();
+int token_process_keyword_sizeof();
+int token_process_keyword_static();
+int token_process_keyword_struct();
+int token_process_keyword_switch();
+int token_process_keyword_typedef();
+int token_process_keyword_union();
+int token_process_keyword_unsigned();
+int token_process_keyword_void();
+int token_process_keyword_volatile();
+int token_process_keyword_while();
+int token_process_keyword__Bool();
+int token_process_keyword__Complex();
+int token_process_keyword__Imaginary();
 void token_keyword_init(struct token_keyword* keyword_token, enum token_keyword_name keyword_name, char* text);
 
 /*
