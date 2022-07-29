@@ -2,27 +2,58 @@
 
 // TODO: read about bison algorithm.
 
+%define parse.error verbose
+
+// TODO: figure out if this grammar is LR(1), maybe fix conflicts then, if LR(2), generating GLR parser is fine, no much overhead.
+// https://stackoverflow.com/a/70601680
+%glr-parser
+
+%locations
+
 %{
-#include "token.h"
+#include "ast.h"
+#include "tokenizer.h"
+
+#include "vector.h"
 
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 
 int yylex();
-void yyerror (char const * string) {
+// void yyerror(struct ast_translation_unit_node** translation_unit, char const * string) {
+void yyerror(struct ast_code_block_node** code_block_node, char const * string) {
+	// (void) translation_unit;
+	(void) code_block_node;
+	
 	fprintf(stderr, "%s\n", string);
 }
 %}
 
+// Use token table. Otherwise there's too many keywords and punctuators, code gets noticebly messier.
+// We would have to provide separate functions for every keyword and punctuator, have many rules in the
+// tokenizer, list every keyword and punctuator as separate rules in the rule section there. One repetition.
+// Then function definitions in the standalone tokenizer, which just prints the tokens out to stdout. Not
+// needed to figure out what particular keyword it is, also a repetition.
+// And we would have to have them here, a lot more functions. Could make a macro, but token table and having
+// general functions for keywords and punctuators are just better approach. No repetitons, only listed in
+// table once and as tokens here, which we would have to do anyways if we would make separate functions for
+// every keyword. We would have to declare those functions for handling keywords and punctuators in the
+// "tokenizer.h", but then it's just too much work for every keyword and punctuator to have a function, they
+// possibly declare it. It provokes to make a macro etc.
+// %token-table
+// Two links about token tables. yytoknum got removed, so yytname is not helpful. Define token list ourselves.
+// 1. https://stackoverflow.com/a/43107075
+// 2. https://dev.gnupg.org/T5616
+
+
+/* TODO: keyword syntax here. */
 %token keyword_auto keyword_break keyword_case keyword_char keyword_const keyword_continue keyword_default
 %token keyword_do keyword_double keyword_else keyword_enum keyword_extern keyword_float keyword_for
 %token keyword_goto keyword_if keyword_inline keyword_int keyword_long keyword_register keyword_restrict
 %token keyword_return keyword_short keyword_signed keyword_sizeof keyword_static keyword_struct
 %token keyword_switch keyword_typedef keyword_union keyword_unsigned keyword_void keyword_volatile
 %token keyword_while keyword__Bool keyword__Complex keyword__Imaginary
-
-%token identifier constant string_literal
 
 /*
 TODO: standard reference here.
@@ -51,9 +82,28 @@ TODO: standard reference here.
 %token punctuator_less_colon punctuator_colon_greater punctuator_less_percent punctuator_percent_greater
 %token punctuator_percent_colon punctuator_percent_colon_percent_colon
 
-%start translation_unit
+%token identifier constant string_literal
 
-%type translation_unit
+// %start translation_unit
+%start block_item_list
+
+// %parse-param { struct ast_translation_unit_node** output }
+%parse-param { struct ast_code_block_node** output }
+
+%union {
+	struct ast_translation_unit_node* translation_unit;
+	struct ast_external_decl_node*    external_decl;
+	struct ast_code_block_node*       code_block;
+}
+
+%type<translation_unit> translation_unit
+%type<external_decl> external_declaration
+%type<code_block> block_item_list
+
+//%destructor { *output = $$; } <translation_unit>
+// %destructor { if ($$ != NULL) { $$ = ast_external_decl_node_delete($$); } } <external_decl>
+%destructor { *output = $$; } <func_code_block>
+
 %%
 
 identifier_opt:
@@ -137,7 +187,7 @@ unary_expression:
 	& * + - ~ !
 */
 unary_operator:
-  punctuator_and | '*' | '+' | '-' | punctuator_tilde | punctuator_exclamation_mark;
+  punctuator_and | punctuator_star | punctuator_plus | punctuator_minus | punctuator_tilde | punctuator_exclamation_mark;
 
 /*
 (6.5.4) cast-expression:
@@ -158,9 +208,9 @@ cast_expression:
 */
 multiplicative_expression:
   cast_expression
-| multiplicative_expression '*' cast_expression
-| multiplicative_expression '/' cast_expression
-| multiplicative_expression '%' cast_expression
+| multiplicative_expression punctuator_star cast_expression
+| multiplicative_expression punctuator_slash cast_expression
+| multiplicative_expression punctuator_percent cast_expression
 ;
 
 /*
@@ -171,8 +221,8 @@ multiplicative_expression:
 */
 additive_expression:
   multiplicative_expression
-| additive_expression '+' multiplicative_expression
-| additive_expression '-' multiplicative_expression
+| additive_expression punctuator_plus multiplicative_expression
+| additive_expression punctuator_minus multiplicative_expression
 ;
 
 /*
@@ -232,7 +282,7 @@ AND_expression:
 */
 exclusive_OR_expression:
   AND_expression
-| exclusive_OR_expression '^' AND_expression
+| exclusive_OR_expression punctuator_circumflex AND_expression
 ;
 
 /*
@@ -242,7 +292,7 @@ exclusive_OR_expression:
 */
 inclusive_OR_expression:
   exclusive_OR_expression
-| inclusive_OR_expression '|' exclusive_OR_expression
+| inclusive_OR_expression punctuator_or exclusive_OR_expression
 ;
 
 /*
@@ -299,13 +349,13 @@ assignment_operator:
 | punctuator_star_equal
 | punctuator_slash_equal
 | punctuator_percent_equal
-| "+="
-| "-="
-| "<<="
-| ">>="
-| "&="
-| "^="
-| "|="
+| punctuator_plus_equal
+| punctuator_minus_equal
+| punctuator_shift_left_equal
+| punctuator_shift_right_equal
+| punctuator_and_equal
+| punctuator_circumflex_equal
+| punctuator_or_equal
 ;
 
 /*
@@ -336,7 +386,7 @@ constant_expression:
 	declaration-specifiers init-declarator-list_opt ;
 */
 declaration:
-  declaration_specifiers init_declarator_list_opt
+  declaration_specifiers init_declarator_list_opt punctuator_semicolon
 ;
 
 /*
@@ -348,10 +398,16 @@ declaration:
 */
 declaration_specifiers:
   storage_class_specifier declaration_specifiers_opt
-| type_specifier declaration_specifiers_opt
+| type_specifier declaration_specifiers_opt {
+      /* if ($2.present == NULL) {
+          
+      } */
+  }
 | type_qualifier declaration_specifiers_opt
 | function_specifier declaration_specifiers_opt
 ;
+/* TODO: storage class specifier can be typedef. I suppose it's invalid for function definitions. Check it on a different compiler, gcc maybe. If it is so, diallow typedef for functions in semantics. */
+/* TODO: also not more than one same storage_class_specifier for a declaration. */
 
 declaration_specifiers_opt:
   %empty
@@ -380,7 +436,7 @@ init_declarator_list_opt:
 */
 init_declarator:
   declarator
-| declarator '=' initializer
+| declarator punctuator_equal initializer
 ;
 
 /*
@@ -412,10 +468,24 @@ storage_class_specifier:
 	unsigned
 	_Bool
 	_Complex
-	struct-or-union-specifier ∗
+	struct-or-union-specifier *
 	enum-specifier
 	typedef-name
 */
+// Looks like this star is not needed. The parser can't read the following:
+/*
+struct simple_struct {
+	int a;
+	int b;
+	int c;
+};
+
+int main() {
+	struct simple_struct instance = {1, 2, 3};
+	return instance.a + instance.b + instance.c;
+}
+*/
+// Dropping it. Maybe it is removed when this standard is transitioned from draft to standard.
 type_specifier:
   keyword_void
 | keyword_char
@@ -428,7 +498,7 @@ type_specifier:
 | keyword_unsigned
 | keyword__Bool
 | keyword__Complex
-| struct_or_union_specifier '*'
+| struct_or_union_specifier
 | enum_specifier
 | typedef_name
 ;
@@ -468,7 +538,7 @@ struct_declaration_list:
 	specifier-qualifier-list struct-declarator-list ;
 */
 struct_declaration:
-  specifier_qualifier_list struct_declarator_list
+  specifier_qualifier_list struct_declarator_list punctuator_semicolon
 ;
 
 /*
@@ -503,7 +573,7 @@ struct_declarator_list:
 */
 struct_declarator:
   declarator
-| declarator_opt ':' constant_expression
+| declarator_opt punctuator_colon constant_expression
 ;
 
 /*
@@ -537,12 +607,12 @@ enumerator_list:
 /*
 enumerator:
   enumeration_constant
-| enumeration_constant '=' constant_expression
+| enumeration_constant punctuator_equal constant_expression
 ;
 */
 enumerator:
   identifier
-| identifier '=' constant_expression
+| identifier punctuator_equal constant_expression
 ;
 
 /*
@@ -562,7 +632,7 @@ type_qualifier:
 	inline
 */
 function_specifier:
-	keyword_inline
+  keyword_inline
 ;
 
 /*
@@ -593,9 +663,9 @@ direct_declarator:
   identifier
 | punctuator_left_parenthesis declarator punctuator_right_parenthesis
 | direct_declarator punctuator_left_square_bracket type_qualifier_list_opt assignment_expression_opt punctuator_right_square_bracket
-| direct_declarator punctuator_left_square_bracket "static" type_qualifier_list_opt assignment_expression punctuator_right_square_bracket
-| direct_declarator punctuator_left_square_bracket type_qualifier_list "static" assignment_expression punctuator_right_square_bracket
-| direct_declarator punctuator_left_square_bracket type_qualifier_list_opt '*' punctuator_right_square_bracket
+| direct_declarator punctuator_left_square_bracket keyword_static type_qualifier_list_opt assignment_expression punctuator_right_square_bracket
+| direct_declarator punctuator_left_square_bracket type_qualifier_list keyword_static assignment_expression punctuator_right_square_bracket
+| direct_declarator punctuator_left_square_bracket type_qualifier_list_opt punctuator_star punctuator_right_square_bracket
 | direct_declarator punctuator_left_parenthesis parameter_type_list punctuator_right_parenthesis
 | direct_declarator punctuator_left_parenthesis identifier_list_opt punctuator_right_parenthesis
 ;
@@ -713,9 +783,9 @@ abstract_declarator_opt:
 direct_abstract_declarator:
   punctuator_left_parenthesis abstract_declarator punctuator_right_parenthesis
 | direct_abstract_declarator_opt punctuator_left_square_bracket type_qualifier_list_opt
-| direct_abstract_declarator_opt punctuator_left_square_bracket "static" type_qualifier_list_opt assignment_expression punctuator_right_square_bracket
-| direct_abstract_declarator_opt punctuator_left_square_bracket type_qualifier_list "static" assignment_expression punctuator_right_square_bracket
-| direct_abstract_declarator_opt punctuator_left_square_bracket '*' punctuator_right_square_bracket
+| direct_abstract_declarator_opt punctuator_left_square_bracket keyword_static type_qualifier_list_opt assignment_expression punctuator_right_square_bracket
+| direct_abstract_declarator_opt punctuator_left_square_bracket type_qualifier_list keyword_static assignment_expression punctuator_right_square_bracket
+| direct_abstract_declarator_opt punctuator_left_square_bracket punctuator_star punctuator_right_square_bracket
 | direct_abstract_declarator_opt punctuator_left_parenthesis parameter_type_list_opt punctuator_right_parenthesis
 ;
 
@@ -729,7 +799,7 @@ direct_abstract_declarator_opt:
 	identifier
 */
 typedef_name:
-	identifier
+  identifier
 ;
 
 /*
@@ -759,7 +829,7 @@ initializer_list:
 	designator-list =
 */
 designation:
-  designator_list '='
+  designator_list punctuator_equal
 ;
 designation_opt:
   %empty
@@ -811,9 +881,9 @@ statement:
 	default : statement
 */
 labeled_statement:
-  identifier ':' statement
-| keyword_case constant_expression ':' statement
-| keyword_default ':' statement
+  identifier punctuator_colon statement
+| keyword_case constant_expression punctuator_colon statement
+| keyword_default punctuator_colon statement
 ;
 
 /*
@@ -854,7 +924,7 @@ block_item:
 	expression_opt ;
 */
 expression_statement:
-  expression_opt ';'
+  expression_opt punctuator_semicolon
 ;
 
 /*
@@ -865,7 +935,7 @@ expression_statement:
 */
 selection_statement:
   keyword_if punctuator_left_parenthesis expression punctuator_right_parenthesis statement
-| keyword_if punctuator_left_parenthesis expression punctuator_right_parenthesis statement "else" statement
+| keyword_if punctuator_left_parenthesis expression punctuator_right_parenthesis statement keyword_else statement
 | keyword_switch punctuator_left_parenthesis expression punctuator_right_parenthesis statement
 ;
 
@@ -879,8 +949,8 @@ selection_statement:
 iteration_statement:
   keyword_while punctuator_left_parenthesis expression punctuator_right_parenthesis statement
 | keyword_do statement keyword_while punctuator_left_parenthesis expression punctuator_right_parenthesis
-| keyword_for punctuator_left_parenthesis expression_opt ';' expression_opt ';' expression_opt punctuator_right_parenthesis statement
-| keyword_for punctuator_left_parenthesis declaration expression_opt ';' expression_opt punctuator_right_parenthesis statement
+| keyword_for punctuator_left_parenthesis expression_opt punctuator_semicolon expression_opt punctuator_semicolon expression_opt punctuator_right_parenthesis statement
+| keyword_for punctuator_left_parenthesis declaration expression_opt punctuator_semicolon expression_opt punctuator_right_parenthesis statement
 ;
 
 /*
@@ -891,10 +961,10 @@ iteration_statement:
 	return expression_opt ;
 */
 jump_statement:
-	keyword_goto identifier ';'
-	keyword_continue ';'
-	keyword_break ';'
-	keyword_return expression_opt ';'
+  keyword_goto identifier punctuator_semicolon
+| keyword_continue punctuator_semicolon
+| keyword_break punctuator_semicolon
+| keyword_return expression_opt punctuator_semicolon
 ;
 
 /*
@@ -917,7 +987,12 @@ declaration_list_opt:
 	declaration-specifiers declarator declaration-list_opt compound-statement
 */
 function_definition:
-  declaration_specifiers declarator declaration_list_opt compound_statement
+  declaration_specifiers declarator declaration_list_opt compound_statement {
+      /* $$ = ast_function_def_node_new($1, $4);
+      if ($$ == NULL) {
+          YYNOMEM;
+      }*/
+  }
 ;
 
 /*
@@ -926,8 +1001,8 @@ function_definition:
 	declaration
 */
 external_declaration:
-  function_definition
-| declaration
+  function_definition { $$ = NULL; /* $$ = (struct ast_external_decl_node*) $1; */ }
+| declaration         { $$ = NULL; /* (struct ast_external_decl_node*) $1; */ }
 ;
 
 /*
@@ -936,146 +1011,146 @@ external_declaration:
 	translation-unit external-declaration
 */
 translation_unit:
-  external_declaration
-| translation_unit external_declaration
+  external_declaration {
+      // TODO: have a vector where memory is allocated and translation unit is just initialized there.
+      // This way in case of an error memory could be freed.
+      $$ = ast_translation_unit_node_new();
+      if ($$ == NULL) {
+          YYNOMEM;
+      }
+      if (!vector_push($$->external_decls, &$1)) {
+          // FIXME: other objects on the stack are not deallocated!! Use bison %destructor keyword.
+          // extern struct vector* ast_memory_pool;
+          $$ = ast_translation_unit_node_delete($$);
+          YYNOMEM;
+      }
+  }
+| translation_unit external_declaration {
+      // FIXME: other objects on the stack are not deallocated!! Have a memory pool as a vector structure to allocate memory at.
+      // extern struct vector* ast_memory_pool;
+      // FIXME: When this is done, no need to deallocate memory here.
+      // TODO: Also, make a test case for this scenario and check memory is actually deallocated when memory pool will be implemented.
+      if (!vector_push($1->external_decls, &$2)) {
+          ast_translation_unit_node_delete($1);
+          YYNOMEM;
+      }
+  }
 ;
 
 %%
 
-int token_process_keyword_auto()       { return keyword_auto;       }
-int token_process_keyword_break()      { return keyword_break;      }
-int token_process_keyword_case()       { return keyword_case;       }
-int token_process_keyword_char()       { return keyword_char;       }
-int token_process_keyword_const()      { return keyword_const;      }
-int token_process_keyword_continue()   { return keyword_continue;   }
-int token_process_keyword_default()    { return keyword_default;    }
-int token_process_keyword_do()         { return keyword_do;         }
-int token_process_keyword_double()     { return keyword_double;     }
-int token_process_keyword_else()       { return keyword_else;       }
-int token_process_keyword_enum()       { return keyword_enum;       }
-int token_process_keyword_extern()     { return keyword_extern;     }
-int token_process_keyword_float()      { return keyword_float;      }
-int token_process_keyword_for()        { return keyword_for;        }
-int token_process_keyword_goto()       { return keyword_goto;       }
-int token_process_keyword_if()         { return keyword_if;         }
-int token_process_keyword_inline()     { return keyword_inline;     }
-int token_process_keyword_int()        { return keyword_int;        }
-int token_process_keyword_long()       { return keyword_long;       }
-int token_process_keyword_register()   { return keyword_register;   }
-int token_process_keyword_restrict()   { return keyword_restrict;   }
-int token_process_keyword_return()     { return keyword_return;     }
-int token_process_keyword_short()      { return keyword_short;      }
-int token_process_keyword_signed()     { return keyword_signed;     }
-int token_process_keyword_sizeof()     { return keyword_sizeof;     }
-int token_process_keyword_static()     { return keyword_static;     }
-int token_process_keyword_struct()     { return keyword_struct;     }
-int token_process_keyword_switch()     { return keyword_switch;     }
-int token_process_keyword_typedef()    { return keyword_typedef;    }
-int token_process_keyword_union()      { return keyword_union;      }
-int token_process_keyword_unsigned()   { return keyword_unsigned;   }
-int token_process_keyword_void()       { return keyword_void;       }
-int token_process_keyword_volatile()   { return keyword_volatile;   }
-int token_process_keyword_while()      { return keyword_while;      }
-int token_process_keyword__Bool()      { return keyword__Bool;      }
-int token_process_keyword__Complex()   { return keyword__Complex;   }
-int token_process_keyword__Imaginary() { return keyword__Imaginary; }
+#include <stdbool.h>
+#include <stddef.h>
 
-int token_process_identifier(char const* text) {
+#define VERIFY(EXPR) if (!(EXPR)) { printf("File %s, line %d: expr %s is false. Program was terminated.\n", __FILE__, __LINE__, #EXPR); abort(); }
+
+struct token_table_entry {
+	char const* token_text;
+	int symbol_index;
+};
+
+#define TO_STRING2(value) #value
+#define TO_STRING(value) TO_STRING2(value)
+
+#define KEYWORD_ENTRY(name) { #name , keyword_ ## name }
+#define PUNCTUATOR_ENTRY(text, name) { text, punctuator_ ## name }
+
+static const struct token_table_entry token_table[] = {
+	KEYWORD_ENTRY(auto),     KEYWORD_ENTRY(break),    KEYWORD_ENTRY(case),     KEYWORD_ENTRY(char),
+	KEYWORD_ENTRY(const),    KEYWORD_ENTRY(continue), KEYWORD_ENTRY(default),  KEYWORD_ENTRY(do),
+	KEYWORD_ENTRY(double),   KEYWORD_ENTRY(else),     KEYWORD_ENTRY(enum),     KEYWORD_ENTRY(extern),
+	KEYWORD_ENTRY(float),    KEYWORD_ENTRY(for),      KEYWORD_ENTRY(goto),     KEYWORD_ENTRY(if),
+	KEYWORD_ENTRY(inline),   KEYWORD_ENTRY(int),      KEYWORD_ENTRY(long),     KEYWORD_ENTRY(register),
+	KEYWORD_ENTRY(restrict), KEYWORD_ENTRY(return),   KEYWORD_ENTRY(short),    KEYWORD_ENTRY(signed),
+	KEYWORD_ENTRY(sizeof),   KEYWORD_ENTRY(static),   KEYWORD_ENTRY(struct),   KEYWORD_ENTRY(switch),
+	KEYWORD_ENTRY(typedef),  KEYWORD_ENTRY(union),    KEYWORD_ENTRY(unsigned), KEYWORD_ENTRY(void),
+	KEYWORD_ENTRY(volatile), KEYWORD_ENTRY(while),    KEYWORD_ENTRY(_Bool),    KEYWORD_ENTRY(_Complex),
+	KEYWORD_ENTRY(_Imaginary),
+	
+	PUNCTUATOR_ENTRY(  "[", left_square_bracket),  PUNCTUATOR_ENTRY(   "]",        right_square_bracket),
+	PUNCTUATOR_ENTRY(  "(",    left_parenthesis),  PUNCTUATOR_ENTRY(   ")",           right_parenthesis),
+	PUNCTUATOR_ENTRY(  "{",          left_brace),  PUNCTUATOR_ENTRY(   "}",                 right_brace),
+	PUNCTUATOR_ENTRY(  ".",                 dot),  PUNCTUATOR_ENTRY(  "->",                       arrow),
+	PUNCTUATOR_ENTRY( "++",           increment),  PUNCTUATOR_ENTRY(  "--",                   decrement),
+	PUNCTUATOR_ENTRY(  "&",                 and),  PUNCTUATOR_ENTRY(   "*",                        star),
+	PUNCTUATOR_ENTRY(  "+",                plus),  PUNCTUATOR_ENTRY(   "-",                       minus),
+	PUNCTUATOR_ENTRY(  "~",               tilde),  PUNCTUATOR_ENTRY(   "!",            exclamation_mark),
+	PUNCTUATOR_ENTRY(  "/",               slash),  PUNCTUATOR_ENTRY(   "%",                     percent),
+	PUNCTUATOR_ENTRY( "<<",          shift_left),  PUNCTUATOR_ENTRY(  ">>",                 shift_right),
+	PUNCTUATOR_ENTRY(  "<",                less),  PUNCTUATOR_ENTRY(   ">",                     greater),
+	PUNCTUATOR_ENTRY( "<=",          less_equal),  PUNCTUATOR_ENTRY(  ">=",               greater_equal),
+	PUNCTUATOR_ENTRY( "==",         equal_equal),  PUNCTUATOR_ENTRY(  "!=",                   not_equal),
+	PUNCTUATOR_ENTRY(  "^",          circumflex),  PUNCTUATOR_ENTRY(   "|",                          or),
+	PUNCTUATOR_ENTRY( "&&",             and_and),  PUNCTUATOR_ENTRY(  "||",                       or_or),
+	PUNCTUATOR_ENTRY(  "?",       question_mark),  PUNCTUATOR_ENTRY(   ":",                       colon),
+	PUNCTUATOR_ENTRY(  ";",           semicolon),  PUNCTUATOR_ENTRY( "...",                    ellipsis),
+	PUNCTUATOR_ENTRY(  "=",               equal),  PUNCTUATOR_ENTRY(  "*=",                  star_equal),
+	PUNCTUATOR_ENTRY( "/=",         slash_equal),  PUNCTUATOR_ENTRY(  "%=",               percent_equal),
+	PUNCTUATOR_ENTRY( "+=",          plus_equal),  PUNCTUATOR_ENTRY(  "-=",                 minus_equal),
+	PUNCTUATOR_ENTRY("<<=",    shift_left_equal),  PUNCTUATOR_ENTRY( ">>=",           shift_right_equal),
+	PUNCTUATOR_ENTRY( "&=",           and_equal),  PUNCTUATOR_ENTRY(  "^=",            circumflex_equal),
+	PUNCTUATOR_ENTRY( "|=",            or_equal),  PUNCTUATOR_ENTRY(   ",",                       comma),
+	PUNCTUATOR_ENTRY(  "#",                hash),  PUNCTUATOR_ENTRY(  "##",                   hash_hash),
+	PUNCTUATOR_ENTRY( "<:",          less_colon),  PUNCTUATOR_ENTRY(  ":>",               colon_greater),
+	PUNCTUATOR_ENTRY( "<%",        less_percent),  PUNCTUATOR_ENTRY(  "%>",             percent_greater),
+	PUNCTUATOR_ENTRY( "%:",       percent_colon),  PUNCTUATOR_ENTRY("%:%:", percent_colon_percent_colon)
+};
+
+#define NUM_TOKENS sizeof(token_table) / sizeof(struct token_table_entry)
+
+#undef KEYWORD_ENTRY
+#undef PUNCTUATOR_ENTRY
+
+static int find_literal_token(char const* text) {
+	for (size_t i = 0; i < NUM_TOKENS; ++i) {
+		if (strcmp(token_table[i].token_text, text) == 0) {
+			return token_table[i].symbol_index;
+		}
+	}
+	
+	VERIFY(false);
+	__builtin_unreachable();
+}
+
+int tokenizer_handle_keyword(char const* text) {
+	return find_literal_token(text);
+}
+
+int tokenizer_handle_punctuator(char const* text) {
+	return find_literal_token(text);
+}
+
+int tokenizer_handle_identifier(char const* text) {
 	(void) text;
 	
 	return identifier;
 }
 
-int token_process_integer_constant(enum token_integer_constant_base base, char const* text) {
-	(void) base;
+int tokenizer_handle_integer_constant(char const* text) {
 	(void) text;
 	
 	return constant;
 }
 
-int token_process_floating_constant(enum token_floating_constant_base base, char const* text) {
-	(void) base;
+int tokenizer_handle_floating_constant(char const* text) {
 	(void) text;
 	
 	return constant;
 }
 
-int token_process_character_constant(char const* text) {
+int tokenizer_handle_character_constant(char const* text) {
 	(void) text;
 	
 	return constant;
 }
 
-int token_process_string_literal(char const* text) {
+int tokenizer_handle_string_literal(char const* text) {
 	(void) text;
 	
 	return string_literal;
 }
 
-int token_process_punctuator_left_square_bracket()         { return punctuator_left_square_bracket;         }
-int token_process_punctuator_right_square_bracket()        { return punctuator_right_square_bracket;        }
-int token_process_punctuator_left_parenthesis()            { return punctuator_left_parenthesis;            }
-int token_process_punctuator_right_parenthesis()           { return punctuator_right_parenthesis;           }
-int token_process_punctuator_left_brace()                  { return punctuator_left_brace;                  }
-int token_process_punctuator_right_brace()                 { return punctuator_right_brace;                 }
-int token_process_punctuator_dot()                         { return punctuator_dot;                         }
-int token_process_punctuator_arrow()                       { return punctuator_arrow;                       }
-int token_process_punctuator_increment()                   { return punctuator_increment;                   }
-int token_process_punctuator_decrement()                   { return punctuator_decrement;                   }
-int token_process_punctuator_and()                         { return punctuator_and;                         }
-int token_process_punctuator_star()                        { return punctuator_star;                        }
-int token_process_punctuator_plus()                        { return punctuator_plus;                        }
-int token_process_punctuator_minus()                       { return punctuator_minus;                       }
-int token_process_punctuator_tilde()                       { return punctuator_tilde;                       }
-int token_process_punctuator_exclamation_mark()            { return punctuator_exclamation_mark;            }
-int token_process_punctuator_slash()                       { return punctuator_slash;                       }
-int token_process_punctuator_percent()                     { return punctuator_percent;                     }
-int token_process_punctuator_shift_left()                  { return punctuator_shift_left;                  }
-int token_process_punctuator_shift_right()                 { return punctuator_shift_right;                 }
-int token_process_punctuator_less()                        { return punctuator_less;                        }
-int token_process_punctuator_greater()                     { return punctuator_greater;                     }
-int token_process_punctuator_less_equal()                  { return punctuator_less_equal;                  }
-int token_process_punctuator_greater_equal()               { return punctuator_greater_equal;               }
-int token_process_punctuator_equal_equal()                 { return punctuator_equal_equal;                 }
-int token_process_punctuator_not_equal()                   { return punctuator_not_equal;                   }
-int token_process_punctuator_circumflex()                  { return punctuator_circumflex;                  }
-int token_process_punctuator_or()                          { return punctuator_or;                          }
-int token_process_punctuator_and_and()                     { return punctuator_and_and;                     }
-int token_process_punctuator_or_or()                       { return punctuator_or_or;                       }
-int token_process_punctuator_question_mark()               { return punctuator_question_mark;               }
-int token_process_punctuator_colon()                       { return punctuator_colon;                       }
-int token_process_punctuator_semicolon()                   { return punctuator_semicolon;                   }
-int token_process_punctuator_ellipsis()                    { return punctuator_ellipsis;                    }
-int token_process_punctuator_equal()                       { return punctuator_equal;                       }
-int token_process_punctuator_star_equal()                  { return punctuator_star_equal;                  }
-int token_process_punctuator_slash_equal()                 { return punctuator_slash_equal;                 }
-int token_process_punctuator_percent_equal()               { return punctuator_percent_equal;               }
-int token_process_punctuator_plus_equal()                  { return punctuator_plus_equal;                  }
-int token_process_punctuator_minus_equal()                 { return punctuator_minus_equal;                 }
-int token_process_punctuator_shift_left_equal()            { return punctuator_shift_left_equal;            }
-int token_process_punctuator_shift_right_equal()           { return punctuator_shift_right_equal;           }
-int token_process_punctuator_and_equal()                   { return punctuator_and_equal;                   }
-int token_process_punctuator_circumflex_equal()            { return punctuator_circumflex_equal;            }
-int token_process_punctuator_or_equal()                    { return punctuator_or_equal;                    }
-int token_process_punctuator_comma()                       { return punctuator_comma;                       }
-int token_process_punctuator_hash()                        { return punctuator_hash;                        }
-int token_process_punctuator_hash_hash()                   { return punctuator_hash_hash;                   }
-int token_process_punctuator_less_colon()                  { return punctuator_less_colon;                  }
-int token_process_punctuator_colon_greater()               { return punctuator_colon_greater;               }
-int token_process_punctuator_less_percent()                { return punctuator_less_percent;                }
-int token_process_punctuator_percent_greater()             { return punctuator_percent_greater;             }
-int token_process_punctuator_percent_colon()               { return punctuator_percent_colon;               }
-int token_process_punctuator_percent_colon_percent_colon() { return punctuator_percent_colon_percent_colon; }
-
-/*
-int token_process_punctuator(char const* text) {
-	(void) text;
-	
-	return punctuator;
-}
-*/
-
-int token_process_invalid_token(char const* text) {
+int tokenizer_handle_invalid_token(char const* text) {
 	(void) text;
 	
 	return -1;

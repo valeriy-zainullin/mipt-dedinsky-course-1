@@ -1,91 +1,82 @@
+#include "tokenizer.h"
+
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
-
-#include "token.h"
-
-int yylex();
 
 // TODO: move to a separate header if needed later in other files.
 #define UNREACHABLE assert(false); __builtin_unreachable();
 
-int token_process_keyword(char const* text) {
-	printf("keyword: %s\n", text);
-	return 1;
-}
-
-int token_process_identifier(char const* text) {
-	printf("identifier: %s\n", text);
-	return 1;
-}
-
-int token_process_integer_constant(enum token_integer_constant_base base, char const* text) {
-	switch (base) {
-		case TOKEN_INTEGER_CONSTANT_DECIMAL_BASE: {
-			printf("integer_constant: decimal_constant, %s\n", text);
-			break;
+static void print_escaped_string(char const* string) {
+	for (; *string != '\0'; ++string) {
+		if (*string == '"') {
+			printf("\\");
 		}
-		
-		case TOKEN_INTEGER_CONSTANT_OCTAL_BASE: {
-			printf("integer_constant: octal_constant, %s\n", text);
-			break;
-		}
-		
-		case TOKEN_INTEGER_CONSTANT_HEXADECIMAL_BASE: {
-			printf("integer_constant: hexadecimal_constant, %s\n", text);
-			break;
-		}
-		
-		default: UNREACHABLE;
+		printf("%c", *string);
 	}
-	
+}
+
+static void print_token(char const* label, char const* value, struct tokenizer_location const* location) {
+	printf("<%s:\"", label);
+	print_escaped_string(value);
+	printf("\"@??.c:%zu,%zu> ", location->line, location->col);
+}
+
+int tokenizer_handle_keyword(char const* text) {
+	print_token("keyword", text, (struct tokenizer_location const*) &tokenizer_current_location);
+	tokenizer_notify_token_handled();
 	return 1;
 }
 
-
-int token_process_floating_constant(enum token_floating_constant_base base, char const* text) {
-	switch (base) {
-		case TOKEN_FLOATING_CONSTANT_DECIMAL_BASE: {
-			printf("floating_constant: decimal_floating_constant, %s\n", text);
-			break;
-		}
-		
-		case TOKEN_FLOATING_CONSTANT_HEXADECIMAL_BASE: {
-			printf("floating_constant: hexadecimal_floating_constant, %s\n", text);
-			break;
-		}
-		
-		default: UNREACHABLE;
-	}
-	
+int tokenizer_handle_punctuator(char const* text) {
+	print_token("punctuator", text, (struct tokenizer_location const*) &tokenizer_current_location);
+	tokenizer_notify_token_handled();
 	return 1;
 }
 
-int token_process_character_constant(char const* text) {
-	printf("character_constant: %s\n", text);
-	
+int tokenizer_handle_identifier(char const* text) {
+	print_token("identifier", text, (struct tokenizer_location const*) &tokenizer_current_location);
+	tokenizer_notify_token_handled();
 	return 1;
 }
 
-int token_process_string_literal(char const* text) {
-	printf("string_literal: %s\n", text);
+int tokenizer_handle_integer_constant(char const* text) {
+	print_token("integer-constant", text, (struct tokenizer_location const*) &tokenizer_current_location);
+	tokenizer_notify_token_handled();
 	return 1;
 }
 
-int token_process_punctuator(char const* text) {
-	printf("punctuator: %s\n", text);
+int tokenizer_handle_floating_constant(char const* text) {
+	print_token("floating-constant", text, (struct tokenizer_location const*) &tokenizer_current_location);
+	tokenizer_notify_token_handled();
 	return 1;
 }
 
-int token_process_invalid_token(char const* text) {
+int tokenizer_handle_character_constant(char const* text) {
+	print_token("character-constant", text, (struct tokenizer_location const*) &tokenizer_current_location);
+	tokenizer_notify_token_handled();
+	return 1;
+}
+
+int tokenizer_handle_string_literal(char const* text) {
+	print_token("string-literal", text, (struct tokenizer_location const*) &tokenizer_current_location); 
+	tokenizer_notify_token_handled();
+	return 1;
+}
+
+int tokenizer_handle_invalid_token(char const* text) {
 	printf("*yytext = %c\n", *text);
 	/* Trigger an error. Unknown token. But returning -1 here is a temporary solution. */
 	/* Better to do some recovery. */
 	printf("Unknown token.\n");
+	// TODO: check if it is needed to be done.
+	// tokenizer_notify_token_handled();
 	return -1;
 }
 
 int main() {
 	// As far as I remember, zero is EOF, negative is error and positive should be our token index.
 	while (yylex() > 0);
+	printf("\n");
 	return 0;
 }

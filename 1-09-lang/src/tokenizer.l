@@ -2,6 +2,8 @@
 
 /* TODO: if comments are stripped by preprocessor, move comments to preprocessor. */
 
+/* TODO: put locations of grammar rules as done in parser. */
+
 /*
 Token syntax in the standard is not a recursive descend grammar. That syntax could be converted to an NFA.
 For every scanned character we could be not in a single vertice, but rather in a set. For example, we
@@ -49,11 +51,20 @@ information about it, of course. Bison is quickier to do and easier to modify th
 /* More info at https://stackoverflow.com/a/46223160 */
 %option never-interactive
 
+%{
+	#include "tokenizer.h"
+%}
+
 /* Track line numbers as well.*/
 %option yylineno 
-
 %{
-	#include "token.h"
+	#include <assert.h>
+	#define YY_USER_ACTION assert(yylineno > 0); tokenizer_current_location.line = (size_t) yylineno;
+	#include "tokenizer.h"
+	struct tokenizer_location tokenizer_current_location = {0};
+	
+	#include <string.h>
+	void accnt_mltln_comment_in_location(char const* text);
 %}
 
 /*
@@ -66,7 +77,7 @@ token:
 ;
 */
 
-blank [ \t\r]
+blank [ \t]
 
 /*
 keyword: one of
@@ -75,44 +86,7 @@ keyword: one of
 	signed sizeof static struct switch typedef union unsigned
 	void volatile while _Bool _Complex _Imaginary
 */
-/* OLD. keyword (auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|_Bool|_Complex|_Imaginary) */
-keyword_auto       auto
-keyword_break      break
-keyword_case       case
-keyword_char       char
-keyword_const      const
-keyword_continue   continue
-keyword_default    default
-keyword_do         do
-keyword_double     double
-keyword_else       else
-keyword_enum       enum
-keyword_extern     extern
-keyword_float      float
-keyword_for        for
-keyword_goto       goto
-keyword_if         if
-keyword_inline     inline
-keyword_int        int
-keyword_long       long
-keyword_register   register
-keyword_restrict   restrict
-keyword_return     return
-keyword_short      short
-keyword_signed     signed
-keyword_sizeof     sizeof
-keyword_static     static
-keyword_struct     struct
-keyword_switch     switch
-keyword_typedef    typedef
-keyword_union      union
-keyword_unsigned   unsigned
-keyword_void       void
-keyword_volatile   volatile
-keyword_while      while
-keyword__Bool      _Bool
-keyword__Complex   _Complex
-keyword__Imaginary _Imaginary
+keyword (auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|_Bool|_Complex|_Imaginary)
 
 /*
 
@@ -360,62 +334,7 @@ punctuator: one of
 	<: :> <% %> %: %:%:
 */
 /* Seems to select the longest case here too. Checked in practice. Great! */
-/* punctuator ([\[\](){}.&*+\-~!/%<>^|?:;=,#]|->|"++"|"--"|<<|>>|<=|>=|==|!=|&&|"||"|"..."|"*="|"/="|%=|"+="|-=|<<=|>>=|&=|^=|\|=|##|<:|:>|<%|%>|%:|%:%:) */
-punctuator_left_square_bracket         \[
-punctuator_right_square_bracket        \]
-punctuator_left_parenthesis            \(
-punctuator_right_parenthesis           \)
-punctuator_left_brace                  \{
-punctuator_right_brace                 \}
-punctuator_dot                         \.
-punctuator_arrow                       ->
-punctuator_increment                   \+\+
-punctuator_decrement                   --
-punctuator_and                         &
-punctuator_star                        \*
-punctuator_plus                        \+
-punctuator_minus                       -
-punctuator_tilde                       ~
-punctuator_exclamation_mark            !
-punctuator_slash                       \/
-punctuator_percent                     %
-punctuator_shift_left                  <<
-punctuator_shift_right                 >>
-punctuator_less                        <
-punctuator_greater                     >
-punctuator_less_equal                  <=
-punctuator_greater_equal               >=
-punctuator_equal_equal                 ==
-punctuator_not_equal                   !=
-punctuator_circumflex                  \^
-punctuator_or                          \|
-punctuator_and_and                     &&
-punctuator_or_or                       \|\|
-punctuator_question_mark               \?
-punctuator_colon                       :
-punctuator_semicolon                   ;
-punctuator_ellipsis                    \.\.\.
-punctuator_equal                       =
-punctuator_star_equal                  \*=
-punctuator_slash_equal                 \/=
-punctuator_percent_equal               %=
-punctuator_plus_equal                  \+=
-punctuator_minus_equal                 -=
-punctuator_shift_left_equal            <<=
-punctuator_shift_right_equal           >>=
-punctuator_and_equal                   &=
-punctuator_circumflex_equal            ^=
-punctuator_or_equal                    \|=
-punctuator_comma                       \,
-punctuator_hash                        \#
-punctuator_hash_hash                   \#\#
-punctuator_less_colon                  <:
-punctuator_colon_greater               >:
-punctuator_less_percent                <%
-punctuator_percent_greater             %>
-punctuator_percent_colon               %:
-punctuator_percent_colon_percent_colon %:%:
-
+punctuator ([\[\](){}.&*+\-~!/%<>^|?:;=,#]|->|"++"|"--"|<<|>>|<=|>=|==|!=|&&|"||"|"..."|"*="|"/="|%=|"+="|-=|<<=|>>=|&=|^=|\|=|##|<:|:>|<%|%>|%:|%:%:)
 
 /*
 https://stackoverflow.com/a/25396611
@@ -433,124 +352,66 @@ Paragraph 6.4.2.1, semantics:
      is converted to a keyword.
 */
 
-/* {keyword}                        { return token_process_keyword(yytext); } */
+/* TODO: do we need to extract the numbers right away? And their bases? And the same for floating point numbers as well?
+   If so, do this. It will be clear when codegenereation will be considered.
+   Maybe we will be codegenerating something our arch doesn't support. As a cross-compilator. So maybe we should leave values as is for code generator. Just check their correctness as tokens.
+*/
 
 %%
-{blank}
-\n
+{blank}                                  { tokenizer_current_location.col += 1;                }
+\r\n?|\n                                 { tokenizer_current_location.col = 1;                 }
 
-"//".*                           { /* ignored */ }
-"/*"([^*]|[*][^/])*"*/"          { /* ignored */ }
+"//".*                                   { /* location column is updated in the rule for \r and \n. */ }
+"/*"([^*]|[*][^/])*"*/"                  { accnt_mltln_comment_in_location(yytext);            }
 
-{keyword_auto}                           { return token_process_keyword_auto();       }
-{keyword_break}                          { return token_process_keyword_break();      }
-{keyword_case}                           { return token_process_keyword_case();       }
-{keyword_char}                           { return token_process_keyword_char();       }
-{keyword_const}                          { return token_process_keyword_const();      }
-{keyword_continue}                       { return token_process_keyword_continue();   }
-{keyword_default}                        { return token_process_keyword_default();    }
-{keyword_do}                             { return token_process_keyword_do();         }
-{keyword_double}                         { return token_process_keyword_double();     }
-{keyword_else}                           { return token_process_keyword_else();       }
-{keyword_enum}                           { return token_process_keyword_enum();       }
-{keyword_extern}                         { return token_process_keyword_extern();     }
-{keyword_float}                          { return token_process_keyword_float();      }
-{keyword_for}                            { return token_process_keyword_for();        }
-{keyword_goto}                           { return token_process_keyword_goto();       }
-{keyword_if}                             { return token_process_keyword_if();         }
-{keyword_inline}                         { return token_process_keyword_inline();     }
-{keyword_int}                            { return token_process_keyword_int();        }
-{keyword_long}                           { return token_process_keyword_long();       }
-{keyword_register}                       { return token_process_keyword_register();   }
-{keyword_restrict}                       { return token_process_keyword_restrict();   }
-{keyword_return}                         { return token_process_keyword_return();     }
-{keyword_short}                          { return token_process_keyword_short();      }
-{keyword_signed}                         { return token_process_keyword_signed();     }
-{keyword_sizeof}                         { return token_process_keyword_sizeof();     }
-{keyword_static}                         { return token_process_keyword_static();     }
-{keyword_struct}                         { return token_process_keyword_struct();     }
-{keyword_switch}                         { return token_process_keyword_switch();     }
-{keyword_typedef}                        { return token_process_keyword_typedef();    }
-{keyword_union}                          { return token_process_keyword_union();      }
-{keyword_unsigned}                       { return token_process_keyword_unsigned();   }
-{keyword_void}                           { return token_process_keyword_void();       }
-{keyword_volatile}                       { return token_process_keyword_volatile();   }
-{keyword_while}                          { return token_process_keyword_while();      }
-{keyword__Bool}                          { return token_process_keyword__Bool();      }
-{keyword__Complex}                       { return token_process_keyword__Complex();   }
-{keyword__Imaginary}                     { return token_process_keyword__Imaginary(); }
+{keyword}                                { return tokenizer_handle_keyword(yytext);            }
 
-{identifier}                             { return token_process_identifier(yytext); }
+{identifier}                             { return tokenizer_handle_identifier(yytext);         }
 
-{decimal_constant}                       { return token_process_integer_constant(TOKEN_INTEGER_CONSTANT_DECIMAL_BASE, yytext); }
-{octal_constant}                         { return token_process_integer_constant(TOKEN_INTEGER_CONSTANT_OCTAL_BASE, yytext); }
-{hexadecimal_constant}                   { return token_process_integer_constant(TOKEN_INTEGER_CONSTANT_HEXADECIMAL_BASE, yytext); }
+{decimal_constant}                       { return tokenizer_handle_integer_constant(yytext);   }
+{octal_constant}                         { return tokenizer_handle_integer_constant(yytext);   }
+{hexadecimal_constant}                   { return tokenizer_handle_integer_constant(yytext);   }
 
-{decimal_floating_constant}              { return token_process_floating_constant(TOKEN_FLOATING_CONSTANT_DECIMAL_BASE, yytext); }
-{hexadecimal_floating_constant}          { return token_process_floating_constant(TOKEN_FLOATING_CONSTANT_HEXADECIMAL_BASE, yytext); }
+{decimal_floating_constant}              { return tokenizer_handle_floating_constant(yytext);  }
+{hexadecimal_floating_constant}          { return tokenizer_handle_floating_constant(yytext);  }
 
-{character_constant}                     { return token_process_character_constant(yytext);               }
-{string_literal}                         { return token_process_string_literal(yytext);                   }
+{character_constant}                     { return tokenizer_handle_character_constant(yytext); }
+{string_literal}                         { return tokenizer_handle_string_literal(yytext);     }
 
-{punctuator_left_square_bracket}         { return token_process_punctuator_left_square_bracket();         }
-{punctuator_right_square_bracket}        { return token_process_punctuator_right_square_bracket();        }
-{punctuator_left_parenthesis}            { return token_process_punctuator_left_parenthesis();            }
-{punctuator_right_parenthesis}           { return token_process_punctuator_right_parenthesis();           }
-{punctuator_left_brace}                  { return token_process_punctuator_left_brace();                  }
-{punctuator_right_brace}                 { return token_process_punctuator_right_brace();                 }
-{punctuator_dot}                         { return token_process_punctuator_dot();                         }
-{punctuator_arrow}                       { return token_process_punctuator_arrow();                       }
-{punctuator_increment}                   { return token_process_punctuator_increment();                   }
-{punctuator_decrement}                   { return token_process_punctuator_decrement();                   }
-{punctuator_and}                         { return token_process_punctuator_and();                         }
-{punctuator_star}                        { return token_process_punctuator_star();                        }
-{punctuator_plus}                        { return token_process_punctuator_plus();                        }
-{punctuator_minus}                       { return token_process_punctuator_minus();                       }
-{punctuator_tilde}                       { return token_process_punctuator_tilde();                       }
-{punctuator_exclamation_mark}            { return token_process_punctuator_exclamation_mark();            }
-{punctuator_slash}                       { return token_process_punctuator_slash();                       }
-{punctuator_percent}                     { return token_process_punctuator_percent();                     }
-{punctuator_shift_left}                  { return token_process_punctuator_shift_left();                  }
-{punctuator_shift_right}                 { return token_process_punctuator_shift_right();                 }
-{punctuator_less}                        { return token_process_punctuator_less();                        }
-{punctuator_greater}                     { return token_process_punctuator_greater();                     }
-{punctuator_less_equal}                  { return token_process_punctuator_less_equal();                  }
-{punctuator_greater_equal}               { return token_process_punctuator_greater_equal();               }
-{punctuator_equal_equal}                 { return token_process_punctuator_equal_equal();                 }
-{punctuator_not_equal}                   { return token_process_punctuator_not_equal();                   }
-{punctuator_circumflex}                  { return token_process_punctuator_circumflex();                  }
-{punctuator_or}                          { return token_process_punctuator_or();                          }
-{punctuator_and_and}                     { return token_process_punctuator_and_and();                     }
-{punctuator_or_or}                       { return token_process_punctuator_or_or();                       }
-{punctuator_question_mark}               { return token_process_punctuator_question_mark();               }
-{punctuator_colon}                       { return token_process_punctuator_colon();                       }
-{punctuator_semicolon}                   { return token_process_punctuator_semicolon();                   }
-{punctuator_ellipsis}                    { return token_process_punctuator_ellipsis();                    }
-{punctuator_equal}                       { return token_process_punctuator_equal();                       }
-{punctuator_star_equal}                  { return token_process_punctuator_star_equal();                  }
-{punctuator_slash_equal}                 { return token_process_punctuator_slash_equal();                 }
-{punctuator_percent_equal}               { return token_process_punctuator_percent_equal();               }
-{punctuator_plus_equal}                  { return token_process_punctuator_plus_equal();                  }
-{punctuator_minus_equal}                 { return token_process_punctuator_minus_equal();                 }
-{punctuator_shift_left_equal}            { return token_process_punctuator_shift_left_equal();            }
-{punctuator_shift_right_equal}           { return token_process_punctuator_shift_right_equal();           }
-{punctuator_and_equal}                   { return token_process_punctuator_and_equal();                   }
-{punctuator_circumflex_equal}            { return token_process_punctuator_circumflex_equal();            }
-{punctuator_or_equal}                    { return token_process_punctuator_or_equal();                    }
-{punctuator_comma}                       { return token_process_punctuator_comma();                       }
-{punctuator_hash}                        { return token_process_punctuator_hash();                        }
-{punctuator_hash_hash}                   { return token_process_punctuator_hash_hash();                   }
-{punctuator_less_colon}                  { return token_process_punctuator_less_colon();                  }
-{punctuator_colon_greater}               { return token_process_punctuator_colon_greater();               }
-{punctuator_less_percent}                { return token_process_punctuator_less_percent();                }
-{punctuator_percent_greater}             { return token_process_punctuator_percent_greater();             }
-{punctuator_percent_colon}               { return token_process_punctuator_percent_colon();               }
-{punctuator_percent_colon_percent_colon} { return token_process_punctuator_percent_colon_percent_colon(); }
+{punctuator}                             { return tokenizer_handle_punctuator(yytext);         }
 
-
-.                                        { return token_process_invalid_token(yytext); }
+.                                        { return tokenizer_handle_invalid_token(yytext);      }
 %%
 
-/* {punctuator}                     { return token_process_punctuator(yytext); } */
+#include <stdint.h>
 
-// #define MAX_INTEGER_CONSTANT_LEN 127
+// TODO: check newlines aren't counted twice for multiline comments.
+static uint32_t count_newlines(char const* text) {
+	// TODO: check file size before even reading it. Not more than 512MB. Select a different data type. uint32_t can hold 512MB.
+	// TODO: use uint32_t in token_location and ast_location.
+	uint32_t num_newlines = 0;
+	for (; *text != '\0'; ++text) {
+		if (*text == '\r') {
+			num_newlines += 1;
+			if (text[1] == '\n') {
+				++text;
+			}
+		}
+		if (*text == '\n') {
+			num_newlines += 1;
+		}
+	}
+	return num_newlines;
+}
+
+void accnt_mltln_comment_in_location(const char* text) {
+	uint32_t num_lines = count_newlines(text);
+	tokenizer_current_location.line += num_lines;
+	if (num_lines > 0) {
+		tokenizer_current_location.col = 1;
+	}
+}
+
+void tokenizer_notify_token_handled() {
+	tokenizer_current_location.col += strlen(yytext);
+}
