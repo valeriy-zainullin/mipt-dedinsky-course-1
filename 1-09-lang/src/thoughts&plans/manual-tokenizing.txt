@@ -1,0 +1,34 @@
+/*
+Token syntax in the standard is not a recursive descend grammar. That syntax could be converted to an NFA.
+For every scanned character we could be not in a single vertice, but rather in a set. For example, we
+could be in a keyword DFA and an identifier DFA combined into a single NFA. If it's either keyword or
+identifier, it's accepted by the NFA. But if it's both, it's keyword. Then we could transform NFA of
+the whole token syntax into a DFA as NFAs are mathematically equivalent to DFAs: any NFA has a
+counterpart DFA that accepts the same set of strings as the initial NFA, and any DFA is already an NFA.
+So DFAs and NFAs can scan the same set of strings. If token is a suffix of a keyword, it's an identifier,
+if it's longer, it's identifier as well (the keyword DFA just won't accept it, as it's not in keywords
+set), but whenever it's accepted by both, flex selects the rule wouldn't accept any continuation of
+that word, yes? (TODO: check.) It's a common situation for computer programming languages to have
+reserved words, so flex is designed to handle this, I suppose. There are many more non-determenistic
+rules in the syntax, but if you make a NFA, then convert it to a DFA, you will parse it. After the token
+is accepted, you can check what rules where accepting it. And select which rule is right.
+Recursive descend grammar is very similar to regular expressions. Regular expressions in programming
+differ from regular expressions in maths in that we are allowed to extract substrings after matching,
+which is not a huge deal, right? And mathematically any regular expression is convertible to a DFA and
+any DFA is convertible to a regular expression (TODO: not always the same one, or always the same one?
+Then I should say and convertible back to the exactly same regular expression). So our recursive descend
+is, I think, the same regular expressions with the idea that we can preprocess rules to insert different
+equations into the main equation. They are indeed convertible to DFAs then, and while simulating a DFA,
+we can extract substrings in our program, so we would do the same that recursive descend does. Recursive
+descend syntax has fixed set of rules, so we don't have to emulate an arbitary DFA with an adjacency
+matrix, but we can create code for those particular rules. Recursive descend knows a little bit in advance,
+it knows if it's a loop or not and when the loop should end, but with a DFA, we can detect cycles with
+depth-first search, so we can restore that information.
+By making an NFA, we can make our own parser without doing exactly the same flex does, our own way if
+it's needed. Of course, if flex does this, we can do as well. And if we would do what flex does (although,
+without copying it's code, implementing ourselves), we could make the first version, maybe we would improve
+it to be more specialized to our case.
+But flex allows to just specify grammar from the standard directly, no additional work. So using flex makes
+the tokenizer more obvious to see. And flex is more widely used. More people know about it and there's
+information about it, of course. Flex is quickier to do and easier to modify then as well. Same thing with bison.
+*/
