@@ -9,10 +9,10 @@
 
 struct ast_code_block_item_node {
 	/*
-	  CODESTYLE: Writing full names in enums and file names (e.g. statement.h, statement.c,
-	  AST_CODE_BLOCK_STATEMENT_ITEM for ast_stmt,
-	  declaration.h, declaration.c, AST_CODE_BLOCK_DECLARATION_ITEM for ast_decl if such
-	  would exist, so there's at least one place it's fully diciphered.
+	  CODESTYLE: Writing full names in enums and file names.
+	  E.g. statement.h, statement.c, AST_CODE_BLOCK_STATEMENT_ITEM for ast_stmt;
+	  declaration.h, declaration.c, AST_CODE_BLOCK_DECLARATION_ITEM for ast_decl if such would exist.
+	  So there's at least one place it's fully diciphered.
 	  For derived classes their short names are written. For example, ast_label_decl, label_decl.h and etc.
 	*/
 	enum ast_code_block_item_type {
