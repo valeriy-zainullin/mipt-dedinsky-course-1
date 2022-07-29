@@ -880,6 +880,7 @@ statement:
 	case constant-expression : statement
 	default : statement
 */
+/* TODO: 1st is ast_label_decl, 2nd is ast_case_decl, 3rd is ast_default_case_decl. */
 labeled_statement:
   identifier punctuator_colon statement
 | keyword_case constant_expression punctuator_colon statement
@@ -899,6 +900,7 @@ compound_statement:
 	block-item
 	block-item-list block-item
 */
+/* TODO: named Block in printed output. */
 block_item_list:
   block_item
 | block_item_list block_item
@@ -960,6 +962,7 @@ iteration_statement:
 	break ;
 	return expression_opt ;
 */
+/* TODO: 1st is ast_goto_stmt, 2nd is continue_stmt, 3rd is break_stmt, 4th is return_stmt expression ptr*/
 jump_statement:
   keyword_goto identifier punctuator_semicolon
 | keyword_continue punctuator_semicolon
