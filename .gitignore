@@ -15,3 +15,4 @@ build/
 .vs
 **/x64/Debug
 *.res
+TX/
