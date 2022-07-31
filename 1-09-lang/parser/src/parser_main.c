@@ -1,4 +1,4 @@
-#include "ast.h"
+#include "mycc-ast/translation_unit.h"
 
 #include <assert.h>
 

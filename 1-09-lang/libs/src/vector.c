@@ -115,7 +115,7 @@ void vector_set(struct vector* vector_ptr, size_t index, void const* item_ptr) {
 }
 
 void vector_get(struct vector const* vector_ptr, size_t index, void* item_ptr) {
-	memcpy(item_ptr,  vector_get_const_item_ptr(vector_ptr, index), vector_ptr->item_size);	
+	memcpy(item_ptr, vector_get_const_item_ptr(vector_ptr, index), vector_ptr->item_size);	
 }
 
 bool vector_check_empty(struct vector const* vector_ptr) {
@@ -141,7 +141,7 @@ bool vector_pop(struct vector* vector_ptr) {
 	return true;
 }
 
-size_t vector_push(struct vector* vector_ptr, const void* item_ptr) {
+bool vector_push(struct vector* vector_ptr, const void* item_ptr) {
 	if (!vector_check_appendable(vector_ptr) && !vector_expand(vector_ptr)) {
 		return false;
 	}

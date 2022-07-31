@@ -20,7 +20,7 @@
 	#include "tokenizer.h"
 %}
 
-/* Track line numbers as well.*/
+/* Track line numbers as well. */
 %option yylineno 
 %{
 	#include <assert.h>

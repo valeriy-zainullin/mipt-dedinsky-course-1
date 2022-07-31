@@ -11,10 +11,12 @@
 %locations
 
 %{
-#include "ast.h"
 #include "tokenizer.h"
 
-#include "vector.h"
+#include "mycc-ast/code_block.h"
+#include "mycc-ast/constant.h"
+
+#include "mycc-libs/vector.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -30,7 +32,7 @@ void yyerror(struct ast_code_block_node** code_block_node, char const * string) 
 }
 %}
 
-// Use token table. Otherwise there's too many keywords and punctuators, code gets noticebly messier.
+// Use token table. Otherwise there are too many keywords and punctuators, code gets noticebly messier.
 // We would have to provide separate functions for every keyword and punctuator, have many rules in the
 // tokenizer, list every keyword and punctuator as separate rules in the rule section there. One repetition.
 // Then function definitions in the standalone tokenizer, which just prints the tokens out to stdout. Not
@@ -82,8 +84,6 @@ TODO: standard reference here.
 %token punctuator_less_colon punctuator_colon_greater punctuator_less_percent punctuator_percent_greater
 %token punctuator_percent_colon punctuator_percent_colon_percent_colon
 
-%token identifier constant string_literal
-
 // %start translation_unit
 %start block_item_list
 
@@ -94,21 +94,57 @@ TODO: standard reference here.
 	struct ast_translation_unit_node* translation_unit;
 	struct ast_external_decl_node*    external_decl;
 	struct ast_code_block_node*       code_block;
+	
+	struct ast_constant*              constant;
+	struct ast_int_constant*          int_constant;
 }
+
+%token identifier
+%token<int_constant> integer_constant
+%token floating_constant
+%token character_constant
+%token string_literal
 
 %type<translation_unit> translation_unit
 %type<external_decl> external_declaration
 %type<code_block> block_item_list
 
+%type<constant> expression
+%type<constant> assignment_expression
+%type<constant> conditional_expression
+%type<constant> logical_OR_expression
+%type<constant> logical_AND_expression
+%type<constant> inclusive_OR_expression
+%type<constant> exclusive_OR_expression
+%type<constant> AND_expression
+%type<constant> equality_expression
+%type<constant> relational_expression
+%type<constant> shift_expression
+%type<constant> additive_expression
+%type<constant> multiplicative_expression
+%type<constant> cast_expression
+%type<constant> unary_expression
+%type<constant> postfix_expression
+%type<constant> primary_expression
+%type<constant> constant
+
 //%destructor { *output = $$; } <translation_unit>
 // %destructor { if ($$ != NULL) { $$ = ast_external_decl_node_delete($$); } } <external_decl>
-%destructor { *output = $$; } <func_code_block>
+%destructor { *output = $$; } <code_block>
 
 %%
 
 identifier_opt:
   %empty
 | identifier
+;
+
+constant:
+  integer_constant {
+      $$ = (struct ast_constant*) $1;
+  }
+| floating_constant
+| character_constant
 ;
 
 /*
@@ -120,7 +156,9 @@ identifier_opt:
 */
 primary_expression:
   identifier
-| constant
+| constant {
+      $$ = /* (struct ast_primary_expr*) */ $1;
+  }
 | string_literal
 | punctuator_left_parenthesis expression punctuator_right_parenthesis
 ;
@@ -138,7 +176,7 @@ primary_expression:
 	( type-name ) { initializer-list , }
 */
 postfix_expression:
-  primary_expression
+  primary_expression { $$ = $1; }
 | postfix_expression punctuator_left_square_bracket expression punctuator_right_square_bracket
 | postfix_expression punctuator_left_parenthesis argument_expression_list_opt punctuator_right_parenthesis
 | postfix_expression punctuator_dot identifier
@@ -174,7 +212,7 @@ argument_expression_list_opt:
 	sizeof ( type-name )
 */
 unary_expression:
-  postfix_expression
+  postfix_expression { $$ = $1; }
 | punctuator_increment unary_expression
 | punctuator_decrement unary_expression
 | unary_operator cast_expression
@@ -195,7 +233,7 @@ unary_operator:
 	( type-name ) cast-expression
 */
 cast_expression:
-  unary_expression
+  unary_expression { $$ = $1; }
 | punctuator_left_parenthesis type_name punctuator_right_parenthesis cast_expression
 ;
 
@@ -207,7 +245,7 @@ cast_expression:
 	multiplicative-expression % cast-expression
 */
 multiplicative_expression:
-  cast_expression
+  cast_expression { $$ = $1; }
 | multiplicative_expression punctuator_star cast_expression
 | multiplicative_expression punctuator_slash cast_expression
 | multiplicative_expression punctuator_percent cast_expression
@@ -220,7 +258,7 @@ multiplicative_expression:
 	additive-expression - multiplicative-expression
 */
 additive_expression:
-  multiplicative_expression
+  multiplicative_expression { $$ = $1; }
 | additive_expression punctuator_plus multiplicative_expression
 | additive_expression punctuator_minus multiplicative_expression
 ;
@@ -232,7 +270,7 @@ additive_expression:
 	shift-expression >> additive-expression
 */
 shift_expression:
-  additive_expression
+  additive_expression { $$ = $1; }
 | shift_expression punctuator_shift_left additive_expression
 | shift_expression punctuator_shift_right additive_expression
 ;
@@ -246,12 +284,21 @@ shift_expression:
 	relational-expression >= shift-expression
 */
 relational_expression:
-  shift_expression
+  shift_expression { $$ = $1; }
 | relational_expression punctuator_less shift_expression
 | relational_expression punctuator_greater shift_expression
 | relational_expression punctuator_less_equal shift_expression
 | relational_expression punctuator_greater_equal shift_expression
 ;
+
+/*
+relational_expression:
+  shift_expression:
+    additive_expression:
+  +
+  shift_expression:
+Количество пробелов -- длина макс оператора по длине + 1. indentation_level -> 
+*/
 
 /*
 (6.5.9) equality-expression:
@@ -260,7 +307,7 @@ relational_expression:
 	equality-expression != relational-expression
 */
 equality_expression:
-  relational_expression
+  relational_expression { $$ = $1; }
 | equality_expression punctuator_equal_equal relational_expression
 | equality_expression punctuator_not_equal relational_expression
 ;
@@ -271,7 +318,7 @@ equality_expression:
 	AND-expression & equality-expression
 */
 AND_expression:
-  equality_expression
+  equality_expression { $$ = $1; }
 | AND_expression punctuator_and equality_expression
 ;
 
@@ -281,7 +328,7 @@ AND_expression:
 	exclusive-OR-expression ^ AND-expression
 */
 exclusive_OR_expression:
-  AND_expression
+  AND_expression { $$ = $1; }
 | exclusive_OR_expression punctuator_circumflex AND_expression
 ;
 
@@ -291,7 +338,7 @@ exclusive_OR_expression:
 	inclusive-OR-expression | exclusive-OR-expression
 */
 inclusive_OR_expression:
-  exclusive_OR_expression
+  exclusive_OR_expression { $$ = $1; }
 | inclusive_OR_expression punctuator_or exclusive_OR_expression
 ;
 
@@ -301,7 +348,7 @@ inclusive_OR_expression:
 	logical-AND-expression && inclusive-OR-expression
 */
 logical_AND_expression:
-  inclusive_OR_expression
+  inclusive_OR_expression { $$ = $1; }
 | logical_AND_expression punctuator_and_and inclusive_OR_expression
 ;
 
@@ -311,7 +358,7 @@ logical_AND_expression:
 	logical-OR-expression || logical-AND-expression
 */
 logical_OR_expression:
-  logical_AND_expression
+  logical_AND_expression { $$ = $1; }
 | logical_OR_expression punctuator_or_or logical_AND_expression
 ;
 
@@ -321,7 +368,7 @@ logical_OR_expression:
 	logical-OR-expression ? expression : conditional-expression
 */
 conditional_expression:
-  logical_OR_expression
+  logical_OR_expression { $$ = $1; }
 | logical_OR_expression punctuator_question_mark expression punctuator_colon conditional_expression
 ;
 
@@ -331,7 +378,7 @@ conditional_expression:
 	unary-expression assignment-operator assignment-expression
 */
 assignment_expression:
-  conditional_expression
+  conditional_expression { $$ = $1; }
 | unary_expression assignment_operator assignment_expression
 ;
 
@@ -364,7 +411,7 @@ assignment_operator:
 	expression , assignment-expression
 */
 expression:
-  assignment_expression
+  assignment_expression { $$ = $1; }
 | expression punctuator_comma assignment_expression
 ;
 
@@ -1130,21 +1177,22 @@ int tokenizer_handle_identifier(char const* text) {
 }
 
 int tokenizer_handle_integer_constant(char const* text) {
-	(void) text;
+	yylval.int_constant = ast_int_constant_new_from_token(text);
+	// TODO: check for null pointer, returned if an allocation fails.
 	
-	return constant;
+	return integer_constant;
 }
 
 int tokenizer_handle_floating_constant(char const* text) {
 	(void) text;
 	
-	return constant;
+	return floating_constant;
 }
 
 int tokenizer_handle_character_constant(char const* text) {
 	(void) text;
 	
-	return constant;
+	return character_constant;
 }
 
 int tokenizer_handle_string_literal(char const* text) {

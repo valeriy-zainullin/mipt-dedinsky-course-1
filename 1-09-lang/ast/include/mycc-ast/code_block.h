@@ -2,7 +2,7 @@
 
 #include "statement.h"
 
-#include "vector.h"
+#include "mycc-libs/vector.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,6 +29,8 @@ struct ast_code_block_node {
 };
 
 bool ast_code_block_node_init(struct ast_code_block_node* code_block);
+void ast_code_block_node_deinit(struct ast_code_block_node* code_block);
+
 struct ast_code_block_node* ast_code_block_node_new();
 struct ast_code_block_node* ast_code_block_node_delete(struct ast_code_block_node* code_block);
 
