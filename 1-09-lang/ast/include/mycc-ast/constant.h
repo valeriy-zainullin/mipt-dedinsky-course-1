@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 struct ast_constant {
-	/* struct ast_primary_expr* primary_expr; */
+	struct ast_primary_expr primary_expr;
 	enum ast_constant_type {
 		AST_CONSTANT_TYPE_INTEGER_CONSTANT,
 		AST_CONSTANT_TYPE_FLOATING_CONSTANT,
@@ -27,6 +27,8 @@ void ast_int_constant_deinit();
 
 struct ast_int_constant* ast_int_constant_new_from_token(char const* text);
 struct ast_int_constant* ast_int_constant_delete(struct ast_int_constant* int_constant);
+
+void ast_print_int_constant(FILE* file, struct ast_int_constant const* int_constant, size_t indent_level);
 
 struct ast_float_constant {
 	struct ast_constant constant;

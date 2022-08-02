@@ -175,6 +175,9 @@ primary_expression:
 	( type-name ) { initializer-list }
 	( type-name ) { initializer-list , }
 */
+// Need to create a separate ast_int_list_expr, to not store this information in postfix_expression,
+// structure members get messy otherwise. Refactoring initializer lists into a separate rule so that
+// syntax corresponds to ast type system.
 postfix_expression:
   primary_expression { $$ = $1; }
 | postfix_expression punctuator_left_square_bracket expression punctuator_right_square_bracket
@@ -183,9 +186,13 @@ postfix_expression:
 | postfix_expression punctuator_arrow identifier
 | postfix_expression punctuator_increment
 | postfix_expression punctuator_decrement
-| punctuator_left_parenthesis type_name punctuator_right_parenthesis punctuator_left_brace initializer_list punctuator_right_brace
+| initializer_list_expr
+;
+initilizer_list_expr:
+  punctuator_left_parenthesis type_name punctuator_right_parenthesis punctuator_left_brace initializer_list punctuator_right_brace
 | punctuator_left_parenthesis type_name punctuator_right_parenthesis punctuator_left_brace initializer_list punctuator_comma punctuator_right_brace
 ;
+
 
 /*
 (6.5.2) argument-expression-list:
@@ -212,11 +219,15 @@ argument_expression_list_opt:
 	sizeof ( type-name )
 */
 unary_expression:
-  postfix_expression { $$ = $1; }
+  prepostfix_expression { $$ = $1; }
 | punctuator_increment unary_expression
 | punctuator_decrement unary_expression
 | unary_operator cast_expression
 | keyword_sizeof unary_expression
+
+  // Not refactoring this to a separate sizeof_type_expression to correspond ast types,
+  // because syntax is worse in my opinion, now sizeof in two places, but this is
+  // handled so that ast_size_of_type_expr is created.
 | keyword_sizeof punctuator_left_parenthesis type_name punctuator_right_parenthesis
 ;
 

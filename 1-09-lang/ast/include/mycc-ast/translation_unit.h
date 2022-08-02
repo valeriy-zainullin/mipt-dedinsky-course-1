@@ -1,6 +1,8 @@
 #pragma once
 
-#include "vector.h"
+#include "mycc-libs/vector.h"
+
+#include "location.h"
 
 #include <stdbool.h>
 #include <stdio.h>
