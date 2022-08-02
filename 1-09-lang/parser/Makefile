@@ -40,10 +40,10 @@ $(OBJECT_DIR)/genrtd_src/%.c: src/%.y | $(OBJECT_DIR)/genrtd_src
 	# bison -Wall -Werror -o $@ $<
 	bison -Wall -l -o $@ $<
 
-$(OBJECT_DIR)/%.obj: $(BUILD_DIR)/%.c | $(OBJECT_DIR)
+$(OBJECT_DIR)/%.obj: $(OBJECT_DIR)/genrtd_src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
-$(OBJECT_DIR)/%.dbg.obj: $(BUILD_DIR)/%.c | $(OBJECT_DIR)
+$(OBJECT_DIR)/%.dbg.obj: $(OBJECT_DIR)/genrtd_src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
 	
 $(OBJECT_DIR)/%.dbg.san.obj: $(OBJECT_DIR)/genrtd_src/%.c | $(OBJECT_DIR)
@@ -58,25 +58,25 @@ $(OBJECT_DIR)/%.dbg.obj: src/%.c | $(OBJECT_DIR)
 $(OBJECT_DIR)/%.dbg.san.obj: src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_DBG) $(CFLAGS_DBG_SAN) -o $@ $<
 	
-$(BUILD_DIR)/libmycc-parser.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,parser.c tokenizer.c)
+$(BUILD_DIR)/libmycc-parser.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,parser.c tokenizer.c) | $(BUILD_DIR)
 	gcc -shared -o $@ $^
-$(BUILD_DIR)/libmycc-parser.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser.c tokenizer.c)
+$(BUILD_DIR)/libmycc-parser.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser.c tokenizer.c) | $(BUILD_DIR)
 	gcc -shared -o $@ $^
-$(BUILD_DIR)/libmycc-parser.dbg.san.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,parser.c tokenizer.c)
+$(BUILD_DIR)/libmycc-parser.dbg.san.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,parser.c tokenizer.c) | $(BUILD_DIR)
 	gcc -shared -o $@ $^
 
-$(BUILD_DIR)/tokenizer: $(patsubst %.c,$(OBJECT_DIR)/%.obj,tokenizer.c tokenizer_main.c) # build/tokenizer$(EXECUTABLE_OS_EXTENSION}
+$(BUILD_DIR)/tokenizer: $(patsubst %.c,$(OBJECT_DIR)/%.obj,tokenizer.c tokenizer_main.c) # build/tokenizer$(EXECUTABLE_OS_EXTENSION} | $(BUILD_DIR)
 	gcc -o $@ $^
-$(BUILD_DIR)/tokenizer.dbg: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,tokenizer.c tokenizer_main.c) # build/tokenizer$(EXECUTABLE_OS_EXTENSION}
+$(BUILD_DIR)/tokenizer.dbg: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,tokenizer.c tokenizer_main.c) # build/tokenizer$(EXECUTABLE_OS_EXTENSION} | $(BUILD_DIR)
 	gcc -o $@ $^
-$(BUILD_DIR)/tokenizer.dbg.san: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,tokenizer.c tokenizer_main.c) # build/tokenizer$(EXECUTABLE_OS_EXTENSION}
+$(BUILD_DIR)/tokenizer.dbg.san: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,tokenizer.c tokenizer_main.c) # build/tokenizer$(EXECUTABLE_OS_EXTENSION} | $(BUILD_DIR)
 	gcc $(CFLAGS_DBG_SAN) -o $@ $^
 
-$(BUILD_DIR)/parser: $(patsubst %.c,$(OBJECT_DIR)/%.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.so
+$(BUILD_DIR)/parser: $(patsubst %.c,$(OBJECT_DIR)/%.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.so | $(BUILD_DIR)
 	gcc -o $@ $^
-$(BUILD_DIR)/parser.dbg: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.dbg.so
+$(BUILD_DIR)/parser.dbg: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.dbg.so | $(BUILD_DIR)
 	gcc -o $@ $^
-$(BUILD_DIR)/parser.dbg.san: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.dbg.san.so
+$(BUILD_DIR)/parser.dbg.san: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.dbg.san.so | $(BUILD_DIR)
 	gcc $(CFLAGS_DBG_SAN) -o $@ $^
 
 $(BUILD_DIR) $(OBJECT_DIR) $(OBJECT_DIR)/genrtd_src:
