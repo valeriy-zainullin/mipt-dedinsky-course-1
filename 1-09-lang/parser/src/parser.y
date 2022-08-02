@@ -175,9 +175,9 @@ primary_expression:
 	( type-name ) { initializer-list }
 	( type-name ) { initializer-list , }
 */
-// Need to create a separate ast_int_list_expr, to not store this information in postfix_expression,
-// structure members get messy otherwise. Refactoring initializer lists into a separate rule so that
-// syntax corresponds to ast type system.
+// Need to create a separate ast_init_list_expr, to not store initializer list information in
+// postfix_expression structure, structure members get messy otherwise. Refactoring
+// initializer lists into a separate rule so that syntax corresponds to ast type system.
 postfix_expression:
   primary_expression { $$ = $1; }
 | postfix_expression punctuator_left_square_bracket expression punctuator_right_square_bracket
@@ -226,8 +226,8 @@ unary_expression:
 | keyword_sizeof unary_expression
 
   // Not refactoring this to a separate sizeof_type_expression to correspond ast types,
-  // because syntax is worse in my opinion, now sizeof in two places, but this is
-  // handled so that ast_size_of_type_expr is created.
+  // because syntax is getting worse in my opinion, now sizeof in two places, but this
+  // is handled so that ast_size_of_type_expr is created.
 | keyword_sizeof punctuator_left_parenthesis type_name punctuator_right_parenthesis
 ;
 
