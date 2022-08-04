@@ -24,9 +24,11 @@
 
 int yylex();
 // void yyerror(struct ast_translation_unit_node** translation_unit, char const * string) {
-void yyerror(struct ast_code_block_node** code_block_node, char const * string) {
+//void yyerror(struct ast_code_block_node** code_block_node, char const * string) {
+void yyerror(struct ast_return_stmt** return_stmt, char const * string) {
 	// (void) translation_unit;
-	(void) code_block_node;
+	//(void) code_block_node;
+	(void) return_stmt;
 	
 	fprintf(stderr, "%s\n", string);
 }
@@ -83,17 +85,15 @@ TODO: standard reference here.
 %token punctuator_comma punctuator_hash punctuator_hash_hash
 %token punctuator_less_colon punctuator_colon_greater punctuator_less_percent punctuator_percent_greater
 %token punctuator_percent_colon punctuator_percent_colon_percent_colon
-
-// %start translation_unit
-%start block_item_list
-
-// %parse-param { struct ast_translation_unit_node** output }
-%parse-param { struct ast_code_block_node** output }
-
 %union {
+	// TODO: delete "_node" from types.
+	// TODO: implement reference counting. ast_acquire_ref, ast_release_ref, ast_get_num_refs
 	struct ast_translation_unit_node* translation_unit;
 	struct ast_external_decl_node*    external_decl;
 	struct ast_code_block_node*       code_block;
+	
+	//struct ast_jump_stmt*             jump_stmt;
+	struct ast_return_stmt*           jump_stmt;
 	
 	struct ast_constant*              constant;
 	struct ast_int_constant*          int_constant;
@@ -105,9 +105,25 @@ TODO: standard reference here.
 %token character_constant
 %token string_literal
 
+// %start translation_unit
+// %start block_item_list
+%start jump_statement
+
+// %parse-param { struct ast_translation_unit_node** output }
+//%parse-param { struct ast_code_block_node** output }
+%parse-param { struct ast_return_stmt** output }
+
 %type<translation_unit> translation_unit
 %type<external_decl> external_declaration
 %type<code_block> block_item_list
+
+%type<jump_stmt> statement
+// labeled_statement
+// compound_statement
+// expression_statement
+// selection_statement
+// iteration_statement
+%type<jump_stmt> jump_statement
 
 %type<constant> expression
 %type<constant> assignment_expression
@@ -128,9 +144,23 @@ TODO: standard reference here.
 %type<constant> primary_expression
 %type<constant> constant
 
+%type<constant> expression_opt
+
 //%destructor { *output = $$; } <translation_unit>
 // %destructor { if ($$ != NULL) { $$ = ast_external_decl_node_delete($$); } } <external_decl>
-%destructor { *output = $$; } <code_block>
+/*%destructor {
+	if ($$ != *output) {
+		$$ = ast_code_block_delete($$);
+	}
+} <code_block>*/
+
+// More about destructors: https://stackoverflow.com/a/6401973
+// I think, I will be able to figure out what to do, when I will be dealing with compilation errors.
+// It's not now. It's some time in the future.
+// %destructor { if ($$ != NULL) $$ = ast_return_stmt_delete($$); /* ast_jump_statement_delete($$); */ } <jump_statement>
+
+// %destructor { if ($$ != NULL) $$ = ast_constant_delete($$); } <constant>
+// %destructor { if ($$ != NULL) $$ = ast_int_constant_delete($$); } <int_constant>
 
 %%
 
@@ -188,7 +218,7 @@ postfix_expression:
 | postfix_expression punctuator_decrement
 | initializer_list_expr
 ;
-initilizer_list_expr:
+initializer_list_expr:
   punctuator_left_parenthesis type_name punctuator_right_parenthesis punctuator_left_brace initializer_list punctuator_right_brace
 | punctuator_left_parenthesis type_name punctuator_right_parenthesis punctuator_left_brace initializer_list punctuator_comma punctuator_right_brace
 ;
@@ -219,7 +249,7 @@ argument_expression_list_opt:
 	sizeof ( type-name )
 */
 unary_expression:
-  prepostfix_expression { $$ = $1; }
+  postfix_expression { $$ = $1; }
 | punctuator_increment unary_expression
 | punctuator_decrement unary_expression
 | unary_operator cast_expression
@@ -427,8 +457,12 @@ expression:
 ;
 
 expression_opt:
-  %empty
-| expression
+  %empty {
+      $$ = NULL;
+  }
+| expression {
+      $$ = $1;
+  }
 ;
 
 /*
@@ -735,7 +769,8 @@ direct_declarator:
 */
 pointer:
   punctuator_star type_qualifier_list_opt
-| punctuator_star type_qualifier_list_opt pointer;
+| punctuator_star type_qualifier_list_opt pointer
+;
 pointer_opt:
   %empty
 | pointer
@@ -929,7 +964,10 @@ statement:
 | expression_statement
 | selection_statement
 | iteration_statement
-| jump_statement
+| jump_statement {
+      $$ = $1;
+      printf("jump_statement = %p.\n", jump_statement);
+  }
 ;
 
 /*
@@ -960,7 +998,8 @@ compound_statement:
 */
 /* TODO: named Block in printed output. */
 block_item_list:
-  block_item
+  block_item {
+  }
 | block_item_list block_item
 ;
 
@@ -1025,7 +1064,11 @@ jump_statement:
   keyword_goto identifier punctuator_semicolon
 | keyword_continue punctuator_semicolon
 | keyword_break punctuator_semicolon
-| keyword_return expression_opt punctuator_semicolon
+| keyword_return expression_opt punctuator_semicolon {
+      $$ = ast_return_stmt_new($2);
+      *output = $$;
+      // TODO: handle out of memory errors.
+  }
 ;
 
 /*

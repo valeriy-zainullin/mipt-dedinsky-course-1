@@ -7,30 +7,31 @@ C_SOURCES = $(patsubst src/%.c,%.c,$(wildcard src/*.c))
 # TODO: make target specific directories inside build. Build for target upon a request, by default use host target.
 # TODO: make gcc output makefiles.
 
-all: build/libmycc-ast.so build/libmycc-ast.dbg.so libmycc-ast.dbg.san.so
+all: $(BUILD_DIR)/libmycc-ast.so $(BUILD_DIR)/libmycc-ast.dbg.so $(BUILD_DIR)/libmycc-ast.dbg.san.so
 
+# -f for not showing errors if cannot delete a folder.
 clean:
-	rm -r build 
+	rm -rf $(BUILD_DIR) $(OBJECT_DIR)
 
 .PHONY: all clean
 
-build/objects/%.obj: src/%.c | build/objects
+$(OBJECT_DIR)/%.obj: src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_REL) -o $@ $<
 
-build/objects/%.dbg.obj: src/%.c | build/objects
+$(OBJECT_DIR)/%.dbg.obj: src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_DBG) -o $@ $<
 	
-build/objects/%.dbg.san.obj: src/%.c | build/objects
+$(OBJECT_DIR)/%.dbg.san.obj: src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_DBG) $(CFLAGS_DBG_SAN) -o $@ $<
 	
-build/libmycc-ast.so: $(patsubst src/%.c,build/objects/%.obj)
-	gcc -shared -o $@ $^
-build/libmycc-ast.dbg.so: $(patsubst %.c,build/objects/%.dbg.obj,$(C_SOURCES))
-	gcc -shared -o $@ $^
-build/libmycc-ast.dbg.san.so: $(patsubst %.c,build/objects/%.dbg.san.obj,$(C_SOURCES))
-	gcc -shared -o $@ $^
+$(BUILD_DIR)/libmycc-ast.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,$(C_SOURCES)) | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^)
+$(BUILD_DIR)/libmycc-ast.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,$(C_SOURCES)) | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^)
+$(BUILD_DIR)/libmycc-ast.dbg.san.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,$(C_SOURCES)) | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^)
 
-build build/objects:
+$(BUILD_DIR) $(OBJECT_DIR):
 	mkdir -p $@
 
 # Don't use embedded make rules.

@@ -4,6 +4,8 @@ CFLAGS += -Iinclude/mycc-parser
 
 CFLAGS_DBG += -DYYDEBUG=1
 
+# TODO: idea for porting: just make more rules for different file names. Conditionally set variable with parser executable name on the platform. Or create subdirectories for different platforms. Make a note "if on windows, run with cygwin make and bash."
+
 all: present
 
 present: parser_tests
@@ -15,7 +17,8 @@ parser_tests: $(BUILD_DIR)/parser.dbg # builld/parser.dbg.san # leaks of ast nod
 	#$< < samples/1-simple_main.c
 	#$< < samples/2-simple-struct.c
 	#$< < samples/3-printf.c
-	$< < simplified-lang-tests/1-simple_main.c
+	#$< < ../simplified-lang-tests/1-simple_main.c
+	$< < ../simplified-lang-tests/0-simpliest_main.c
 
 parser_counterexamples: src/parser.y
 	bison -Wall -fsyntax-only -Wcounterexamples $<
@@ -58,12 +61,12 @@ $(OBJECT_DIR)/%.dbg.obj: src/%.c | $(OBJECT_DIR)
 $(OBJECT_DIR)/%.dbg.san.obj: src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_DBG) $(CFLAGS_DBG_SAN) -o $@ $<
 	
-$(BUILD_DIR)/libmycc-parser.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,parser.c tokenizer.c) | $(BUILD_DIR)
-	gcc -shared -o $@ $^
-$(BUILD_DIR)/libmycc-parser.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser.c tokenizer.c) | $(BUILD_DIR)
-	gcc -shared -o $@ $^
-$(BUILD_DIR)/libmycc-parser.dbg.san.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,parser.c tokenizer.c) | $(BUILD_DIR)
-	gcc -shared -o $@ $^
+$(BUILD_DIR)/libmycc-parser.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,parser.c tokenizer.c) $(BUILD_DIR)/libmycc-ast.so | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-ast
+$(BUILD_DIR)/libmycc-parser.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser.c tokenizer.c) $(BUILD_DIR)/libmycc-ast.dbg.so | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-ast.dbg
+$(BUILD_DIR)/libmycc-parser.dbg.san.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,parser.c tokenizer.c) $(BUILD_DIR)/libmycc-ast.dbg.san.so | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-ast.dbg.san
 
 $(BUILD_DIR)/tokenizer: $(patsubst %.c,$(OBJECT_DIR)/%.obj,tokenizer.c tokenizer_main.c) # build/tokenizer$(EXECUTABLE_OS_EXTENSION} | $(BUILD_DIR)
 	gcc -o $@ $^
@@ -73,11 +76,21 @@ $(BUILD_DIR)/tokenizer.dbg.san: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,token
 	gcc $(CFLAGS_DBG_SAN) -o $@ $^
 
 $(BUILD_DIR)/parser: $(patsubst %.c,$(OBJECT_DIR)/%.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.so | $(BUILD_DIR)
-	gcc -o $@ $^
+	gcc $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-parser -lmycc-ast
 $(BUILD_DIR)/parser.dbg: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.dbg.so | $(BUILD_DIR)
-	gcc -o $@ $^
+	gcc $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-parser.dbg -lmycc-ast.dbg
 $(BUILD_DIR)/parser.dbg.san: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.dbg.san.so | $(BUILD_DIR)
-	gcc $(CFLAGS_DBG_SAN) -o $@ $^
+	gcc $(CFLAGS_DBG_SAN) $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) $(LDFLAGS_DBG) -L$(BUILD_DIR) -lmycc-parser.dbg.san -lmycc-ast.dbg.san
+
+# We don't know the dependencies of these libraries here.
+# They may need to be updated as targets, so these libraries are PHONY targets. If there's nothing to do,
+# nothing is done anyways.
+# We will always see linking of mycc-parser.so, because one of it's dependencies needs update as it's PHONY,
+# PHONY targets always need to be updated. But we can't do anything with it. We could be including makefiles
+# instead, but adding to CFLAGS and etc. is harder then. 
+$(BUILD_DIR)/libmycc-ast.so $(BUILD_DIR)/libmycc-ast.dbg.so $(BUILD_DIR)/libmycc-ast.dbg.san.so: | $(BUILD_DIR)
+	$(MAKE) -C ../ast $@
+.PHONY: $(BUILD_DIR)/libmycc-ast.so $(BUILD_DIR)/libmycc-ast.dbg.so $(BUILD_DIR)/libmycc-ast.dbg.san.so
 
 $(BUILD_DIR) $(OBJECT_DIR) $(OBJECT_DIR)/genrtd_src:
 	mkdir -p $@

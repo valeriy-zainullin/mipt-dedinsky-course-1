@@ -1,0 +1,132 @@
+#include "constant.h"
+
+#include <assert.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
+#include <stdlib.h>
+
+static bool string_startswith(char const* string, char const* prefix) {
+	return strncmp(string, prefix, strlen(prefix)) == 0;
+}
+
+static bool check_is_int_suffix_char(char character) {
+	return character == 'u' || character == 'U' || character == 'l' || character == 'L';
+}
+
+void ast_constant_init(struct ast_constant* constant, enum ast_constant_type constant_type) {
+	constant->constant_type = constant_type;
+}
+
+struct ast_constant* ast_constant_delete(struct ast_constant* constant) {
+	switch (constant->constant_type) {
+		case AST_CONSTANT_TYPE_INTEGER_CONSTANT: {
+			return (struct ast_constant*) ast_int_constant_delete((struct ast_int_constant*) constant);
+		}
+		
+		case AST_CONSTANT_TYPE_FLOATING_CONSTANT:
+		case AST_CONSTANT_TYPE_ENUMERATION_CONSTANT:
+		case AST_CONSTANT_TYPE_CHARACTER_CONSTANT:
+		default: {
+			printf("ast_constant_delete: unimplemented.\n");
+			return NULL;
+		}
+	}
+}
+
+bool ast_int_constant_init_from_token(struct ast_int_constant* int_constant, char const* text) {
+	assert(strlen(text) != 0);
+	
+	enum ast_int_constant_base base = AST_INT_CONSTANT_BASE_DECIMAL;
+	if (string_startswith(text, "0x") || string_startswith(text, "0X")) {
+		base = AST_INT_CONSTANT_BASE_HEXADECIMAL;
+		text += 2;
+	} else if (string_startswith(text, "0")) {
+		base = AST_INT_CONSTANT_BASE_OCTAL;
+	}
+	
+	size_t suffix_start = strlen(text);
+	while (suffix_start > 0 && check_is_int_suffix_char(text[suffix_start - 1])) {
+		suffix_start -= 1;
+	}
+	
+	char* constant_value = calloc(strlen(text) + 1, sizeof(char));
+	if (constant_value == NULL) {
+		return false;
+	}
+	strcpy(constant_value, text);
+	constant_value[suffix_start] = '\0';
+	
+	bool is_unsigned = false;
+	bool is_long = false;
+	bool is_long_long = false;
+	for (size_t i = suffix_start; text[i] != '\0'; ++i) {
+		if ((text[suffix_start] == 'u' || text[suffix_start] == 'U') && !is_unsigned) {
+			is_unsigned = true;
+		} else if ((text[suffix_start] == 'l' || text[suffix_start] == 'L') && !is_long && !is_long_long) {
+			is_long = true;
+		} else if ((text[suffix_start] == 'l' || text[suffix_start] == 'L') && is_long && !is_long_long) {
+			is_long = false;
+			is_long_long = true;
+		}
+		
+		// Invalid character. Ignored in release build, but error in debug build.
+		// Should never happen in correct execution of the compiler.
+		assert(false);
+	}
+	
+	enum ast_int_constant_c_type c_type = AST_INT_CONSTANT_INT_TYPE;
+	if (!is_unsigned) {
+		if (is_long) {
+			c_type = AST_INT_CONSTANT_LONG_TYPE;
+		} else if (is_long_long) {
+			c_type = AST_INT_CONSTANT_LONG_LONG_TYPE;
+		} else {
+			c_type = AST_INT_CONSTANT_INT_TYPE;
+		}
+	} else {
+		if (is_long) {
+			c_type = AST_INT_CONSTANT_UNSIGNED_LONG_TYPE;
+		} else if (is_long_long) {
+			c_type = AST_INT_CONSTANT_UNSIGNED_LONG_LONG_TYPE;
+		} else {
+			c_type = AST_INT_CONSTANT_UNSIGNED_INT_TYPE;
+		}
+	}
+		
+	ast_constant_init((struct ast_constant*) int_constant, AST_CONSTANT_TYPE_INTEGER_CONSTANT);
+	
+	int_constant->base = base;
+	int_constant->c_type = c_type;
+	int_constant->value = constant_value;
+	
+	return int_constant;
+}
+
+void ast_int_constant_deinit(struct ast_int_constant* int_constant) {
+	free(int_constant->value);
+	int_constant->value = NULL;
+}
+
+struct ast_int_constant* ast_int_constant_new_from_token(char const* text) {
+	struct ast_int_constant* int_constant = calloc(1, sizeof(struct ast_int_constant));
+	if (int_constant == NULL) {
+		return false;
+	}
+	
+	if (!ast_int_constant_init_from_token(int_constant, text)) {
+		free(int_constant);
+		return false;
+	}
+	
+	return int_constant;
+}
+
+struct ast_int_constant* ast_int_constant_delete(struct ast_int_constant* int_constant) {
+	ast_int_constant_deinit(int_constant);
+	free(int_constant);
+	return NULL;
+}
+
+void ast_print_int_constant(FILE* file, struct ast_int_constant const* int_constant, size_t indent_level);
+

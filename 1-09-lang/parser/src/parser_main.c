@@ -1,8 +1,9 @@
-#include "mycc-ast/translation_unit.h"
+#include "mycc-ast/statement.h"
 
 #include <assert.h>
+#include <stdio.h>
 
-int yyparse();
+int yyparse(struct ast_return_stmt** return_stmt/* struct ast_translation_unit** translation_unit*/);
 
 extern int yydebug;
 
@@ -11,7 +12,8 @@ int main() {
 		yydebug = 1;
 	#endif
 	
-	struct ast_translation_unit_node* return_stmt = NULL;
+	// struct ast_translation_unit* translation_unit = NULL;
+	struct ast_return_stmt* return_stmt = NULL;
 
 	int result = yyparse(&return_stmt);
 	

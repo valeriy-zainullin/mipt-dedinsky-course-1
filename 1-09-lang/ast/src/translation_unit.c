@@ -1,10 +1,11 @@
-#include "ast.h"
+#include "translation_unit.h"
 
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
 bool ast_translation_unit_node_init(struct ast_translation_unit_node* translation_unit) {
 	translation_unit->external_decls = vector_new(0, sizeof(struct ast_external_decl_node));
 	if (translation_unit->external_decls == NULL) {
@@ -84,3 +85,4 @@ void ast_print_external_decl_node(FILE* file, struct ast_external_decl_node cons
 		}
 	}
 }
+*/
