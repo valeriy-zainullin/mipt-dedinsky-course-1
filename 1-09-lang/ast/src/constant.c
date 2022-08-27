@@ -1,5 +1,7 @@
 #include "constant.h"
 
+#include "print_indent.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -128,5 +130,86 @@ struct ast_int_constant* ast_int_constant_delete(struct ast_int_constant* int_co
 	return NULL;
 }
 
-void ast_print_int_constant(FILE* file, struct ast_int_constant const* int_constant, size_t indent_level);
+void ast_print_int_constant(FILE* file, struct ast_int_constant const* int_constant, size_t indent_level) {
+	print_indent(file, indent_level);
 
+	fprintf(file, "integer_constant(");
+	
+	switch (int_constant->base) {
+		case AST_INT_CONSTANT_BASE_OCTAL: {
+			fprintf(file, "octal,");
+			break;
+		}
+		
+		case AST_INT_CONSTANT_BASE_DECIMAL: {
+			fprintf(file, "decimal,");
+			break;
+		}
+		
+		case AST_INT_CONSTANT_BASE_HEXADECIMAL: {
+			fprintf(file, "hexadecimal,");
+			break;
+		}
+		
+		// All possible cases are handled.
+		default: assert(false); __builtin_unreachable();
+	}
+	
+	switch (int_constant->c_type) {
+		case AST_INT_CONSTANT_INT_TYPE: {
+			fprintf(file, "int");
+			break;
+		}
+		
+		case AST_INT_CONSTANT_LONG_TYPE: {
+			fprintf(file, "long");
+			break;
+		}
+
+		case AST_INT_CONSTANT_LONG_LONG_TYPE: {
+			fprintf(file, "long long");
+			break;
+		}
+		
+		case AST_INT_CONSTANT_UNSIGNED_INT_TYPE: {
+			fprintf(file, "unsigned int");
+			break;
+		}
+
+		case AST_INT_CONSTANT_UNSIGNED_LONG_TYPE: {
+			fprintf(file, "unsigned long");
+			break;
+		}
+		
+		case AST_INT_CONSTANT_UNSIGNED_LONG_LONG_TYPE: {
+			fprintf(file, "unsigned long long");
+			break;
+		}
+	}
+	
+	fprintf(file, ") = %s\n", int_constant->value);
+}
+
+void ast_print_constant(FILE* file, struct ast_constant* constant, size_t indent_level) {
+	switch (constant->constant_type) {
+		case AST_CONSTANT_TYPE_INTEGER_CONSTANT: {
+			ast_print_int_constant(file, (struct ast_int_constant*) constant, indent_level);
+			return;
+		}
+		
+		case AST_CONSTANT_TYPE_FLOATING_CONSTANT: {
+			return;
+		}
+		
+		case AST_CONSTANT_TYPE_ENUMERATION_CONSTANT: {
+			return;
+		}
+		
+		case AST_CONSTANT_TYPE_CHARACTER_CONSTANT: {
+			return;
+		}
+		
+		// All possible cases are handled.
+		default: assert(false); __builtin_unreachable();
+	}
+}

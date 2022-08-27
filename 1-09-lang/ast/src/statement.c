@@ -44,4 +44,12 @@ void ast_print_return_stmt(FILE* file, struct ast_return_stmt const* return_stmt
 	(void) file;
 	(void) return_stmt;
 	(void) indent_level;
+	
+	printf("return_stmt");
+	if (return_stmt->constant != NULL) {
+		printf(":\n");
+		ast_print_constant(file, return_stmt->constant, indent_level + 1);
+	} else {
+		printf("\n");
+	}
 }
