@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 struct ast_translation_unit_node {
-	struct ast_location location;
+	// struct ast_location location;
 	struct vector* external_decls;
 };
 

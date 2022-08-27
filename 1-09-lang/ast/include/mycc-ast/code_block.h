@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-struct ast_code_block_item_node {
+struct ast_code_block_item {
 	/*
 	  CODESTYLE: Writing full names in enums and file names.
 	  E.g. statement.h, statement.c, AST_CODE_BLOCK_STATEMENT_ITEM for ast_stmt;
@@ -20,18 +20,19 @@ struct ast_code_block_item_node {
 		AST_CODE_BLOCK_STATEMENT_ITEM
 	} item_type;
 	union {
+		struct ast_decl* decl; // loc_decl? local_decl. Decl collides with external_decl if just decl. Or external_decl is also a decl?
 		struct ast_stmt* stmt;
 	};
 };
 
-struct ast_code_block_node {
+struct ast_code_block {
 	struct vector* items;
 };
 
-bool ast_code_block_node_init(struct ast_code_block_node* code_block);
-void ast_code_block_node_deinit(struct ast_code_block_node* code_block);
+bool ast_code_block_init(struct ast_code_block* code_block);
+void ast_code_block_deinit(struct ast_code_block* code_block);
 
-struct ast_code_block_node* ast_code_block_node_new();
-struct ast_code_block_node* ast_code_block_node_delete(struct ast_code_block_node* code_block);
+struct ast_code_block* ast_code_block_new();
+struct ast_code_block* ast_code_block_delete(struct ast_code_block* code_block);
 
-void ast_print_code_block_node(FILE* file, struct ast_code_block_node const* code_block, size_t indent_level);
+void ast_print_code_block_node(FILE* file, struct ast_code_block const* code_block, size_t indent_level);

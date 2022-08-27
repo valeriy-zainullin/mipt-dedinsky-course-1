@@ -1,10 +1,11 @@
 #pragma once
 
-#include "mycc-libs/exporting.h"
+#include "code_block.h"
 
 #include <stdio.h>
 
 struct ast_stmt {
+	struct ast_code_block_item code_block_item;
 	enum ast_stmt_type {
 		// jump-statement:
 		AST_STMT_TYPE_RETURN_STMT
