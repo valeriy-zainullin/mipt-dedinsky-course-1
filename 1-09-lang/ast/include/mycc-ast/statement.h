@@ -26,4 +26,4 @@ void ast_return_stmt_deinit(struct ast_return_stmt* return_stmt);
 struct ast_return_stmt* ast_return_stmt_new(struct ast_constant* constant/*struct ast_expr* expr*/);
 struct ast_return_stmt* ast_return_stmt_delete(struct ast_return_stmt* return_stmt);
 
-void ast_print_return_stmt(FILE* file, struct ast_return_stmt const* return_stmt, size_t indent_level);
+void ast_return_stmt_print(FILE* file, struct ast_return_stmt const* return_stmt, size_t indent_level);

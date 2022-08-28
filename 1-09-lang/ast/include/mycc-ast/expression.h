@@ -106,6 +106,7 @@ struct ast_primary_expr {
 		AST_PRIMARY_EXPR_IDENTIFIER,
 		AST_PRIMARY_EXPR_CONSTANT,
 		AST_PRIMARY_EXPR_STRING_LITERAL,
-		AST_PRIMARY_EXPR_WRAPPED_EXPR    // Parenthised expr.
+		AST_PRIMARY_EXPR_WRAPPED_EXPR    // Parenthesized expr.
 	} primary_expr_type;
 };
+void ast_primary_expr_print(FILE* file, struct ast_primary_expr const* primary_expr, size_t indent_level);

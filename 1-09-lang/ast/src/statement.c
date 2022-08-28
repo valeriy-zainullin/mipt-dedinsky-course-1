@@ -40,7 +40,7 @@ struct ast_return_stmt* ast_return_stmt_delete(struct ast_return_stmt* return_st
 	return NULL;
 }
 
-void ast_print_return_stmt(FILE* file, struct ast_return_stmt const* return_stmt, size_t indent_level) {
+void ast_return_stmt_print(FILE* file, struct ast_return_stmt const* return_stmt, size_t indent_level) {
 	(void) file;
 	(void) return_stmt;
 	(void) indent_level;
@@ -48,7 +48,7 @@ void ast_print_return_stmt(FILE* file, struct ast_return_stmt const* return_stmt
 	printf("return_stmt");
 	if (return_stmt->constant != NULL) {
 		printf(":\n");
-		ast_print_constant(file, return_stmt->constant, indent_level + 1);
+		ast_constant_print(file, return_stmt->constant, indent_level + 1);
 	} else {
 		printf("\n");
 	}

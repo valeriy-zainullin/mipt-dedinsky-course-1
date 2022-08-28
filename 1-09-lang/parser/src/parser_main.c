@@ -20,10 +20,11 @@ int main() {
 	if (result != 0) {
 		// TODO: maybe show warnings, errors and etc.
 		printf("Input is incorrect. Error recovery is not possible.\n");
+		return 1;
 	}
 	
 	assert(return_stmt != NULL);
-	ast_print_return_stmt(stdout, return_stmt, 0);
+	ast_return_stmt_print(stdout, return_stmt, 0);
 	
 	return 0;
 }

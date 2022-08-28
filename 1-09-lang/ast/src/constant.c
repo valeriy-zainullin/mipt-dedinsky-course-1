@@ -130,7 +130,7 @@ struct ast_int_constant* ast_int_constant_delete(struct ast_int_constant* int_co
 	return NULL;
 }
 
-void ast_print_int_constant(FILE* file, struct ast_int_constant const* int_constant, size_t indent_level) {
+void ast_int_constant_print(FILE* file, struct ast_int_constant const* int_constant, size_t indent_level) {
 	print_indent(file, indent_level);
 
 	fprintf(file, "integer_constant(");
@@ -190,10 +190,10 @@ void ast_print_int_constant(FILE* file, struct ast_int_constant const* int_const
 	fprintf(file, ") = %s\n", int_constant->value);
 }
 
-void ast_print_constant(FILE* file, struct ast_constant* constant, size_t indent_level) {
+void ast_constant_print(FILE* file, struct ast_constant const* constant, size_t indent_level) {
 	switch (constant->constant_type) {
 		case AST_CONSTANT_TYPE_INTEGER_CONSTANT: {
-			ast_print_int_constant(file, (struct ast_int_constant*) constant, indent_level);
+			ast_int_constant_print(file, (struct ast_int_constant*) constant, indent_level);
 			return;
 		}
 		

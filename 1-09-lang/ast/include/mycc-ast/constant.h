@@ -16,7 +16,7 @@ struct ast_constant {
 
 void ast_constant_init(struct ast_constant* constant, enum ast_constant_type constant_type);
 
-void ast_print_constant(FILE* file, struct ast_constant const* constant, size_t indent_level);
+void ast_constant_print(FILE* file, struct ast_constant const* constant, size_t indent_level);
 
 struct ast_constant* ast_constant_delete(struct ast_constant* constant);
 
