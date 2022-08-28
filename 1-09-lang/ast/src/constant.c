@@ -17,6 +17,7 @@ static bool check_is_int_suffix_char(char character) {
 }
 
 void ast_constant_init(struct ast_constant* constant, enum ast_constant_type constant_type) {
+	ast_primary_expr_init((struct ast_primary_expr*) constant, AST_PRIMARY_EXPR_CONSTANT);
 	constant->constant_type = constant_type;
 }
 

@@ -1,9 +1,8 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
-
-#include "constant.h"
 
 struct ast_assign_expr; // TODO: delete when there will be a vector
 struct ast_expr {
@@ -109,4 +108,8 @@ struct ast_primary_expr {
 		AST_PRIMARY_EXPR_WRAPPED_EXPR    // Parenthesized expr.
 	} primary_expr_type;
 };
+
+void ast_primary_expr_init(struct ast_primary_expr* primary_expr, enum ast_primary_expr_type primary_expr_type);
+struct ast_primary_expr* ast_primary_expr_delete(struct ast_primary_expr* primary_expr);
+
 void ast_primary_expr_print(FILE* file, struct ast_primary_expr const* primary_expr, size_t indent_level);

@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 struct ast_constant {
-	// struct ast_primary_expr primary_expr;
+	struct ast_primary_expr primary_expr;
 	enum ast_constant_type {
 		AST_CONSTANT_TYPE_INTEGER_CONSTANT,
 		AST_CONSTANT_TYPE_FLOATING_CONSTANT,

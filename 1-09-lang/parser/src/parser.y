@@ -95,6 +95,7 @@ TODO: standard reference here.
 	//struct ast_jump_stmt*             jump_stmt;
 	struct ast_return_stmt*           jump_stmt;
 	
+	struct ast_primary_expr*          primary_expr;
 	struct ast_constant*              constant;
 	struct ast_int_constant*          int_constant;
 }
@@ -125,26 +126,26 @@ TODO: standard reference here.
 // iteration_statement
 %type<jump_stmt> jump_statement
 
-%type<constant> expression
-%type<constant> assignment_expression
-%type<constant> conditional_expression
-%type<constant> logical_OR_expression
-%type<constant> logical_AND_expression
-%type<constant> inclusive_OR_expression
-%type<constant> exclusive_OR_expression
-%type<constant> AND_expression
-%type<constant> equality_expression
-%type<constant> relational_expression
-%type<constant> shift_expression
-%type<constant> additive_expression
-%type<constant> multiplicative_expression
-%type<constant> cast_expression
-%type<constant> unary_expression
-%type<constant> postfix_expression
-%type<constant> primary_expression
+%type<primary_expr> expression
+%type<primary_expr> assignment_expression
+%type<primary_expr> conditional_expression
+%type<primary_expr> logical_OR_expression
+%type<primary_expr> logical_AND_expression
+%type<primary_expr> inclusive_OR_expression
+%type<primary_expr> exclusive_OR_expression
+%type<primary_expr> AND_expression
+%type<primary_expr> equality_expression
+%type<primary_expr> relational_expression
+%type<primary_expr> shift_expression
+%type<primary_expr> additive_expression
+%type<primary_expr> multiplicative_expression
+%type<primary_expr> cast_expression
+%type<primary_expr> unary_expression
+%type<primary_expr> postfix_expression
+%type<primary_expr> primary_expression
 %type<constant> constant
 
-%type<constant> expression_opt
+%type<primary_expr> expression_opt
 
 //%destructor { *output = $$; } <translation_unit>
 // %destructor { if ($$ != NULL) { $$ = ast_external_decl_node_delete($$); } } <external_decl>
@@ -187,7 +188,7 @@ constant:
 primary_expression:
   identifier
 | constant {
-      $$ = /* (struct ast_primary_expr*) */ $1;
+      $$ = (struct ast_primary_expr*) $1;
   }
 | string_literal
 | punctuator_left_parenthesis expression punctuator_right_parenthesis
