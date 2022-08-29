@@ -24,12 +24,22 @@ $(OBJECT_DIR)/%.dbg.obj: src/%.c | $(OBJECT_DIR)
 $(OBJECT_DIR)/%.dbg.san.obj: src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_DBG) $(CFLAGS_DBG_SAN) -o $@ $<
 	
-$(BUILD_DIR)/libmycc-ast.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,$(C_SOURCES)) | $(BUILD_DIR)
-	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^)
-$(BUILD_DIR)/libmycc-ast.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,$(C_SOURCES)) | $(BUILD_DIR)
-	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^)
-$(BUILD_DIR)/libmycc-ast.dbg.san.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,$(C_SOURCES)) | $(BUILD_DIR)
-	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^)
+$(BUILD_DIR)/libmycc-ast.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,$(C_SOURCES)) $(BUILD_DIR)/libmycc-libs.so | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-libs
+$(BUILD_DIR)/libmycc-ast.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,$(C_SOURCES)) $(BUILD_DIR)/libmycc-libs.dbg.so | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-libs.dbg
+$(BUILD_DIR)/libmycc-ast.dbg.san.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,$(C_SOURCES)) $(BUILD_DIR)/libmycc-libs.dbg.san.so | $(BUILD_DIR)
+	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-libs.dbg.san
+
+# We don't know the dependencies of these libraries here.
+# They may need to be updated as targets, so these libraries are PHONY targets. If there's nothing to do,
+# nothing is done anyways.
+# We will always see linking of mycc-parser.so, because one of it's dependencies needs update as it's PHONY,
+# PHONY targets always need to be updated. But we can't do anything with it. We could be including makefiles
+# instead, but adding to CFLAGS and etc. is harder then. 
+$(BUILD_DIR)/libmycc-libs.so $(BUILD_DIR)/libmycc-libs.dbg.so $(BUILD_DIR)/libmycc-libs.dbg.san.so: | $(BUILD_DIR)
+	$(MAKE) -C ../libs $@
+.PHONY: $(BUILD_DIR)/libmycc-libs.so $(BUILD_DIR)/libmycc-libs.dbg.so $(BUILD_DIR)/libmycc-libs.dbg.san.so
 
 $(BUILD_DIR) $(OBJECT_DIR):
 	mkdir -p $@

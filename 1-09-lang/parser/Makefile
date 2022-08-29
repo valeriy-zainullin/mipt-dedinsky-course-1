@@ -13,12 +13,13 @@ present: parser_tests
 tokenizer_tests: $(BUILD_DIR)/tokenizer.dbg.san
 	$< < simple_file.c
 	
-parser_tests: $(BUILD_DIR)/parser.dbg # builld/parser.dbg.san # leaks of ast nodes in parsing are not fixed for now.
+parser_tests: $(BUILD_DIR)/parser.dbg.san # builld/parser.dbg.san # leaks of ast nodes in parsing are not fixed for now.
 	#$< < samples/1-simple_main.c
 	#$< < samples/2-simple-struct.c
 	#$< < samples/3-printf.c
 	#$< < ../simplified-lang-tests/1-simple_main.c
 	$< < ../simplified-lang-tests/0-simpliest_main.c
+	$< < ../simplified-lang-tests/1-multiplicative-return-main.c 
 
 parser_counterexamples: src/parser.y
 	bison -Wall -fsyntax-only -Wcounterexamples $<
@@ -80,7 +81,7 @@ $(BUILD_DIR)/parser: $(patsubst %.c,$(OBJECT_DIR)/%.obj,parser_main.c) $(BUILD_D
 $(BUILD_DIR)/parser.dbg: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.dbg.so | $(BUILD_DIR)
 	gcc $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-parser.dbg -lmycc-ast.dbg
 $(BUILD_DIR)/parser.dbg.san: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.san.obj,parser_main.c) $(BUILD_DIR)/libmycc-parser.dbg.san.so | $(BUILD_DIR)
-	gcc $(CFLAGS_DBG_SAN) $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) $(LDFLAGS_DBG) -L$(BUILD_DIR) -lmycc-parser.dbg.san -lmycc-ast.dbg.san
+	gcc $(CFLAGS_DBG_SAN) $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-parser.dbg.san -lmycc-ast.dbg.san
 
 # We don't know the dependencies of these libraries here.
 # They may need to be updated as targets, so these libraries are PHONY targets. If there's nothing to do,

@@ -94,7 +94,8 @@ TODO: standard reference here.
 	
 	//struct ast_jump_stmt*             jump_stmt;
 	struct ast_return_stmt*           jump_stmt;
-	
+
+	struct ast_mult_expr*             mult_expr;
 	struct ast_primary_expr*          primary_expr;
 	struct ast_constant*              constant;
 	struct ast_int_constant*          int_constant;
@@ -126,26 +127,26 @@ TODO: standard reference here.
 // iteration_statement
 %type<jump_stmt> jump_statement
 
-%type<primary_expr> expression
-%type<primary_expr> assignment_expression
-%type<primary_expr> conditional_expression
-%type<primary_expr> logical_OR_expression
-%type<primary_expr> logical_AND_expression
-%type<primary_expr> inclusive_OR_expression
-%type<primary_expr> exclusive_OR_expression
-%type<primary_expr> AND_expression
-%type<primary_expr> equality_expression
-%type<primary_expr> relational_expression
-%type<primary_expr> shift_expression
-%type<primary_expr> additive_expression
-%type<primary_expr> multiplicative_expression
+%type<mult_expr> expression
+%type<mult_expr> assignment_expression
+%type<mult_expr> conditional_expression
+%type<mult_expr> logical_OR_expression
+%type<mult_expr> logical_AND_expression
+%type<mult_expr> inclusive_OR_expression
+%type<mult_expr> exclusive_OR_expression
+%type<mult_expr> AND_expression
+%type<mult_expr> equality_expression
+%type<mult_expr> relational_expression
+%type<mult_expr> shift_expression
+%type<mult_expr> additive_expression
+%type<mult_expr> multiplicative_expression
 %type<primary_expr> cast_expression
 %type<primary_expr> unary_expression
 %type<primary_expr> postfix_expression
 %type<primary_expr> primary_expression
 %type<constant> constant
 
-%type<primary_expr> expression_opt
+%type<mult_expr> expression_opt
 
 //%destructor { *output = $$; } <translation_unit>
 // %destructor { if ($$ != NULL) { $$ = ast_external_decl_node_delete($$); } } <external_decl>
@@ -287,10 +288,71 @@ cast_expression:
 	multiplicative-expression % cast-expression
 */
 multiplicative_expression:
-  cast_expression { $$ = $1; }
-| multiplicative_expression punctuator_star cast_expression
-| multiplicative_expression punctuator_slash cast_expression
-| multiplicative_expression punctuator_percent cast_expression
+  cast_expression {
+      struct ast_mult_expr* mult_expr = ast_mult_expr_new();
+      if (mult_expr == NULL) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      printf("vector_push: 1.\n");
+      if (!vector_push(mult_expr->primary_exprs, &$1)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = mult_expr;
+  }
+| multiplicative_expression punctuator_star cast_expression {
+      struct ast_mult_expr* mult_expr = $1;
+      printf("vector_push: 2.\n");
+      if (!vector_push(mult_expr->primary_exprs, &$3)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      printf("vector_push: 3.\n");
+      enum ast_mult_expr_op op = AST_MULTIPLICATIVE_EXPR_OPERATION_MULTIPLICATION;
+      if (!vector_push(mult_expr->ops, &op)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = mult_expr;
+  }
+| multiplicative_expression punctuator_slash cast_expression {
+      printf("vector_push: 4.\n");
+      struct ast_mult_expr* mult_expr = $1;
+      if (!vector_push(mult_expr->primary_exprs, &$3)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      printf("vector_push: 5.\n");
+      enum ast_mult_expr_op op = AST_MULTIPLICATIVE_EXPR_OPERATION_DIVISION;
+      if (!vector_push(mult_expr->ops, &op)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = mult_expr;
+  }
+| multiplicative_expression punctuator_percent cast_expression {
+      printf("vector_push: 6.\n");
+      struct ast_mult_expr* mult_expr = $1;
+      if (!vector_push(mult_expr->primary_exprs, &$3)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      printf("vector_push: 7.\n");
+      enum ast_mult_expr_op op = AST_MULTIPLICATIVE_EXPR_OPERATION_MODULO;
+      if (!vector_push(mult_expr->ops, &op)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = mult_expr;
+  }
 ;
 
 /*

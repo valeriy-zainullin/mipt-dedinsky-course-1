@@ -52,7 +52,21 @@ struct ast_bit_shift_expr;
 
 struct ast_add_expr;
 
-struct ast_mult_expr;
+enum ast_mult_expr_op {
+	AST_MULTIPLICATIVE_EXPR_OPERATION_MULTIPLICATION,
+	AST_MULTIPLICATIVE_EXPR_OPERATION_DIVISION,
+	AST_MULTIPLICATIVE_EXPR_OPERATION_MODULO
+};
+struct ast_mult_expr {
+	// struct vector* cast_exprs;
+	struct vector* primary_exprs;
+	struct vector* ops;
+};
+
+struct ast_mult_expr* ast_mult_expr_new();
+struct ast_mult_expr* ast_mult_expr_delete(struct ast_mult_expr* mult_expr);
+
+void ast_mult_expr_print(FILE* file, struct ast_mult_expr const* mult_expr, size_t indent_level);
 
 struct ast_cast_expr /*{
 	enum {
@@ -69,13 +83,13 @@ struct ast_init_list_expr;
 
 struct ast_postfix_expr_op {
 	enum ast_postfix_expr_op_type {
-		AST_POSTFIX_EXPR_OP_INDEXATION,
-		AST_POSTFIX_EXPR_OP_FUNCTION_CALL,
-		AST_POSTFIX_EXPR_OP_STRUCT_MEMBER_ACCESS,
-		AST_POSTFIX_EXPR_OP_STRUCT_PTR_MEMBER_ACCESS,
-		AST_POSTFIX_EXPR_OP_INCREMENT,
-		AST_POSTFIX_EXPR_OP_DECREMENT
-	} operator_type;
+		AST_POSTFIX_EXPR_OPERATION_INDEXATION,
+		AST_POSTFIX_EXPR_OPERATION_FUNCTION_CALL,
+		AST_POSTFIX_EXPR_OPERATION_STRUCT_MEMBER_ACCESS,
+		AST_POSTFIX_EXPR_OPERATION_STRUCT_PTR_MEMBER_ACCESS,
+		AST_POSTFIX_EXPR_OPERATION_INCREMENT,
+		AST_POSTFIX_EXPR_OPERATION_DECREMENT
+	} op_type;
 };
 struct ast_indexation_op {
 	struct ast_postfix_expr_op postfix_expr_op;
