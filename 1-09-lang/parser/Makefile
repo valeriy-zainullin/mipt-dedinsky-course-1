@@ -13,6 +13,7 @@ present: parser_tests
 tokenizer_tests: $(BUILD_DIR)/tokenizer.dbg.san
 	$< < ../simplified-lang-tests/0-simpliest_main.c
 	$< < ../simplified-lang-tests/1-multiplicative-return-main.c 
+	$< < ../simplified-lang-tests/2-additive-return-main.c 
 	
 parser_tests: $(BUILD_DIR)/parser.dbg.san # builld/parser.dbg.san # leaks of ast nodes in parsing are not fixed for now.
 	#$< < samples/1-simple_main.c
@@ -21,6 +22,7 @@ parser_tests: $(BUILD_DIR)/parser.dbg.san # builld/parser.dbg.san # leaks of ast
 	#$< < ../simplified-lang-tests/1-simple_main.c
 	$< < ../simplified-lang-tests/0-simpliest_main.c
 	$< < ../simplified-lang-tests/1-multiplicative-return-main.c 
+	$< < ../simplified-lang-tests/2-additive-return-main.c 
 
 parser_counterexamples: src/parser.y
 	bison -Wall -fsyntax-only -Wcounterexamples $<
@@ -63,7 +65,7 @@ $(OBJECT_DIR)/%.dbg.obj: src/%.c | $(OBJECT_DIR)
 $(OBJECT_DIR)/%.dbg.san.obj: src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_DBG) $(CFLAGS_DBG_SAN) -o $@ $<
 	
-$(BUILD_DIR)/libmycc-parser.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,parser.c tokenizer.c) $(BUILD_DIR)/libmycc-ast.so | $(BUILD_DIR)
+$(BUILD_DIR)/libmycc-parser.so: $(patsubst %.c,$(OBJECT_DIR)/%.obj,parser.c tokenizer.c) $(BUILD_DIR)/libmycc-ast.so | $(BUILD_DIR)
 	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-ast
 $(BUILD_DIR)/libmycc-parser.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,parser.c tokenizer.c) $(BUILD_DIR)/libmycc-ast.dbg.so | $(BUILD_DIR)
 	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-ast.dbg

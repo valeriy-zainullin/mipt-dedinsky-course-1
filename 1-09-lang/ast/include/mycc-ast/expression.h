@@ -50,7 +50,19 @@ struct ast_rel_expr;
 
 struct ast_bit_shift_expr;
 
-struct ast_add_expr;
+enum ast_add_expr_op {
+	AST_ADDITIVE_EXPR_OPERATION_ADDITION,
+	AST_ADDITIVE_EXPR_OPERATION_SUBTRACTION,
+};
+struct ast_add_expr {
+	struct vector* mult_exprs;
+	struct vector* ops;
+};
+
+struct ast_add_expr* ast_add_expr_new();
+struct ast_add_expr* ast_add_expr_delete(struct ast_add_expr* add_expr);
+
+void ast_add_expr_print(FILE* file, struct ast_add_expr const* add_expr, size_t indent_level);
 
 enum ast_mult_expr_op {
 	AST_MULTIPLICATIVE_EXPR_OPERATION_MULTIPLICATION,

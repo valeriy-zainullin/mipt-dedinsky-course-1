@@ -95,6 +95,7 @@ TODO: standard reference here.
 	//struct ast_jump_stmt*             jump_stmt;
 	struct ast_return_stmt*           jump_stmt;
 
+	struct ast_add_expr*              add_expr;
 	struct ast_mult_expr*             mult_expr;
 	struct ast_primary_expr*          primary_expr;
 	struct ast_constant*              constant;
@@ -127,26 +128,26 @@ TODO: standard reference here.
 // iteration_statement
 %type<jump_stmt> jump_statement
 
-%type<mult_expr> expression
-%type<mult_expr> assignment_expression
-%type<mult_expr> conditional_expression
-%type<mult_expr> logical_OR_expression
-%type<mult_expr> logical_AND_expression
-%type<mult_expr> inclusive_OR_expression
-%type<mult_expr> exclusive_OR_expression
-%type<mult_expr> AND_expression
-%type<mult_expr> equality_expression
-%type<mult_expr> relational_expression
-%type<mult_expr> shift_expression
-%type<mult_expr> additive_expression
-%type<mult_expr> multiplicative_expression
+%type<add_expr>     expression
+%type<add_expr>     assignment_expression
+%type<add_expr>     conditional_expression
+%type<add_expr>     logical_OR_expression
+%type<add_expr>     logical_AND_expression
+%type<add_expr>     inclusive_OR_expression
+%type<add_expr>     exclusive_OR_expression
+%type<add_expr>     AND_expression
+%type<add_expr>     equality_expression
+%type<add_expr>     relational_expression
+%type<add_expr>     shift_expression
+%type<add_expr>     additive_expression
+%type<mult_expr>    multiplicative_expression
 %type<primary_expr> cast_expression
 %type<primary_expr> unary_expression
 %type<primary_expr> postfix_expression
 %type<primary_expr> primary_expression
 %type<constant> constant
 
-%type<mult_expr> expression_opt
+%type<add_expr> expression_opt
 
 //%destructor { *output = $$; } <translation_unit>
 // %destructor { if ($$ != NULL) { $$ = ast_external_decl_node_delete($$); } } <external_decl>
@@ -362,9 +363,54 @@ multiplicative_expression:
 	additive-expression - multiplicative-expression
 */
 additive_expression:
-  multiplicative_expression { $$ = $1; }
-| additive_expression punctuator_plus multiplicative_expression
-| additive_expression punctuator_minus multiplicative_expression
+  multiplicative_expression {
+      struct ast_add_expr* add_expr = ast_add_expr_new();
+      if (add_expr == NULL) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      printf("vector_push: 1.\n");
+      if (!vector_push(add_expr->mult_exprs, &$1)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = add_expr;
+  }
+| additive_expression punctuator_plus multiplicative_expression {
+      printf("vector_push: 4.\n");
+      struct ast_add_expr* add_expr = $1;
+      if (!vector_push(add_expr->mult_exprs, &$3)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      printf("vector_push: 5.\n");
+      enum ast_add_expr_op op = AST_ADDITIVE_EXPR_OPERATION_ADDITION;
+      if (!vector_push(add_expr->ops, &op)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = add_expr;
+  }
+| additive_expression punctuator_minus multiplicative_expression {
+      printf("vector_push: 4.\n");
+      struct ast_add_expr* add_expr = $1;
+      if (!vector_push(add_expr->mult_exprs, &$3)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      printf("vector_push: 5.\n");
+      enum ast_add_expr_op op = AST_ADDITIVE_EXPR_OPERATION_SUBTRACTION;
+      if (!vector_push(add_expr->ops, &op)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = add_expr;
+  }
 ;
 
 /*

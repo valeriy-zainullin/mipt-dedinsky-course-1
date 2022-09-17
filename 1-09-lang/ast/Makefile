@@ -24,7 +24,7 @@ $(OBJECT_DIR)/%.dbg.obj: src/%.c | $(OBJECT_DIR)
 $(OBJECT_DIR)/%.dbg.san.obj: src/%.c | $(OBJECT_DIR)
 	gcc -c $(CFLAGS) $(CFLAGS_DBG) $(CFLAGS_DBG_SAN) -o $@ $<
 	
-$(BUILD_DIR)/libmycc-ast.so: $(patsubst src/%.c,$(OBJECT_DIR)/%.obj,$(C_SOURCES)) $(BUILD_DIR)/libmycc-libs.so | $(BUILD_DIR)
+$(BUILD_DIR)/libmycc-ast.so: $(patsubst %.c,$(OBJECT_DIR)/%.obj,$(C_SOURCES)) $(BUILD_DIR)/libmycc-libs.so | $(BUILD_DIR)
 	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-libs
 $(BUILD_DIR)/libmycc-ast.dbg.so: $(patsubst %.c,$(OBJECT_DIR)/%.dbg.obj,$(C_SOURCES)) $(BUILD_DIR)/libmycc-libs.dbg.so | $(BUILD_DIR)
 	gcc -shared $(CFLAGS_LINK) -o $@ $(filter %.obj,$^) -L$(BUILD_DIR) -lmycc-libs.dbg
