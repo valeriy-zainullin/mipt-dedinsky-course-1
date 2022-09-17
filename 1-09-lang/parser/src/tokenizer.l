@@ -86,6 +86,10 @@ constant:
 */
 /* Enum constant is essentially an identifier. We won't have them as a separate entity, otherwise we won't be able to distinguish them from identifiers at tokenizing stage. */
 /* Enum members will come as identifiers to the parser. */
+/*
+We will be able to implement enum constant though by using flex start conditions.
+https://westes.github.io/flex/manual/Flex-is-not-matching-my-patterns-in-the-same-order-that-I-defined-them_002e.html
+*/
 
 /*
 integer-constant:
@@ -93,6 +97,7 @@ integer-constant:
 	octal-constant integer-suffix_opt
 	hexadecimal-constant integer-suffix_opt
 */
+integer_constant ({decimal_constant}{integer_suffix}?)|({octal_constant}{integer_suffix}?)|({hexadecimal_constant}{integer_suffix}?)
 /*
 integer-suffix:
 	unsigned-suffix long-suffix_opt
@@ -107,6 +112,9 @@ long-suffix: one of
 long-long-suffix: one of
 	ll LL
 */
+unsigned_suffix u|U
+long_suffix l|L
+long_long_suffix ll|LL
 integer_suffix (({unsigned_suffix}{long_suffix}?)|({unsigned_suffix}{long_long_suffix})|({long_suffix}{unsigned_suffix}?)|({long_long_suffix}{unsigned_suffix}?))
 /*
 nonzero-digit: one of
@@ -322,6 +330,12 @@ Paragraph 6.4.2.1, semantics:
    Maybe we will be codegenerating something our arch doesn't support. As a cross-compilator. So maybe we should leave values as is for code generator. Just check their correctness as tokens.
 */
 
+/* TODO: if decimal and hexadecimal floating constants are distinguished at parsing stage, unify them here. */
+
+/* Seems like flex selects the rule matching the most text and if there are multiple of them, selects the
+   top one. Mb check if needed.
+*/
+
 %%
 {blank}                                  { tokenizer_current_location.col += 1;                }
 \r\n?|\n                                 { tokenizer_current_location.col = 1;                 }
@@ -333,9 +347,7 @@ Paragraph 6.4.2.1, semantics:
 
 {identifier}                             { return tokenizer_handle_identifier(yytext);         }
 
-{decimal_constant}                       { return tokenizer_handle_integer_constant(yytext);   }
-{octal_constant}                         { return tokenizer_handle_integer_constant(yytext);   }
-{hexadecimal_constant}                   { return tokenizer_handle_integer_constant(yytext);   }
+{integer_constant}                       { return tokenizer_handle_integer_constant(yytext);   }
 
 {decimal_floating_constant}              { return tokenizer_handle_floating_constant(yytext);  }
 {hexadecimal_floating_constant}          { return tokenizer_handle_floating_constant(yytext);  }

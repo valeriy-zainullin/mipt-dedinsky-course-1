@@ -64,17 +64,21 @@ bool ast_int_constant_init_from_token(struct ast_int_constant* int_constant, cha
 	bool is_long = false;
 	bool is_long_long = false;
 	for (size_t i = suffix_start; text[i] != '\0'; ++i) {
-		if ((text[suffix_start] == 'u' || text[suffix_start] == 'U') && !is_unsigned) {
+		if ((text[i] == 'u' || text[i] == 'U') && !is_unsigned) {
 			is_unsigned = true;
-		} else if ((text[suffix_start] == 'l' || text[suffix_start] == 'L') && !is_long && !is_long_long) {
+			continue;
+		} else if ((text[i] == 'l' || text[i] == 'L') && !is_long && !is_long_long) {
 			is_long = true;
-		} else if ((text[suffix_start] == 'l' || text[suffix_start] == 'L') && is_long && !is_long_long) {
+			continue;
+		} else if ((text[i] == 'l' || text[i] == 'L') && is_long && !is_long_long) {
 			is_long = false;
 			is_long_long = true;
+			continue;
 		}
 		
 		// Invalid character. Ignored in release build, but error in debug build.
 		// Should never happen in correct execution of the compiler.
+		// Tokenizer checks syntax of integer constants, here we just extract information.
 		assert(false);
 	}
 	

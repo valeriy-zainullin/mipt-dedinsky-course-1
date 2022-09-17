@@ -16,7 +16,6 @@ int tokenizer_handle_keyword(char const* text);
 int tokenizer_handle_identifier(char const* text);
 
 int tokenizer_handle_integer_constant(char const* text);
-int tokenizer_handle_integer_constant(char const* text);
 int tokenizer_handle_floating_constant(char const* text);
 int tokenizer_handle_character_constant(char const* text);
 int tokenizer_handle_string_literal(char const* text);
