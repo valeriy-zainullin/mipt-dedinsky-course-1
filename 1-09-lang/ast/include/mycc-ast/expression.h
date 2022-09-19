@@ -48,7 +48,19 @@ struct ast_equal_expr;
 
 struct ast_rel_expr;
 
-struct ast_bit_shift_expr;
+enum ast_bit_shift_expr_op {
+	AST_BIT_SHIFT_EXPR_OPERATION_SHIFT_RIGHT,
+	AST_BIT_SHIFT_EXPR_OPERATION_SHIFT_LEFT,
+};
+struct ast_bit_shift_expr {
+	struct vector* add_exprs;
+	struct vector* ops;
+};
+
+struct ast_bit_shift_expr* ast_bit_shift_expr_new();
+struct ast_bit_shift_expr* ast_bit_shift_expr_delete(struct ast_bit_shift_expr* bit_shift_expr);
+
+void ast_bit_shift_expr_print(FILE* file, struct ast_bit_shift_expr const* bit_shift_expr, size_t indent_level);
 
 enum ast_add_expr_op {
 	AST_ADDITIVE_EXPR_OPERATION_ADDITION,

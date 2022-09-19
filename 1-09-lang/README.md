@@ -5,3 +5,5 @@
 В будущем можно будет проверить, может ли он скомпилировать себя. И скомпилировать с помощью него и проверить все свои лабораторные работы. Заодно на них можно будет замерять производительность.
 
 TODO: перевести проект в отдельный репозиторий. mycc. Move project into a separate repository. В репозитории оставить код здесь для истории. Сделать коммит, что репозиторий перехал, в README добавить ссылку.
+
+TODO: manual parsing would teach me a lot as well. So implement it when the task is done with the bison already.

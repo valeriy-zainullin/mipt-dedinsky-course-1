@@ -88,6 +88,11 @@ TODO: standard reference here.
 %union {
 	// TODO: delete "_node" from types.
 	// TODO: implement reference counting. ast_acquire_ref, ast_release_ref, ast_get_num_refs
+	// TODO: should be the following:
+	//struct ast_translation_unit* translation_unit;
+	//struct ast_external_decl*    external_decl;
+	//struct ast_code_block*       code_block;
+	// also align all other members here after these changes.
 	struct ast_translation_unit_node* translation_unit;
 	struct ast_external_decl_node*    external_decl;
 	struct ast_code_block_node*       code_block;
@@ -95,6 +100,7 @@ TODO: standard reference here.
 	//struct ast_jump_stmt*             jump_stmt;
 	struct ast_return_stmt*           jump_stmt;
 
+	struct ast_bit_shift_expr*        bit_shift_expr;
 	struct ast_add_expr*              add_expr;
 	struct ast_mult_expr*             mult_expr;
 	struct ast_primary_expr*          primary_expr;
@@ -128,26 +134,26 @@ TODO: standard reference here.
 // iteration_statement
 %type<jump_stmt> jump_statement
 
-%type<add_expr>     expression
-%type<add_expr>     assignment_expression
-%type<add_expr>     conditional_expression
-%type<add_expr>     logical_OR_expression
-%type<add_expr>     logical_AND_expression
-%type<add_expr>     inclusive_OR_expression
-%type<add_expr>     exclusive_OR_expression
-%type<add_expr>     AND_expression
-%type<add_expr>     equality_expression
-%type<add_expr>     relational_expression
-%type<add_expr>     shift_expression
-%type<add_expr>     additive_expression
-%type<mult_expr>    multiplicative_expression
-%type<primary_expr> cast_expression
-%type<primary_expr> unary_expression
-%type<primary_expr> postfix_expression
-%type<primary_expr> primary_expression
-%type<constant> constant
+%type<bit_shift_expr> expression
+%type<bit_shift_expr> assignment_expression
+%type<bit_shift_expr> conditional_expression
+%type<bit_shift_expr> logical_OR_expression
+%type<bit_shift_expr> logical_AND_expression
+%type<bit_shift_expr> inclusive_OR_expression
+%type<bit_shift_expr> exclusive_OR_expression
+%type<bit_shift_expr> AND_expression
+%type<bit_shift_expr> equality_expression
+%type<bit_shift_expr> relational_expression
+%type<bit_shift_expr> shift_expression
+%type<add_expr>       additive_expression
+%type<mult_expr>      multiplicative_expression
+%type<primary_expr>   cast_expression
+%type<primary_expr>   unary_expression
+%type<primary_expr>   postfix_expression
+%type<primary_expr>   primary_expression
+%type<constant>       constant
 
-%type<add_expr> expression_opt
+%type<bit_shift_expr> expression_opt
 
 //%destructor { *output = $$; } <translation_unit>
 // %destructor { if ($$ != NULL) { $$ = ast_external_decl_node_delete($$); } } <external_decl>
@@ -420,9 +426,54 @@ additive_expression:
 	shift-expression >> additive-expression
 */
 shift_expression:
-  additive_expression { $$ = $1; }
-| shift_expression punctuator_shift_left additive_expression
-| shift_expression punctuator_shift_right additive_expression
+  additive_expression {
+      struct ast_bit_shift_expr* bit_shift_expr = ast_bit_shift_expr_new();
+      if (bit_shift_expr == NULL) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      printf("vector_push: 1.\n");
+      if (!vector_push(bit_shift_expr->add_exprs, &$1)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = bit_shift_expr;
+  }
+| shift_expression punctuator_shift_left additive_expression {
+      printf("vector_push: 4.\n");
+      struct ast_bit_shift_expr* bit_shift_expr = $1;
+      if (!vector_push(bit_shift_expr->add_exprs, &$3)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      printf("vector_push: 5.\n");
+      enum ast_bit_shift_expr_op op = AST_BIT_SHIFT_EXPR_OPERATION_SHIFT_LEFT;
+      if (!vector_push(bit_shift_expr->ops, &op)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = bit_shift_expr;
+  }
+| shift_expression punctuator_shift_right additive_expression {
+      printf("vector_push: 4.\n");
+      struct ast_bit_shift_expr* bit_shift_expr = $1;
+      if (!vector_push(bit_shift_expr->add_exprs, &$3)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      printf("vector_push: 5.\n");
+      enum ast_bit_shift_expr_op op = AST_BIT_SHIFT_EXPR_OPERATION_SHIFT_RIGHT;
+      if (!vector_push(bit_shift_expr->ops, &op)) {
+          assert(false);
+          // TODO: handle this case.
+      }
+      
+      $$ = bit_shift_expr;
+  }
 ;
 
 /*
