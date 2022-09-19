@@ -13,7 +13,7 @@ struct ast_add_expr* ast_add_expr_new() {
 		return NULL;
 	}
 	
-	add_expr->mult_exprs = vector_new(0, sizeof(struct ast_primary_expr*));
+	add_expr->mult_exprs = vector_new(0, sizeof(struct ast_mult_expr*));
 	if (add_expr->mult_exprs == NULL) {
 		free(add_expr);
 		return NULL;
@@ -31,8 +31,8 @@ struct ast_add_expr* ast_add_expr_new() {
 
 struct ast_add_expr* ast_add_expr_delete(struct ast_add_expr* add_expr) {
 	for (size_t i = 0; i < vector_get_size(add_expr->mult_exprs); ++i) {
-		struct ast_primary_expr** primary_expr_storage = vector_get_item_ptr(add_expr->mult_exprs, i);
-		*primary_expr_storage = ast_primary_expr_delete(*primary_expr_storage);
+		struct ast_mult_expr** mult_expr_storage = vector_get_item_ptr(add_expr->mult_exprs, i);
+		*mult_expr_storage = ast_mult_expr_delete(*mult_expr_storage);
 	}
 	add_expr->mult_exprs = vector_delete(add_expr->mult_exprs);
 
