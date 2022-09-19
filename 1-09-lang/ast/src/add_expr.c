@@ -56,7 +56,7 @@ void ast_add_expr_print(FILE* file, struct ast_add_expr const* add_expr, size_t 
 	assert(vector_get_size(add_expr->mult_exprs) == vector_get_size(add_expr->ops) + 1);
 
 	print_indent(file, indent_level);
-	printf("additive_expr:\n");
+	fprintf(file, "additive_expr:\n");
 	
 	struct ast_mult_expr const* mult_expr = NULL;
 	vector_get(add_expr->mult_exprs, 0, &mult_expr);
@@ -68,13 +68,13 @@ void ast_add_expr_print(FILE* file, struct ast_add_expr const* add_expr, size_t 
 		switch (op) {
 			case AST_ADDITIVE_EXPR_OPERATION_ADDITION: {
 				print_indent(file, indent_level);
-				printf("+\n");
+				fprintf(file, "+\n");
 				break;
 			}
 			
 			case AST_ADDITIVE_EXPR_OPERATION_SUBTRACTION: {
 				print_indent(file, indent_level);
-				printf("-\n");
+				fprintf(file, "-\n");
 				break;
 			}
 			

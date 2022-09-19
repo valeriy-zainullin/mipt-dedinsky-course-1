@@ -56,7 +56,7 @@ void ast_mult_expr_print(FILE* file, struct ast_mult_expr const* mult_expr, size
 	assert(vector_get_size(mult_expr->primary_exprs) == vector_get_size(mult_expr->ops) + 1);
 
 	print_indent(file, indent_level);
-	printf("multiplicative_expr:\n");
+	fprintf(file, "multiplicative_expr:\n");
 	
 	struct ast_primary_expr const* primary_expr = NULL;
 	vector_get(mult_expr->primary_exprs, 0, &primary_expr);
@@ -68,19 +68,19 @@ void ast_mult_expr_print(FILE* file, struct ast_mult_expr const* mult_expr, size
 		switch (op) {
 			case AST_MULTIPLICATIVE_EXPR_OPERATION_MULTIPLICATION: {
 				print_indent(file, indent_level);
-				printf("*\n");
+				fprintf(file, "*\n");
 				break;
 			}
 			
 			case AST_MULTIPLICATIVE_EXPR_OPERATION_DIVISION: {
 				print_indent(file, indent_level);
-				printf("/\n");
+				fprintf(file, "/\n");
 				break;
 			}
 			
 			case AST_MULTIPLICATIVE_EXPR_OPERATION_MODULO: {
 				print_indent(file, indent_level);
-				printf("%%\n");
+				fprintf(file, "%%\n");
 				break;
 			}
 			

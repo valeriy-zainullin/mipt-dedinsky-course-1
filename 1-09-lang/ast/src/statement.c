@@ -41,11 +41,11 @@ struct ast_return_stmt* ast_return_stmt_delete(struct ast_return_stmt* return_st
 }
 
 void ast_return_stmt_print(FILE* file, struct ast_return_stmt const* return_stmt, size_t indent_level) {
-	printf("return_stmt");
+	fprintf(file, "return_stmt");
 	if (return_stmt->add_expr != NULL) {
-		printf(":\n");
+		fprintf(file, ":\n");
 		ast_add_expr_print(file, return_stmt->add_expr, indent_level + 1);
 	} else {
-		printf("\n");
+		fprintf(file, "\n");
 	}
 }
